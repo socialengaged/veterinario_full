@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -17,7 +17,7 @@ def create_request(body: CreateRequestBody, db: Session = Depends(get_db)) -> Cr
         out = svc.create_request(
             email=body.email,
             full_name=body.full_name,
-            phone=body.phone,
+            phone=body.phone or None,
             animal_species=body.animal_species,
             animal_name=body.animal_name,
             city=body.city,
@@ -29,6 +29,7 @@ def create_request(body: CreateRequestBody, db: Session = Depends(get_db)) -> Cr
             description=body.description,
             contact_method=body.contact_method,
             marketing_consent=body.marketing_consent,
+            password_plain=body.password,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

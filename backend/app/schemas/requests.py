@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing_extensions import Self
 
 
@@ -11,13 +11,25 @@ class AnimalIn(BaseModel):
     name: Optional[str] = Field(default=None, max_length=255)
 
 
-# Codici servizio client → slug DB (vedi scripts/seed.py)
+# Codici servizio client → slug DB (vedi scripts/seed.py + taxonomy frontend)
 SERVICE_TO_SPECIALTY_SLUG: dict[str, str] = {
     "visita_generica": "visite-generali",
     "visite-generali": "visite-generali",
+    "visita": "visite-generali",
     "chirurgia": "chirurgia",
     "diagnostica": "diagnostica",
+    "analisi": "diagnostica",
+    "specialistica": "visite-generali",
+    "prevenzione": "visite-generali",
+    "nutrizione": "visite-generali",
+    "emergenza": "emergenze",
     "emergenze": "emergenze",
+    "riabilitazione": "visite-generali",
+    "odontoiatria": "chirurgia",
+    "cura": "visite-generali",
+    "animali_esotici": "visite-generali",
+    "animali-esotici": "visite-generali",
+    "rurale": "visite-generali",
     "toelettatura": "toelettatura",
 }
 
@@ -26,13 +38,15 @@ class CreateRequestBody(BaseModel):
     """Accetta payload flat (legacy) o annidato (QA / frontend)."""
 
     email: EmailStr
-    phone: str = Field(min_length=3, max_length=64)
+    phone: Optional[str] = Field(default=None, max_length=64)
     city: str = Field(min_length=1, max_length=128)
     province: str = Field(min_length=1, max_length=8)
     cap: Optional[str] = Field(default=None, max_length=16)
     urgency: str = Field(default="normale", max_length=64)
     description: Optional[str] = None
-    contact_method: str = Field(default="telefono", max_length=32)
+    contact_secondary: Optional[str] = Field(default=None, max_length=16)
+    contact_method: Optional[str] = Field(default=None, max_length=32)
+    email_verification_ack: bool = False
     marketing_consent: bool = False
     sub_service: Optional[str] = None
 
@@ -46,6 +60,27 @@ class CreateRequestBody(BaseModel):
 
     specialty_slug: Optional[str] = Field(default=None, max_length=128)
     service: Optional[str] = Field(default=None, max_length=128)
+
+    password: Optional[str] = Field(default=None, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def password_min_length_if_set(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        if len(v) < 8:
+            raise ValueError("La password deve essere di almeno 8 caratteri")
+        return v
+
+    @field_validator("phone")
+    @classmethod
+    def phone_optional(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or not str(v).strip():
+            return None
+        s = str(v).strip()
+        if len(s) < 3:
+            raise ValueError("Numero di telefono non valido")
+        return s
 
     @model_validator(mode="after")
     def normalize(self) -> Self:
@@ -77,6 +112,25 @@ class CreateRequestBody(BaseModel):
             raise ValueError("Fornire specialty_slug oppure service")
 
         self.specialty_slug = self.specialty_slug.strip().lower()
+
+        sec = (self.contact_secondary or "").strip().lower() or None
+        if sec is not None and sec not in ("sms", "whatsapp"):
+            raise ValueError("contact_secondary deve essere sms o whatsapp")
+        self.contact_secondary = sec
+        if sec in ("sms", "whatsapp"):
+            if not self.phone:
+                raise ValueError(
+                    "Numero di cellulare obbligatorio se scegli anche SMS o WhatsApp come canale di contatto."
+                )
+        if sec is not None:
+            self.contact_method = f"email+{sec}"
+        elif self.contact_method is None or not str(self.contact_method).strip():
+            self.contact_method = "email"
+
+        if not self.email_verification_ack:
+            raise ValueError(
+                "Conferma di aver compreso che devi verificare l'email (anche in spam) per l'inoltro ai veterinari."
+            )
         return self
 
 

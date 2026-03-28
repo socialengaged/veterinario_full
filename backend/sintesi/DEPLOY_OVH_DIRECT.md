@@ -2,7 +2,9 @@
 
 Runbook per portare **solo il backend** LIVE su VPS Ubuntu OVH, testare via **IP** prima del DNS. Allineato al pattern “deploy safe”: backup DB prima di migrazioni distruttive, smoke test, rollback con `git`.
 
-**Server di esempio in questo documento:** `80.225.90.151` (sostituire se diverso).
+**Sintesi aggiornata (frontend, SSL, permessi, email, comandi):** [`PROGETTO_OVH_STATO.md`](PROGETTO_OVH_STATO.md).
+
+**Server di esempio in questo documento:** `80.225.90.151` (sostituire se diverso; in produzione attuale il VPS è spesso `57.131.16.162` — verificare con `curl -4 ifconfig.me` sul server).
 
 **Porta API interna:** su server condivisi, **8000/8001 possono essere già occupati** da altri progetti. L’istanza veterinari usa **`127.0.0.1:8060`** (systemd + Nginx → stesso host pubblico sulla porta 80). Non modificare i processi sulle altre porte.
 
@@ -67,11 +69,13 @@ cd veterinari
 
 ## STEP 4 — Clone repo
 
+Repository monorepo (backend + frontend):
+
 ```bash
-git clone YOUR_REPO_URL .
+git clone https://github.com/socialengaged/veterinario_full.git .
 ```
 
-Atteso: cartella `backend/` nella root del clone.
+Atteso nella root del clone: cartelle **`backend/`** e **`veterinari_frontend/`**. Il deploy API usa solo `backend/`; la build statica si genera da `veterinari_frontend/` (vedi `PROGETTO_OVH_STATO.md` §Deploy frontend e `README.md` in root).
 
 ---
 

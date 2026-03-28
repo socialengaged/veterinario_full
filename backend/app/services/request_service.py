@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.security import (
     create_access_token,
+    hash_password,
     hash_token,
     new_raw_verification_token,
 )
@@ -41,18 +42,25 @@ class RequestService:
         self.settings = get_settings()
         self.email = EmailService()
 
-    def _get_or_create_user(self, email: str, full_name: str, phone: Optional[str]) -> User:
+    def _get_or_create_user(
+        self,
+        email: str,
+        full_name: str,
+        phone: Optional[str],
+        password_plain: Optional[str] = None,
+    ) -> User:
         user = self.db.scalar(select(User).where(User.email == email.strip().lower()))
         if user:
             user.full_name = full_name
             if phone:
                 user.phone = phone
             return user
+        hp = hash_password(password_plain) if password_plain else None
         user = User(
             email=email.strip().lower(),
             full_name=full_name,
             phone=phone,
-            hashed_password=None,
+            hashed_password=hp,
         )
         self.db.add(user)
         self.db.flush()
@@ -96,12 +104,113 @@ class RequestService:
         scored.sort(key=lambda x: x[1], reverse=True)
         return scored[:25]
 
+    def _dispatch_request_to_vets(
+        self,
+        req: VetRequest,
+        *,
+        phone_fallback: str,
+        urgency: str,
+    ) -> list[dict[str, Any]]:
+        addr = self.db.get(UserAddress, req.address_id)
+        animal = self.db.get(Animal, req.animal_id)
+        specialty = self.db.get(Specialty, req.specialty_id)
+        user = self.db.get(User, req.user_id)
+        if not addr or not animal or not specialty or not user:
+            raise ValueError("Dati richiesta incompleti per inoltro veterinari")
+
+        city, province = addr.city, addr.province
+        matches = self._match_specialists(specialty.id, city, province, animal.species)
+        for sp, sc in matches:
+            self.db.add(RequestMatch(request_id=req.id, specialist_id=sp.id, score=sc))
+
+        matched_specs = [
+            {
+                "id": str(sp.id),
+                "name": sp.full_name,
+                "city": sp.city,
+                "province": sp.province,
+                "score": sc,
+            }
+            for sp, sc in matches
+        ]
+
+        wa_payload = build_admin_whatsapp_payload(
+            user_email=user.email,
+            user_name=user.full_name,
+            user_phone=user.phone or phone_fallback,
+            animal_species=animal.species,
+            animal_name=animal.name,
+            city=city,
+            province=province,
+            specialty=specialty.name,
+            urgency=urgency,
+            description=req.description,
+            matches=matched_specs,
+        )
+
+        notif = AdminNotification(
+            channel="whatsapp",
+            title=f"Nuova richiesta {req.id}",
+            payload_json=wa_payload,
+        )
+        self.db.add(notif)
+        req.status = "open"
+
+        try:
+            self.email.send_admin_new_request(
+                admin_email=self.settings.admin_email,
+                user_email=user.email,
+                user_name=user.full_name,
+                user_phone=user.phone or phone_fallback,
+                animal_species=animal.species,
+                city=city,
+                province=province,
+                specialty_name=specialty.name,
+                urgency=urgency,
+                description=req.description,
+                matches=matched_specs,
+                whatsapp_text=wa_payload["whatsapp_text"],
+            )
+        except Exception:
+            logger.exception("Email admin fallita dopo inoltro richiesta")
+
+        return matched_specs
+
+    def release_pending_requests_for_user(self, user_id: UUID) -> None:
+        """Dopo verifica email: inoltra ai veterinari le richieste ancora in attesa."""
+        reqs = self.db.scalars(
+            select(VetRequest).where(
+                VetRequest.user_id == user_id,
+                VetRequest.status == "pending_verification",
+            )
+        ).all()
+        if not reqs:
+            return
+        user = self.db.get(User, user_id)
+        phone_fb = (user.phone or "") if user else ""
+        for req in reqs:
+            self._dispatch_request_to_vets(req, phone_fallback=phone_fb, urgency=req.urgency)
+            conv = self.db.scalar(select(Conversation).where(Conversation.request_id == req.id).limit(1))
+            if conv:
+                self.db.add(
+                    Message(
+                        conversation_id=conv.id,
+                        sender_role=MessageSenderRole.system.value,
+                        body=(
+                            "Email verificata. Abbiamo inoltrato la tua richiesta alle strutture veterinarie "
+                            "della tua zona per trovare la prima disponibilità tra i nostri contatti. "
+                            "Ti ricontatteranno secondo le preferenze indicate (email, SMS o WhatsApp)."
+                        ),
+                    )
+                )
+        self.db.commit()
+
     def create_request(
         self,
         *,
         email: str,
         full_name: str,
-        phone: str,
+        phone: Optional[str],
         animal_species: str,
         animal_name: Optional[str],
         city: str,
@@ -113,13 +222,15 @@ class RequestService:
         description: Optional[str],
         contact_method: str,
         marketing_consent: bool,
+        password_plain: Optional[str] = None,
     ) -> dict[str, Any]:
         slug = specialty_slug.strip().lower()
         specialty = self.db.scalar(select(Specialty).where(Specialty.slug == slug))
         if not specialty:
             raise ValueError(f"Specialty not found: {specialty_slug}")
 
-        user = self._get_or_create_user(email, full_name, phone)
+        user = self._get_or_create_user(email, full_name, phone, password_plain)
+        forward_to_vets = user.email_verified_at is not None
 
         addr = UserAddress(
             user_id=user.id,
@@ -150,23 +261,58 @@ class RequestService:
             contact_method=contact_method,
             marketing_consent=marketing_consent,
             sub_service=sub_service,
-            status="open",
+            status="open" if forward_to_vets else "pending_verification",
         )
         self.db.add(req)
         self.db.flush()
 
-        matches = self._match_specialists(specialty.id, city, province, animal.species)
-        for sp, sc in matches:
-            self.db.add(RequestMatch(request_id=req.id, specialist_id=sp.id, score=sc))
+        matches: list[tuple[Specialist, float]] = []
+        matched_specs: list[dict[str, Any]] = []
+
+        wa_payload: Optional[dict[str, Any]] = None
+        if forward_to_vets:
+            matches = self._match_specialists(specialty.id, city, province, animal.species)
+            for sp, sc in matches:
+                self.db.add(RequestMatch(request_id=req.id, specialist_id=sp.id, score=sc))
+            matched_specs = [
+                {
+                    "id": str(sp.id),
+                    "name": sp.full_name,
+                    "city": sp.city,
+                    "province": sp.province,
+                    "score": sc,
+                }
+                for sp, sc in matches
+            ]
+            wa_payload = build_admin_whatsapp_payload(
+                user_email=user.email,
+                user_name=user.full_name,
+                user_phone=user.phone or (phone or ""),
+                animal_species=animal.species,
+                animal_name=animal.name,
+                city=city,
+                province=province,
+                specialty=specialty.name,
+                urgency=urgency,
+                description=description,
+                matches=matched_specs,
+            )
 
         conv = Conversation(request_id=req.id, user_id=user.id)
         self.db.add(conv)
         self.db.flush()
 
-        welcome = (
-            "Ciao, abbiamo ricevuto la tua richiesta. Uno specialista ti risponderà quanto prima. "
-            "Controlla la mail di conferma e verifica anche lo spam."
-        )
+        if forward_to_vets:
+            welcome = (
+                "Ciao, abbiamo ricevuto la tua richiesta. Uno specialista ti risponderà quanto prima. "
+                "Controlla la mail di conferma e verifica anche lo spam."
+            )
+        else:
+            welcome = (
+                "Ciao! Abbiamo registrato la tua richiesta. Per inoltrarla ai veterinari della tua zona e "
+                "cercare la prima disponibilità tra i nostri contatti, apri l'email che ti abbiamo inviato e "
+                "clicca sul link di verifica. Controlla anche la cartella spam."
+            )
         self.db.add(
             Message(
                 conversation_id=conv.id,
@@ -188,37 +334,14 @@ class RequestService:
 
         redirect_url = f"{self.settings.frontend_url.rstrip('/')}/verify-email?token={raw_token}"
 
-        matched_specs = [
-            {
-                "id": str(sp.id),
-                "name": sp.full_name,
-                "city": sp.city,
-                "province": sp.province,
-                "score": sc,
-            }
-            for sp, sc in matches
-        ]
+        if forward_to_vets and wa_payload is not None:
+            notif = AdminNotification(
+                channel="whatsapp",
+                title=f"Nuova richiesta {req.id}",
+                payload_json=wa_payload,
+            )
+            self.db.add(notif)
 
-        wa_payload = build_admin_whatsapp_payload(
-            user_email=user.email,
-            user_name=user.full_name,
-            user_phone=user.phone or phone,
-            animal_species=animal.species,
-            animal_name=animal.name,
-            city=city,
-            province=province,
-            specialty=specialty.name,
-            urgency=urgency,
-            description=description,
-            matches=matched_specs,
-        )
-
-        notif = AdminNotification(
-            channel="whatsapp",
-            title=f"Nuova richiesta {req.id}",
-            payload_json=wa_payload,
-        )
-        self.db.add(notif)
         self.db.commit()
 
         try:
@@ -228,22 +351,27 @@ class RequestService:
                 request_id=str(req.id),
                 verify_url=redirect_url,
             )
-            self.email.send_admin_new_request(
-                admin_email=self.settings.admin_email,
-                user_email=user.email,
-                user_name=user.full_name,
-                user_phone=phone,
-                animal_species=animal.species,
-                city=city,
-                province=province,
-                specialty_name=specialty.name,
-                urgency=urgency,
-                description=description,
-                matches=matched_specs,
-                whatsapp_text=wa_payload["whatsapp_text"],
-            )
         except Exception:
-            logger.exception("Email delivery failed after request persisted")
+            logger.exception("Email conferma utente fallita dopo persistenza richiesta")
+
+        if forward_to_vets and wa_payload is not None:
+            try:
+                self.email.send_admin_new_request(
+                    admin_email=self.settings.admin_email,
+                    user_email=user.email,
+                    user_name=user.full_name,
+                    user_phone=phone or "",
+                    animal_species=animal.species,
+                    city=city,
+                    province=province,
+                    specialty_name=specialty.name,
+                    urgency=urgency,
+                    description=description,
+                    matches=matched_specs,
+                    whatsapp_text=wa_payload["whatsapp_text"],
+                )
+            except Exception:
+                logger.exception("Email admin fallita dopo persistenza richiesta")
 
         email_verified = user.email_verified_at is not None
 

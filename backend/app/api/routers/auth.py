@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
@@ -12,6 +12,7 @@ from app.db.session import get_db
 from app.models.entities import EmailVerification, User
 from app.schemas.auth import LoginRequest, OkResponse, TokenResponse, UserPublic, VerifyEmailRequest
 from app.services.email_service import EmailService
+from app.services.request_service import RequestService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -57,6 +58,7 @@ def verify_email(body: VerifyEmailRequest, db: Session = Depends(get_db)) -> OkR
     u.email_verified_at = datetime.now(timezone.utc)
     ev.consumed_at = datetime.now(timezone.utc)
     db.commit()
+    RequestService(db).release_pending_requests_for_user(u.id)
     return OkResponse(ok=True)
 
 

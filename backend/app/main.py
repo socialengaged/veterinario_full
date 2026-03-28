@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,12 +14,20 @@ def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title="VeterinarioVicino API", version="1.0.0")
 
-    origins = [
-        settings.frontend_url.rstrip("/"),
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://localhost:5173",
-    ]
+    origins = list(
+        {
+            settings.frontend_url.rstrip("/"),
+            "http://localhost:8080",
+            "http://127.0.0.1:8080",
+            "http://localhost:5173",
+            "http://veterinariovicino.it",
+            "http://www.veterinariovicino.it",
+            "https://veterinariovicino.it",
+            "https://www.veterinariovicino.it",
+            "http://80.225.90.151",
+            "http://57.131.16.162",
+        }
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,

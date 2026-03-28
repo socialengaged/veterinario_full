@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     api_public_url: str = "http://localhost:8000"
 
     admin_email: str = "seomantis@gmail.com"
+    # Link mostrato nelle email admin (nessun invio automatico a WhatsApp)
+    admin_whatsapp_url: str = "https://wa.me/393204864478"
 
     smtp_host: str = "localhost"
     smtp_port: int = 587

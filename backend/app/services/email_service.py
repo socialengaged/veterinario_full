@@ -35,6 +35,12 @@ class EmailService:
             )
             return
 
+        if not (self.settings.smtp_password or "").strip():
+            raise ValueError(
+                "SMTP non configurato: imposta SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_FROM nel .env "
+                "(es. Gmail: smtp.gmail.com:587 + password per app)"
+            )
+
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = self.settings.smtp_from
@@ -108,6 +114,7 @@ class EmailService:
             description=description or "",
             matches=matches,
             whatsapp_text=whatsapp_text,
+            admin_whatsapp_url=self.settings.admin_whatsapp_url,
         )
         text_lines = [
             "Nuova richiesta VeterinarioVicino",
@@ -117,7 +124,18 @@ class EmailService:
             f"Specialità: {specialty_name}",
             f"Urgenza: {urgency}",
             "",
-            "WhatsApp:",
+            f"WhatsApp team: {self.settings.admin_whatsapp_url}",
+            "",
+            "Testo da copiare:",
             whatsapp_text,
         ]
         self._send(admin_email, f"[Admin] Nuova richiesta — {city}", html, "\n".join(text_lines))
+
+    def send_test_ping(self) -> None:
+        """Email minima per verificare SMTP in produzione."""
+        self._send(
+            self.settings.admin_email,
+            "[Test] VeterinarioVicino — produzione",
+            "<p>Test invio email da produzione (script/API).</p>",
+            "Test invio email da produzione (script/API).",
+        )
