@@ -35,3 +35,5 @@ Altri test: schema richieste, payload admin, health/header; integrazione email d
 ## Test automatici (frontend)
 
 `npm run test` (Vitest): es. `ProtectedRoute` — senza token in `localStorage` si viene reindirizzati verso `/accedi/`; con token mock la dashboard protetta si renderizza.
+
+**Playwright** (`veterinari_frontend/`, `npm run test:e2e` o `npm run test:e2e:journeys`): percorsi anonimi (moduli, combinazioni servizio/animale), autenticati (chat, profilo, login). Variabili `E2E_BASE_URL` e `E2E_API_URL`; opzionale `E2E_START_WEBSERVER=1` per avviare Vite (vedi `playwright.config.ts`).

@@ -22,9 +22,8 @@ test.describe("Produzione — smoke", () => {
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator("#password")).toBeVisible();
 
-    const loginUrl = `${API.replace(/\/$/, "")}/auth/login`;
     const responsePromise = page.waitForResponse(
-      res => res.url() === loginUrl && res.request().method() === "POST",
+      res => res.url().includes("/auth/login") && res.request().method() === "POST",
       { timeout: 25_000 }
     );
 

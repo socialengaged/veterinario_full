@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:journeys": "playwright test e2e/journeys-anonymous.spec.ts e2e/journeys-authenticated.spec.ts e2e/journeys-combos.spec.ts e2e/production-smoke.spec.ts",
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
