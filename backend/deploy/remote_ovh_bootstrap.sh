@@ -12,6 +12,7 @@ SECRET="$(openssl rand -hex 32)"
 cat > "$BACKEND/.env" <<EOF
 DATABASE_URL=postgresql+psycopg://vetuser:strongpassword@127.0.0.1:5432/veterinari
 SECRET_KEY=${SECRET}
+# In produzione con dominio e HTTPS: FRONTEND_URL=https://veterinariovicino.it (link email verifica)
 FRONTEND_URL=http://80.225.90.151:8080
 API_PUBLIC_URL=http://80.225.90.151
 ADMIN_EMAIL=seomantis@gmail.com
