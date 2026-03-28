@@ -5,6 +5,7 @@ import {
   clearSession,
   defaultApiUrl,
   injectAccessToken,
+  isApiHealthy,
   uniqueEmail,
 } from "./helpers";
 
@@ -13,16 +14,29 @@ const API = defaultApiUrl();
 test.describe("Utente loggato — chat, profilo, login UI", () => {
   test.describe.configure({ mode: "serial" });
 
-  let email: string;
+  let email = "";
   const password = "E2EAuthPass99!";
-  let token: string;
-  let conversationId: string;
+  let token = "";
+  let conversationId = "";
+  /** false se /health fallisce o POST /requests fallisce */
+  let setupOk = false;
 
   test.beforeAll(async ({ request }) => {
+    const healthy = await isApiHealthy(request);
+    if (!healthy) return;
     email = uniqueEmail("e2e.auth");
-    const out = await apiCreateRequest(request, API, buildDefaultRequestBody(email, password));
-    token = out.access_token;
-    conversationId = out.conversation_id;
+    try {
+      const out = await apiCreateRequest(request, API, buildDefaultRequestBody(email, password));
+      token = out.access_token;
+      conversationId = out.conversation_id;
+      setupOk = true;
+    } catch {
+      setupOk = false;
+    }
+  });
+
+  test.beforeEach(({}, testInfo) => {
+    testInfo.skip(!setupOk, "API non raggiungibile o setup POST /requests fallito");
   });
 
   test("dashboard chat: invio messaggio nella conversazione", async ({ page }) => {

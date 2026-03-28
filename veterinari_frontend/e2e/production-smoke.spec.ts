@@ -1,10 +1,20 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type APIRequestContext } from "@playwright/test";
 
 const API = process.env.E2E_API_URL ?? "https://api.veterinariovicino.it";
 
+async function getHealthWithRetry(request: APIRequestContext) {
+  const base = API.replace(/\/$/, "");
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const res = await request.get(`${base}/health`);
+    if (res.ok()) return res;
+    await new Promise(r => setTimeout(r, 2500));
+  }
+  return request.get(`${base}/health`);
+}
+
 test.describe("Produzione — smoke", () => {
   test("GET /health risponde ok", async ({ request }) => {
-    const res = await request.get(`${API.replace(/\/$/, "")}/health`);
+    const res = await getHealthWithRetry(request);
     expect(res.ok(), `HTTP ${res.status()}`).toBeTruthy();
     const body = await res.json();
     expect(body).toMatchObject({ status: "ok" });

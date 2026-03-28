@@ -1,10 +1,10 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class LoginRequest(BaseModel):
@@ -22,14 +22,13 @@ class VerifyEmailRequest(BaseModel):
 
 
 class UserPublic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     email: str
     full_name: str
     phone: Optional[str] = None
     email_verified: bool
-
-    class Config:
-        from_attributes = True
 
 
 class OkResponse(BaseModel):

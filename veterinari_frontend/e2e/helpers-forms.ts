@@ -21,6 +21,10 @@ export type RichiediOptions = {
  * Usa label accessibili come nel componente React.
  */
 export async function fillRichiediAssistenza(page: Page, o: RichiediOptions): Promise<void> {
+  await expect(
+    page.getByRole("heading", { name: /Invia una richiesta di contatto veterinario/i }),
+  ).toBeVisible({ timeout: 45_000 });
+
   const name = o.fullName ?? "Utente E2E Test";
   await page.getByLabel("Animale *").selectOption(o.animal ?? "cane");
   await page.getByLabel("Categoria servizio *").selectOption(o.serviceCategory ?? "visita");

@@ -154,8 +154,16 @@ export default function RequestPage() {
           <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border shadow-sm p-6 md:p-8 space-y-5">
             {/* Animal */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Animale *</label>
-              <select value={form.animal} onChange={e => set("animal", e.target.value)} className={inputClass} required>
+              <label htmlFor="vv-request-animal" className="block text-sm font-medium text-foreground mb-1.5">
+                Animale *
+              </label>
+              <select
+                id="vv-request-animal"
+                value={form.animal}
+                onChange={e => set("animal", e.target.value)}
+                className={inputClass}
+                required
+              >
                 <option value="">Seleziona animale</option>
                 {animals.map(a => <option key={a.id} value={a.id}>{a.emoji} {a.label}</option>)}
               </select>
@@ -164,15 +172,26 @@ export default function RequestPage() {
             {/* Service Category + SubService */}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Categoria servizio *</label>
-                <select value={form.serviceCategory} onChange={e => handleServiceCategoryChange(e.target.value)} className={inputClass} required>
+                <label htmlFor="vv-request-service-category" className="block text-sm font-medium text-foreground mb-1.5">
+                  Categoria servizio *
+                </label>
+                <select
+                  id="vv-request-service-category"
+                  value={form.serviceCategory}
+                  onChange={e => handleServiceCategoryChange(e.target.value)}
+                  className={inputClass}
+                  required
+                >
                   <option value="">Seleziona categoria</option>
                   {serviceTaxonomy.map(s => <option key={s.id} value={s.id}>{s.emoji} {s.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Servizio specifico</label>
+                <label htmlFor="vv-request-sub-service" className="block text-sm font-medium text-foreground mb-1.5">
+                  Servizio specifico
+                </label>
                 <select
+                  id="vv-request-sub-service"
                   value={form.subService}
                   onChange={e => set("subService", e.target.value)}
                   className={inputClass}
@@ -187,8 +206,11 @@ export default function RequestPage() {
             {/* Location */}
             <div className="grid md:grid-cols-3 gap-4">
               <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-foreground mb-1.5">Città *</label>
+                <label htmlFor="vv-request-city" className="block text-sm font-medium text-foreground mb-1.5">
+                  Città *
+                </label>
                 <input
+                  id="vv-request-city"
                   type="text"
                   value={form.city}
                   onChange={e => set("city", e.target.value)}
@@ -198,8 +220,11 @@ export default function RequestPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Provincia *</label>
+                <label htmlFor="vv-request-province" className="block text-sm font-medium text-foreground mb-1.5">
+                  Provincia *
+                </label>
                 <input
+                  id="vv-request-province"
                   type="text"
                   value={form.province}
                   onChange={e => set("province", e.target.value.toUpperCase().slice(0, 2))}
@@ -210,8 +235,11 @@ export default function RequestPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">CAP</label>
+                <label htmlFor="vv-request-cap" className="block text-sm font-medium text-foreground mb-1.5">
+                  CAP
+                </label>
                 <input
+                  id="vv-request-cap"
                   type="text"
                   value={form.cap}
                   onChange={e => set("cap", e.target.value)}
@@ -227,12 +255,33 @@ export default function RequestPage() {
             {/* Personal info */}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Nome e cognome *</label>
-                <input type="text" required value={form.name} onChange={e => set("name", e.target.value)} placeholder="Mario Rossi" className={inputClass} />
+                <label htmlFor="vv-request-full-name" className="block text-sm font-medium text-foreground mb-1.5">
+                  Nome e cognome *
+                </label>
+                <input
+                  id="vv-request-full-name"
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={e => set("name", e.target.value)}
+                  placeholder="Mario Rossi"
+                  className={inputClass}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Email *</label>
-                <input type="email" required value={form.email} onChange={e => set("email", e.target.value)} placeholder="nome@email.it" className={inputClass} autoComplete="email" />
+                <label htmlFor="vv-request-email" className="block text-sm font-medium text-foreground mb-1.5">
+                  Email *
+                </label>
+                <input
+                  id="vv-request-email"
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={e => set("email", e.target.value)}
+                  placeholder="nome@email.it"
+                  className={inputClass}
+                  autoComplete="email"
+                />
                 <p className="text-xs text-muted-foreground mt-1">
                   Riceverai qui il link di verifica. Senza verifica non possiamo inoltrare la richiesta alle strutture.
                 </p>
@@ -255,8 +304,11 @@ export default function RequestPage() {
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Password *</label>
+                <label htmlFor="vv-request-password" className="block text-sm font-medium text-foreground mb-1.5">
+                  Password *
+                </label>
                 <input
+                  id="vv-request-password"
                   type="password"
                   value={form.password}
                   onChange={e => set("password", e.target.value)}
@@ -271,8 +323,11 @@ export default function RequestPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Note aggiuntive</label>
+              <label htmlFor="vv-request-description" className="block text-sm font-medium text-foreground mb-1.5">
+                Note aggiuntive
+              </label>
               <textarea
+                id="vv-request-description"
                 rows={3}
                 value={form.description}
                 onChange={e => set("description", e.target.value)}

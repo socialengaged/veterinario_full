@@ -4,10 +4,12 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AddressOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     city: str
     province: str
@@ -16,31 +18,26 @@ class AddressOut(BaseModel):
     label: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class AnimalOutFull(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     species: str
     name: Optional[str] = None
     notes: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class SpecialistLinkOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     full_name: str
     email: str
     city: str
     province: str
     is_active: bool
-
-    class Config:
-        from_attributes = True
 
 
 class UserProfileOut(BaseModel):

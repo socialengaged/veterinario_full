@@ -6,6 +6,24 @@ export const ACCESS_TOKEN_KEY = "vv_access_token";
 export const defaultApiUrl = () =>
   (process.env.E2E_API_URL ?? "https://api.veterinariovicino.it").replace(/\/$/, "");
 
+/** GET /health con retry (gateway 502 transitori). */
+export async function isApiHealthy(request: APIRequestContext, retries = 3): Promise<boolean> {
+  const base = defaultApiUrl();
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await request.get(`${base}/health`);
+      if (res.ok()) {
+        const j = await res.json().catch(() => null);
+        if (j && typeof j === "object" && (j as { status?: string }).status === "ok") return true;
+      }
+    } catch {
+      /* rete / TLS */
+    }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  return false;
+}
+
 /** Email univoca per non collidere con utenti reali / run precedenti. */
 export function uniqueEmail(prefix: string): string {
   const t = Date.now();

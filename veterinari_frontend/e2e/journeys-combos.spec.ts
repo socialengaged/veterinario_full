@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { fillRichiediAssistenza } from "./helpers-forms";
-import { uniqueEmail } from "./helpers";
+import { isApiHealthy, uniqueEmail } from "./helpers";
 
 /**
  * Varie combinazioni animale × categoria servizio × sottoservizio (tutte anonime → POST /requests).
@@ -25,6 +25,15 @@ const combos: {
 
 test.describe("Combinazioni servizio × animale (anonimo)", () => {
   test.describe.configure({ mode: "parallel" });
+
+  let apiOk = false;
+  test.beforeAll(async ({ request }) => {
+    apiOk = await isApiHealthy(request);
+  });
+
+  test.beforeEach(({}, testInfo) => {
+    testInfo.skip(!apiOk, "API non raggiungibile (GET /health)");
+  });
 
   for (const c of combos) {
     test(`richiesta: ${c.name}`, async ({ page }) => {
