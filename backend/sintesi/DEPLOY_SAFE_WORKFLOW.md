@@ -61,6 +61,8 @@ chmod +x scripts/db_backup.sh scripts/deploy_safe.sh scripts/post_deploy_check.s
 ./scripts/post_deploy_check.sh
 ```
 
+**Cartella senza `.git` (caso OVH attuale):** `deploy_safe.sh` salta `git pull` e stampa un avviso. Per aggiornare solo gli script dalla macchina di sviluppo: `scp backend/scripts/{db_backup,deploy_safe,post_deploy_check}.sh ubuntu@HOST:/var/www/veterinari/backend/scripts/` (poi `chmod +x scripts/*.sh`). Per avere `git pull` sul server, va creato un clone Git in quella path (o spostato il deploy su checkout CI).
+
 **Nota:** `deploy_safe.sh` interrompe tutto se una fase fallisce (`set -e`). Se `alembic upgrade head` fallisce, **non** viene eseguito il restart (il comando precedente ha già fallito). Comunque **verificare** i log prima di rilanciare.
 
 **E2E dal server:** `post_deploy_check.sh` chiama l’API pubblica (`https://api.veterinariovicino.it` di default in `e2e_temp_mail_flow.py`) e richiede rete + mail.tm; se il server non deve uscire verso internet, eseguire l’E2E dal PC di sviluppo invece che dallo script sul VPS.
