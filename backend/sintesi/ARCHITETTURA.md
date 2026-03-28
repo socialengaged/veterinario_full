@@ -5,4 +5,5 @@
 - **Layer**: `api/routers` (HTTP) → `services` (business) → SQLAlchemy `Session` → `models`.
 - **RequestService.create_request**: transazione unica (user get/create, indirizzo, animale, richiesta, match specialisti, conversazione, messaggio sistema, token verifica email, notifica admin JSON). Email inviate post-commit; errori SMTP loggati senza rollback DB.
 - **Auth**: JWT Bearer; `POST /requests` restituisce `access_token` per auto-login client.
-- **Matching**: join `specialist_specialties`, filtro attivi, score città (+50), provincia (+10), specie (+40 o tutte se lista vuota).
+- **Matching** ([`RequestService._match_specialists`](../app/services/request_service.py)): join `specialist_specialties`, solo specialisti `is_active`; punteggio: stessa **città** dell’utente (+50), altrimenti stessa **provincia** (+10); **specie** animale (+40 se `species_tags` contiene la specie o lista vuota = tutte); se **CAP utente** (`user_addresses.cap`) e **CAP specialista** (`specialists.cap`) sono entrambi valorizzati e uguali, **+80** (boost zona). Ordinamento per score decrescente, max 25 risultati. Geografia SEO (comuni, slug) resta nel **frontend** (`veterinari_frontend/src/data/`), non in tabelle comuni lato API.
+- **Roadmap / audit:** [`PIANO_AZIONE_POST_AUDIT.md`](PIANO_AZIONE_POST_AUDIT.md).

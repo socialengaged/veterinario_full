@@ -230,6 +230,7 @@ Repository GitHub: [https://github.com/socialengaged/veterinario_full](https://g
 - `sintesi/API.md` — endpoint API
 - `sintesi/DATABASE.md` — schema / entità
 - `sintesi/ARCHITETTURA.md` — panoramica componenti
+- `sintesi/PIANO_AZIONE_POST_AUDIT.md` — roadmap post-audit (fasi, gate, testing)
 - `deploy/veterinari.service` — unit systemd
 - `deploy/nginx-veterinari-*.conf` — template Nginx (adattare `server_name`)
 
