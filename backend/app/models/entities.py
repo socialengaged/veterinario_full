@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import enum
 import uuid
@@ -118,6 +118,8 @@ class Specialist(Base):
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     city: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     province: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    cap: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, index=True)
+    street_address: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     phone: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     species_tags: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)

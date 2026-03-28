@@ -5,18 +5,48 @@
   <h2>Nuova richiesta</h2>
   <p><strong>Utente:</strong> {{ user_name }} &lt;{{ user_email }}&gt; — {{ user_phone }}</p>
   <p><strong>Animale:</strong> {{ animal_species }}</p>
-  <p><strong>Zona:</strong> {{ city }} ({{ province }})</p>
+  <p><strong>Zona:</strong> {{ city }} ({{ province }}){% if user_cap %} — <strong>CAP utente:</strong> {{ user_cap }}{% endif %}</p>
   <p><strong>Specialità:</strong> {{ specialty_name }}</p>
   <p><strong>Urgenza:</strong> {{ urgency }}</p>
-  {% if description %}<p><strong>Note:</strong> {{ description }}</p>{% endif %}
-  <h3>Specialisti matchati</h3>
-  <ul>
-  {% for m in matches %}
-    <li>{{ m.name }} — {{ m.city }} ({{ m.province }}) — score {{ m.score }}</li>
-  {% endfor %}
-  </ul>
-  <p><a href="{{ admin_whatsapp_url }}">Apri WhatsApp (team)</a> — copia il testo qui sotto e incollalo nella chat se serve.</p>
-  <h3>Testo WhatsApp</h3>
+  {% if description %}<p><strong>Note utente (form):</strong> {{ description }}</p>{% endif %}
+
+  <h3>Specialisti in zona (match)</h3>
+  <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:900px;font-size:14px;">
+    <thead>
+      <tr style="background:#f0f0f0;">
+        <th align="left">Nome</th>
+        <th align="left">Indirizzo</th>
+        <th>CAP</th>
+        <th align="left">Specialità</th>
+        <th>Score</th>
+        <th>Email</th>
+        <th>WhatsApp</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for m in matches %}
+      <tr>
+        <td>{{ m.name }}</td>
+        <td>{{ m.street_address or "—" }}</td>
+        <td align="center">{{ m.cap or "—" }}</td>
+        <td>{{ m.specialty_name }}</td>
+        <td align="center">{{ m.score|round(1) }}</td>
+        <td><a href="{{ m.mailto_url }}">Apri email</a></td>
+        <td>{% if m.whatsapp_url %}<a href="{{ m.whatsapp_url }}">Apri WhatsApp</a>{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <p style="margin-top:20px;">
+    <a href="{{ team_whatsapp_url_with_text }}" style="display:inline-block;padding:10px 16px;background:#25D366;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
+      Apri WhatsApp team (testo precompilato)
+    </a>
+  </p>
+  <p style="font-size:13px;color:#555;">Il link apre <code>wa.me</code> con il riepilogo richiesta; non viene inviato alcun messaggio automaticamente dal server.</p>
+
+  <p><a href="{{ admin_whatsapp_url }}">Link team (senza testo)</a> — oppure copia il testo qui sotto.</p>
+  <h3>Testo WhatsApp (copia)</h3>
   <pre style="white-space:pre-wrap;background:#f4f4f4;padding:12px;">{{ whatsapp_text }}</pre>
 </body>
 </html>

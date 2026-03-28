@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any
 
@@ -35,8 +35,10 @@ def build_admin_whatsapp_payload(
         lines.append("(nessun match trovato — verificare mapping)")
     else:
         for m in matches:
+            cap = (m.get("cap") or "").strip()
+            extra = f" | CAP {cap}" if cap else ""
             lines.append(
-                f"- {m.get('name')} | {m.get('city')} | score {m.get('score')}"
+                f"- {m.get('name')} | {m.get('city')}{extra} | score {m.get('score')}"
             )
     lines.append("")
     lines.append("_Copia incolla su WhatsApp per inoltrare al team._")

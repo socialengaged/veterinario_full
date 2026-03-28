@@ -292,6 +292,11 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 | Pagine servizio × animale | Form inline reale (non stub): stesso flusso API + redirect chat; link CTA con `animale` + `servizio` (slug) |
 | `request-taxonomy.ts` | `resolveTaxonomyFromQuery` per mappare slug servizio → categoria/sottoservizio |
 | Codice morto | Rimossi `RequestForm.tsx` e `web3forms.ts` (flusso unico `POST /requests`) |
+| Chat post-verifica | Messaggio utente (note dal form) come `Message` ruolo `user` in chat; poi messaggio di sistema |
+| Specialist | Colonne `cap`, `street_address`; matching con boost CAP utente; email admin con tabella + link mailto / `wa.me` per specialista; link team WhatsApp con `?text=` |
+| DB | Migrazione Alembic `0002_specialist_cap_address` (idempotente se colonne già create da `create_all`) |
+
+**Deploy dopo questo blocco:** obbligatorio `alembic upgrade head` sul server; opzionale aggiornare riga specialisti in PostgreSQL con CAP/indirizzo reali (`UPDATE specialists SET cap=…, street_address=…`).
 
 ---
 

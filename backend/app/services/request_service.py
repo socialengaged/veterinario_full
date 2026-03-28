@@ -30,6 +30,10 @@ from app.models.entities import (
     VetRequest,
     specialist_specialties,
 )
+from app.services.admin_match_payload import (
+    admin_team_whatsapp_url_with_text,
+    enrich_specialist_matches,
+)
 from app.services.email_service import EmailService
 from app.services.whatsapp_text import build_admin_whatsapp_payload
 
@@ -86,6 +90,7 @@ class RequestService:
         city: str,
         province: str,
         species: str,
+        user_cap: Optional[str] = None,
     ) -> list[tuple[Specialist, float]]:
         spec_rows = self.db.execute(
             select(Specialist)
@@ -104,6 +109,7 @@ class RequestService:
         scored: list[tuple[Specialist, float]] = []
         city_l = city.strip().lower()
         prov_l = province.strip().lower()
+        cap_u = (user_cap or "").strip() or None
         for sp in spec_rows:
             score = 0.0
             if sp.city.strip().lower() == city_l:
@@ -113,6 +119,9 @@ class RequestService:
             tags = sp.species_tags if isinstance(sp.species_tags, list) else []
             if not tags or species in tags:
                 score += 40.0
+            sp_cap = (sp.cap or "").strip() if sp.cap else ""
+            if cap_u and sp_cap and cap_u == sp_cap:
+                score += 80.0
             if score > 0:
                 scored.append((sp, score))
         scored.sort(key=lambda x: x[1], reverse=True)
@@ -133,20 +142,25 @@ class RequestService:
             raise ValueError("Dati richiesta incompleti per inoltro veterinari")
 
         city, province = addr.city, addr.province
-        matches = self._match_specialists(specialty.id, city, province, animal.species)
+        user_cap = (addr.cap or "").strip() or None
+        matches = self._match_specialists(
+            specialty.id, city, province, animal.species, user_cap=user_cap
+        )
         for sp, sc in matches:
             self.db.add(RequestMatch(request_id=req.id, specialist_id=sp.id, score=sc))
 
-        matched_specs = [
-            {
-                "id": str(sp.id),
-                "name": sp.full_name,
-                "city": sp.city,
-                "province": sp.province,
-                "score": sc,
-            }
-            for sp, sc in matches
-        ]
+        matched_specs = enrich_specialist_matches(
+            matches,
+            specialty_name=specialty.name,
+            user_name=user.full_name,
+            user_email=user.email,
+            user_phone=user.phone or phone_fallback,
+            animal_species=animal.species,
+            city=city,
+            province=province,
+            user_cap=user_cap,
+            description=req.description,
+        )
 
         wa_payload = build_admin_whatsapp_payload(
             user_email=user.email,
@@ -171,6 +185,9 @@ class RequestService:
         req.status = "open"
 
         try:
+            team_wa = admin_team_whatsapp_url_with_text(
+                self.settings.admin_whatsapp_url, wa_payload["whatsapp_text"]
+            )
             self.email.send_admin_new_request(
                 admin_email=self.settings.admin_email,
                 user_email=user.email,
@@ -184,6 +201,8 @@ class RequestService:
                 description=req.description,
                 matches=matched_specs,
                 whatsapp_text=wa_payload["whatsapp_text"],
+                team_whatsapp_url_with_text=team_wa,
+                user_cap=user_cap,
             )
         except Exception:
             logger.exception("Email admin fallita dopo inoltro richiesta")
@@ -206,6 +225,15 @@ class RequestService:
             self._dispatch_request_to_vets(req, phone_fallback=phone_fb, urgency=req.urgency)
             conv = self.db.scalar(select(Conversation).where(Conversation.request_id == req.id).limit(1))
             if conv:
+                desc = (req.description or "").strip()
+                if desc:
+                    self.db.add(
+                        Message(
+                            conversation_id=conv.id,
+                            sender_role=MessageSenderRole.user.value,
+                            body=desc,
+                        )
+                    )
                 self.db.add(
                     Message(
                         conversation_id=conv.id,
@@ -285,19 +313,24 @@ class RequestService:
 
         wa_payload: Optional[dict[str, Any]] = None
         if forward_to_vets:
-            matches = self._match_specialists(specialty.id, city, province, animal.species)
+            user_cap = (addr.cap or "").strip() or None
+            matches = self._match_specialists(
+                specialty.id, city, province, animal.species, user_cap=user_cap
+            )
             for sp, sc in matches:
                 self.db.add(RequestMatch(request_id=req.id, specialist_id=sp.id, score=sc))
-            matched_specs = [
-                {
-                    "id": str(sp.id),
-                    "name": sp.full_name,
-                    "city": sp.city,
-                    "province": sp.province,
-                    "score": sc,
-                }
-                for sp, sc in matches
-            ]
+            matched_specs = enrich_specialist_matches(
+                matches,
+                specialty_name=specialty.name,
+                user_name=user.full_name,
+                user_email=user.email,
+                user_phone=user.phone or (phone or ""),
+                animal_species=animal.species,
+                city=city,
+                province=province,
+                user_cap=user_cap,
+                description=description,
+            )
             wa_payload = build_admin_whatsapp_payload(
                 user_email=user.email,
                 user_name=user.full_name,
@@ -370,6 +403,10 @@ class RequestService:
 
         if forward_to_vets and wa_payload is not None:
             try:
+                uc = (cap or "").strip() or None
+                team_wa = admin_team_whatsapp_url_with_text(
+                    self.settings.admin_whatsapp_url, wa_payload["whatsapp_text"]
+                )
                 self.email.send_admin_new_request(
                     admin_email=self.settings.admin_email,
                     user_email=user.email,
@@ -383,6 +420,8 @@ class RequestService:
                     description=description,
                     matches=matched_specs,
                     whatsapp_text=wa_payload["whatsapp_text"],
+                    team_whatsapp_url_with_text=team_wa,
+                    user_cap=uc,
                 )
             except Exception:
                 logger.exception("Email admin fallita dopo persistenza richiesta")
