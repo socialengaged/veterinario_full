@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -148,11 +148,11 @@ def delete_address(
     address_id: UUID,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> None:
+) -> Response:
     a = db.get(UserAddress, address_id)
     if not a or a.user_id != user.id:
         raise HTTPException(status_code=404, detail="Indirizzo non trovato")
-    n = db.scalar(select(VetRequest).where(VetRequest.address_id == address_id).limit(1))
+    n = db.scalar(select(VetRequest.id).where(VetRequest.address_id == address_id).limit(1))
     if n:
         raise HTTPException(
             status_code=409,
@@ -160,6 +160,7 @@ def delete_address(
         )
     db.delete(a)
     db.commit()
+    return Response(status_code=204)
 
 
 @router.post("/me/animals", response_model=AnimalOutFull)
@@ -206,7 +207,7 @@ def delete_animal(
     animal_id: UUID,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> None:
+) -> Response:
     an = db.get(Animal, animal_id)
     if not an or an.user_id != user.id:
         raise HTTPException(status_code=404, detail="Animale non trovato")
@@ -218,6 +219,7 @@ def delete_animal(
         )
     db.delete(an)
     db.commit()
+    return Response(status_code=204)
 
 
 @router.get("/me/requests", response_model=List[RequestSummary])
