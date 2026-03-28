@@ -10,8 +10,12 @@ echo "DEPLOY_ROOT=$DEPLOY_ROOT"
 
 cd "$DEPLOY_ROOT"
 
-echo "Pulling latest code..."
-git pull
+if [[ -d .git ]]; then
+  echo "Pulling latest code..."
+  git pull
+else
+  echo "WARN: no .git in $DEPLOY_ROOT — skipping git pull (sync code via clone/rsync/CI, then re-run)."
+fi
 
 echo "Activating venv..."
 # shellcheck source=/dev/null
