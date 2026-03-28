@@ -1,6 +1,8 @@
 # Deploy OVH — Staging (runbook)
 
-**Prerequisito:** backend verificato in locale (`python scripts/smoke_test.py`, migrazioni e opzionale seed). Non puntare il DNS finché non passano i check in fondo.
+**Deploy diretto sul VPS senza passare dal PC locale:** vedi **[DEPLOY_OVH_DIRECT.md](DEPLOY_OVH_DIRECT.md)** (IP, `ssh ovh`, ordine test → systemd → Nginx → DNS).
+
+**Prerequisito (questo file):** backend verificato in locale (`python scripts/smoke_test.py`, migrazioni e opzionale seed). Non puntare il DNS finché non passano i check in fondo.
 
 File di riferimento nel repo:
 
