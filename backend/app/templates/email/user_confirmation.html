@@ -1,0 +1,12 @@
+﻿<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="utf-8"/><title>Conferma richiesta</title></head>
+<body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111;">
+  <p>Ciao {{ user_name }},</p>
+  <p>Abbiamo ricevuto la tua richiesta di contatto veterinario.</p>
+  <p><strong>ID richiesta:</strong> {{ request_id }}</p>
+  <p>Per completare la verifica email e accedere alla chat, clicca il link seguente:</p>
+  <p><a href="{{ verify_url }}">Verifica email</a></p>
+  <p style="font-size:12px;color:#666;">Se non hai richiesto tu questa mail, ignora questo messaggio.</p>
+</body>
+</html>

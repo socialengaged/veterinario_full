@@ -1,0 +1,31 @@
+﻿from app.models.entities import (
+    AdminNotification,
+    Animal,
+    Conversation,
+    EmailVerification,
+    Message,
+    MessageSenderRole,
+    RequestMatch,
+    Specialty,
+    Specialist,
+    User,
+    UserAddress,
+    VetRequest,
+    specialist_specialties,
+)
+
+__all__ = [
+    "AdminNotification",
+    "Animal",
+    "Conversation",
+    "EmailVerification",
+    "Message",
+    "MessageSenderRole",
+    "RequestMatch",
+    "Specialty",
+    "Specialist",
+    "User",
+    "UserAddress",
+    "VetRequest",
+    "specialist_specialties",
+]

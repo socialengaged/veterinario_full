@@ -1,0 +1,21 @@
+﻿<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="utf-8"/><title>Nuova richiesta admin</title></head>
+<body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111;">
+  <h2>Nuova richiesta</h2>
+  <p><strong>Utente:</strong> {{ user_name }} &lt;{{ user_email }}&gt; — {{ user_phone }}</p>
+  <p><strong>Animale:</strong> {{ animal_species }}</p>
+  <p><strong>Zona:</strong> {{ city }} ({{ province }})</p>
+  <p><strong>Specialità:</strong> {{ specialty_name }}</p>
+  <p><strong>Urgenza:</strong> {{ urgency }}</p>
+  {% if description %}<p><strong>Note:</strong> {{ description }}</p>{% endif %}
+  <h3>Specialisti matchati</h3>
+  <ul>
+  {% for m in matches %}
+    <li>{{ m.name }} — {{ m.city }} ({{ m.province }}) — score {{ m.score }}</li>
+  {% endfor %}
+  </ul>
+  <h3>Testo WhatsApp</h3>
+  <pre style="white-space:pre-wrap;background:#f4f4f4;padding:12px;">{{ whatsapp_text }}</pre>
+</body>
+</html>
