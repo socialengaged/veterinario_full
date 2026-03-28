@@ -31,7 +31,19 @@ echo "Restarting service..."
 sudo systemctl restart veterinari
 
 echo "Health check..."
-curl -sS http://127.0.0.1:8060/health
+ok=0
+for _ in $(seq 1 20); do
+  if out=$(curl -sfS -m 2 http://127.0.0.1:8060/health 2>/dev/null); then
+    echo "$out"
+    ok=1
+    break
+  fi
+  sleep 1
+done
+if [[ "$ok" -ne 1 ]]; then
+  echo "ERROR: health check failed after restart (port 8060)" >&2
+  exit 1
+fi
 echo ""
 
 echo "=== DEPLOY DONE ==="
