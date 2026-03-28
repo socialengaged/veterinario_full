@@ -16,6 +16,7 @@ def _base_kwargs(**overrides):
         "animal_species": "cane",
         "service": "visita_generica",
         "email_verification_ack": True,
+        "registration_consent": True,
     }
     base.update(overrides)
     return base
@@ -42,6 +43,12 @@ def test_fail_ack_false():
     with pytest.raises(ValidationError) as ei:
         CreateRequestBody(**_base_kwargs(email_verification_ack=False))
     assert "verificare" in str(ei.value).lower()
+
+
+def test_fail_registration_consent_false():
+    with pytest.raises(ValidationError) as ei:
+        CreateRequestBody(**_base_kwargs(registration_consent=False))
+    assert "registrare" in str(ei.value).lower()
 
 
 def test_fail_invalid_contact_secondary():

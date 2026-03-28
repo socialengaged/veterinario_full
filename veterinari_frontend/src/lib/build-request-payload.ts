@@ -16,6 +16,7 @@ export type RequestFormFields = {
   contactSecondary: string;
   marketing: boolean;
   emailVerificationAck: boolean;
+  registrationConsent: boolean;
   password?: string;
 };
 
@@ -42,6 +43,7 @@ export function buildCreateRequestPayload(f: RequestFormFields): CreateRequestPa
     description: f.description?.trim() || null,
     contact_secondary,
     email_verification_ack: f.emailVerificationAck,
+    registration_consent: f.registrationConsent,
     marketing_consent: f.marketing,
     password: pw ? pw : null,
   };

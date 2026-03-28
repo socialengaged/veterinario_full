@@ -16,6 +16,9 @@ body = {
     "service": "visita_generica",
     "urgency": "alta",
     "description": "Verifica invio email Resend verso stesso account",
+    "email_verification_ack": True,
+    "registration_consent": True,
+    "password": "ResendTest123456!",
 }
 req = urllib.request.Request(
     f"{BASE}/requests",

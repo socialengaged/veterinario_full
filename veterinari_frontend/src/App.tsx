@@ -65,6 +65,22 @@ const App = () => (
               <Route path="/registrati/" element={<RegisterPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route
+                path="/dashboard/chat"
+                element={
+                  <ProtectedRoute>
+                    <ChatsListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/chat/:conversationId"
+                element={
+                  <ProtectedRoute>
+                    <ChatDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/dashboard/chats"
                 element={
                   <ProtectedRoute>

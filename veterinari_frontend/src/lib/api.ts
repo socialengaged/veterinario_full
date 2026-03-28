@@ -60,6 +60,7 @@ export type CreateRequestPayload = {
   contact_method?: string;
   contact_secondary?: string | null;
   email_verification_ack: boolean;
+  registration_consent: boolean;
   marketing_consent?: boolean;
   password?: string | null;
 };

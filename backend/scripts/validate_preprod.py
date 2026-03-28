@@ -85,7 +85,10 @@ def main() -> int:
         "service": "visita_generica",
         "urgency": "media",
         "description": "Test reale completo",
+        "email_verification_ack": True,
+        "registration_consent": True,
         "marketing_consent": False,
+        "password": "ValidatePreprod123!",
     }
 
     db = SessionLocal()
@@ -203,6 +206,9 @@ def main() -> int:
                 "animal": {"species": "gatto", "name": "X"},
                 "service": "visita_generica",
                 "urgency": "bassa",
+                "email_verification_ack": True,
+                "registration_consent": True,
+                "password": "PerfLoop123456!",
             },
         )
         t_b = time.perf_counter()

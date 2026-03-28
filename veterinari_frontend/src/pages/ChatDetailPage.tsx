@@ -82,7 +82,7 @@ export default function ChatDetailPage() {
         <div className="container max-w-2xl py-6 flex-1 flex flex-col">
           <div className="mb-4">
             <Button variant="ghost" size="sm" asChild className="mb-2 -ml-2">
-              <Link to="/dashboard/chats">
+              <Link to="/dashboard/chat">
                 <ArrowLeft className="h-4 w-4 mr-1" /> Tutte le chat
               </Link>
             </Button>

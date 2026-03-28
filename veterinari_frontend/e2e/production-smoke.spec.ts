@@ -41,12 +41,13 @@ test.describe("Produzione — smoke", () => {
     await expect(page.getByRole("heading", { name: "Crea un account" })).toBeVisible();
   });
 
-  test("Richiedi assistenza: titolo e checkbox conferma verifica email", async ({ page }) => {
+  test("Richiedi assistenza: titolo e checkbox verifica email + registrazione sito", async ({ page }) => {
     await page.goto("/richiedi-assistenza/", { waitUntil: "domcontentloaded" });
     await expect(
       page.getByRole("heading", { name: "Invia una richiesta di contatto veterinario" })
     ).toBeVisible();
     await expect(page.getByRole("checkbox", { name: /Ho compreso che devo verificare/i })).toBeVisible();
+    await expect(page.getByRole("checkbox", { name: /Voglio registrarmi al sito/i })).toBeVisible();
   });
 
   test("Verify-email senza token: messaggio link non valido", async ({ page }) => {

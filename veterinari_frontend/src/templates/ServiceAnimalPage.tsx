@@ -319,6 +319,7 @@ function InlineRequestForm({
     description: "",
     contactSecondary: "" as "" | "sms" | "whatsapp",
     emailVerificationAck: false,
+    registrationConsent: false,
     marketing: false,
     consent: false,
   });
@@ -339,6 +340,7 @@ function InlineRequestForm({
     e.preventDefault();
     if (
       !form.consent ||
+      !form.registrationConsent ||
       !form.emailVerificationAck ||
       !form.name ||
       !form.email ||
@@ -373,12 +375,13 @@ function InlineRequestForm({
         description: form.description,
         contactSecondary: form.contactSecondary,
         emailVerificationAck: form.emailVerificationAck,
+        registrationConsent: form.registrationConsent,
         marketing: form.marketing,
         password: form.password,
       });
       const res = await postRequests(payload);
       setAccessToken(res.access_token);
-      navigate(`/dashboard/chats/${res.conversation_id}`, { replace: true });
+      navigate(`/dashboard/chat/${res.conversation_id}`, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invio non riuscito");
     } finally {
@@ -617,6 +620,20 @@ function InlineRequestForm({
         <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
+            checked={form.registrationConsent}
+            onChange={(e) => set("registrationConsent", e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-input accent-primary"
+            required
+          />
+          <span className="text-xs text-muted-foreground leading-relaxed">
+            Voglio registrarmi al sito e creare un account con questa email e password per accedere alla chat e alle funzioni
+            riservate. *
+          </span>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
             checked={form.consent}
             onChange={(e) => set("consent", e.target.checked)}
             className="mt-1 h-4 w-4 rounded border-input accent-primary"
@@ -650,6 +667,7 @@ function InlineRequestForm({
           disabled={
             submitting ||
             !form.emailVerificationAck ||
+            !form.registrationConsent ||
             !form.consent ||
             (needsPhoneForChannels && form.phone.trim().length < 3)
           }

@@ -192,7 +192,7 @@ export function Header() {
             )}
             {sessionToken ? (
               <>
-                <Link to="/dashboard/chats" onClick={() => setOpen(false)} className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Link to="/dashboard/chat" onClick={() => setOpen(false)} className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <MessageCircle className="h-4 w-4" /> Le mie chat
                 </Link>
                 <button

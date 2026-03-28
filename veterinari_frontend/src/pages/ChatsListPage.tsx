@@ -66,7 +66,7 @@ export default function ChatsListPage() {
               {items.map(c => (
                 <li key={c.id}>
                   <Link
-                    to={`/dashboard/chats/${c.id}`}
+                    to={`/dashboard/chat/${c.id}`}
                     className="block p-4 rounded-xl border border-border bg-card hover:bg-accent/50 transition-colors"
                   >
                     <div className="flex items-start gap-3">

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, User, UserPlus, Loader2 } from "lucide-react";
-import { animals } from "@/config/site";
+import { animals, siteConfig } from "@/config/site";
 import { serviceTaxonomy, getSubcategories } from "@/data/service-taxonomy";
 import { cn } from "@/lib/utils";
 import { postRequests, setAccessToken } from "@/lib/api";
@@ -31,6 +31,8 @@ export default function RegisterPage() {
     description: "",
     contactSecondary: "" as "" | "sms" | "whatsapp",
     emailVerificationAck: false,
+    registrationConsent: false,
+    consent: false,
     marketing: false,
   });
 
@@ -56,6 +58,8 @@ export default function RegisterPage() {
       !form.password ||
       form.password.length < 8 ||
       !form.emailVerificationAck ||
+      !form.registrationConsent ||
+      !form.consent ||
       !form.animal ||
       !form.serviceCategory ||
       !form.city ||
@@ -85,12 +89,13 @@ export default function RegisterPage() {
         description: form.description,
         contactSecondary: form.contactSecondary,
         emailVerificationAck: form.emailVerificationAck,
+        registrationConsent: form.registrationConsent,
         marketing: form.marketing,
         password: form.password,
       });
       const res = await postRequests(payload);
       setAccessToken(res.access_token);
-      navigate(`/dashboard/chats/${res.conversation_id}`, { replace: true });
+      navigate(`/dashboard/chat/${res.conversation_id}`, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registrazione non riuscita");
     } finally {
@@ -231,6 +236,38 @@ export default function RegisterPage() {
               </label>
 
               <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.registrationConsent}
+                  onChange={e => set("registrationConsent", e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-input accent-primary"
+                  required
+                />
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  Voglio registrarmi al sito e creare un account con questa email e password per accedere alla chat e alle
+                  funzioni riservate. *
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.consent}
+                  onChange={e => set("consent", e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-input accent-primary"
+                  required
+                />
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  Acconsento al trattamento dei miei dati personali ai sensi del Reg. UE 2016/679 (GDPR) e della{" "}
+                  <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                    Privacy Policy
+                  </a>{" "}
+                  e autorizzo {siteConfig.name} a trasmettere la mia richiesta di contatto a veterinari e strutture veterinarie della zona
+                  affinché possano ricontattarmi direttamente. *
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer">
                 <input type="checkbox" checked={form.marketing} onChange={e => set("marketing", e.target.checked)} className="mt-1 h-4 w-4 rounded border-input accent-primary" />
                 <span className="text-xs text-muted-foreground">Acconsento a ricevere comunicazioni promozionali (facoltativo)</span>
               </label>
@@ -248,6 +285,8 @@ export default function RegisterPage() {
                 disabled={
                   submitting ||
                   !form.emailVerificationAck ||
+                  !form.registrationConsent ||
+                  !form.consent ||
                   (needsPhoneForChannels && form.phone.trim().length < 3)
                 }
               >

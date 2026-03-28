@@ -47,6 +47,7 @@ class CreateRequestBody(BaseModel):
     contact_secondary: Optional[str] = Field(default=None, max_length=16)
     contact_method: Optional[str] = Field(default=None, max_length=32)
     email_verification_ack: bool = False
+    registration_consent: bool = False
     marketing_consent: bool = False
     sub_service: Optional[str] = None
 
@@ -130,6 +131,10 @@ class CreateRequestBody(BaseModel):
         if not self.email_verification_ack:
             raise ValueError(
                 "Conferma di aver compreso che devi verificare l'email (anche in spam) per l'inoltro ai veterinari."
+            )
+        if not self.registration_consent:
+            raise ValueError(
+                "Conferma di volerti registrare al sito con questa email e password per accedere alla chat."
             )
         return self
 

@@ -261,6 +261,8 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
     "animal_species": "cane",
     "service": "visita_generica",
     "email_verification_ack": true,
+    "registration_consent": true,
+    "password": "EsempioSicuro123!",
     "contact_secondary": null
   }'
 ```
@@ -275,7 +277,7 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 
 | Area | Modifica |
 |------|----------|
-| `/richiedi-assistenza/` | Password obbligatoria; prefill `animale`, `servizio` (slug o taxonomy), `sottoservizio`, `citta`/`localita`; submit → account + chat |
+| `/richiedi-assistenza/` | Password obbligatoria; consensi email + registrazione al sito + GDPR; prefill `animale`, `servizio`, `citta`/`localita`; submit → account + redirect `/dashboard/chat/:id` |
 | Pagine servizio × animale | Form inline reale (non stub): stesso flusso API + redirect chat; link CTA con `animale` + `servizio` (slug) |
 | `request-taxonomy.ts` | `resolveTaxonomyFromQuery` per mappare slug servizio → categoria/sottoservizio |
 | Codice morto | Rimossi `RequestForm.tsx` e `web3forms.ts` (flusso unico `POST /requests`) |

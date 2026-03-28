@@ -16,7 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from || "/dashboard/chats";
+  const from = (location.state as { from?: string } | null)?.from || "/dashboard/chat";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

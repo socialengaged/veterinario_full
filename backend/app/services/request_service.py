@@ -13,6 +13,7 @@ from app.core.security import (
     hash_password,
     hash_token,
     new_raw_verification_token,
+    verify_password,
 )
 from app.models.entities import (
     AdminNotification,
@@ -49,18 +50,31 @@ class RequestService:
         phone: Optional[str],
         password_plain: Optional[str] = None,
     ) -> User:
-        user = self.db.scalar(select(User).where(User.email == email.strip().lower()))
+        email_norm = email.strip().lower()
+        user = self.db.scalar(select(User).where(User.email == email_norm))
         if user:
             user.full_name = full_name
             if phone:
                 user.phone = phone
+            if user.hashed_password:
+                if not password_plain or not verify_password(password_plain, user.hashed_password):
+                    raise ValueError(
+                        "Questa email è già registrata. Usa la password corretta oppure accedi, "
+                        "oppure usa un altro indirizzo email."
+                    )
+            else:
+                if password_plain and len(password_plain) >= 8:
+                    user.hashed_password = hash_password(password_plain)
+                elif not password_plain:
+                    raise ValueError("Password obbligatoria (min. 8 caratteri) per creare o completare l'account.")
             return user
-        hp = hash_password(password_plain) if password_plain else None
+        if not password_plain or len(password_plain) < 8:
+            raise ValueError("Password obbligatoria (min. 8 caratteri) per creare l'account.")
         user = User(
-            email=email.strip().lower(),
+            email=email_norm,
             full_name=full_name,
             phone=phone,
-            hashed_password=hp,
+            hashed_password=hash_password(password_plain),
         )
         self.db.add(user)
         self.db.flush()

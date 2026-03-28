@@ -37,6 +37,7 @@ export default function RequestPage() {
     description: "",
     contactSecondary: "" as "" | "sms" | "whatsapp",
     emailVerificationAck: false,
+    registrationConsent: false,
     consent: false,
     marketing: false,
   });
@@ -72,6 +73,7 @@ export default function RequestPage() {
     e.preventDefault();
     if (
       !form.consent ||
+      !form.registrationConsent ||
       !form.emailVerificationAck ||
       !form.name ||
       !form.email ||
@@ -106,12 +108,13 @@ export default function RequestPage() {
         description: form.description,
         contactSecondary: form.contactSecondary,
         emailVerificationAck: form.emailVerificationAck,
+        registrationConsent: form.registrationConsent,
         marketing: form.marketing,
         password: form.password,
       });
       const res = await postRequests(payload);
       setAccessToken(res.access_token);
-      navigate(`/dashboard/chats/${res.conversation_id}`, { replace: true });
+      navigate(`/dashboard/chat/${res.conversation_id}`, { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Invio non riuscito");
     } finally {
@@ -331,6 +334,20 @@ export default function RequestPage() {
               </span>
             </label>
 
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.registrationConsent}
+                onChange={e => set("registrationConsent", e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-input accent-primary"
+                required
+              />
+              <span className="text-xs text-muted-foreground leading-relaxed">
+                Voglio registrarmi al sito e creare un account con questa email e password per accedere alla chat e alle
+                funzioni riservate. *
+              </span>
+            </label>
+
             {/* GDPR consent - required */}
             <label className="flex items-start gap-3 cursor-pointer">
               <input
@@ -386,6 +403,7 @@ export default function RequestPage() {
               className="w-full"
               disabled={
                 !form.consent ||
+                !form.registrationConsent ||
                 !form.emailVerificationAck ||
                 !form.name ||
                 !form.email ||

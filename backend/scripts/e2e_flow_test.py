@@ -25,6 +25,9 @@ def main() -> None:
         "service": "visita_generica",
         "urgency": "media",
         "description": "Test automatico flusso richiesta + match specialisti zona Lecce",
+        "email_verification_ack": True,
+        "registration_consent": True,
+        "password": "E2EFlowTest123456!",
     }
     req = urllib.request.Request(
         f"{BASE}/requests",
