@@ -14,9 +14,9 @@ Documento di continuità dopo l’audit su backend, DB e dati geografici. Ogni f
 
 ## Fase 0 — Documentazione e allineamento produzione (basso rischio)
 
-**Contenuto:** sintesi aggiornate (`ARCHITETTURA.md`, `DATABASE.md`, questo file); su server produzione eseguire `alembic upgrade head` se necessario, poi backfill CAP/indirizzi per record seed (`@example.com`) o dati reali inseriti a mano.
+**Contenuto:** sintesi aggiornate (`ARCHITETTURA.md`, `DATABASE.md`, questo file); copia locale **non committata** della `DATABASE_URL` produzione in **`secrets/`** (vedi `secrets/README.md`); deploy pacchetto senza sovrascrivere `.env` sul server usando **`backend/deploy/package_backend_for_ovh.ps1`** / **`.sh`**. Su server: `alembic upgrade head` se necessario, poi backfill CAP/indirizzi per record seed (`@example.com`) o dati reali inseriti a mano.
 
-**DoD:** migrazione `0002_specialist_cap_address` applicata; specialisti di test o reali con `cap`/`street_address` valorizzati dove previsto; `GET /health` OK.
+**DoD:** migrazione `0002_specialist_cap_address` applicata; specialisti di test o reali con `cap`/`street_address` valorizzati dove previsto; `GET /health` OK; risposte API con header di sicurezza minimi (test `test_health_and_headers.py`).
 
 **Gate:** smoke manuale o `curl` su API pubblica dopo deploy.
 

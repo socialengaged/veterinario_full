@@ -2,6 +2,7 @@
 
 - **Stack**: FastAPI, SQLAlchemy 2 sync, PostgreSQL, Alembic, Pydantic v2, JWT (python-jose), passlib bcrypt, SMTP (stdlib), Jinja2 template email.
 - **Entrypoint**: `main.py` (root) importa `app` da `app/main.py`.
+- **HTTP**: CORS, GZip (risposte ≥ 512 byte), header `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` ([`app/main.py`](../app/main.py), [`app/http_middleware.py`](../app/http_middleware.py)).
 - **Layer**: `api/routers` (HTTP) → `services` (business) → SQLAlchemy `Session` → `models`.
 - **RequestService.create_request**: transazione unica (user get/create, indirizzo, animale, richiesta, match specialisti, conversazione, messaggio sistema, token verifica email, notifica admin JSON). Email inviate post-commit; errori SMTP loggati senza rollback DB.
 - **Auth**: JWT Bearer; `POST /requests` restituisce `access_token` per auto-login client.

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 
 from app.api.routers import auth as auth_router
+from app.http_middleware import SecurityHeadersMiddleware
 from app.api.routers import dashboard_route
 from app.api.routers import requests_route
 from app.api.routers import users_route
@@ -35,6 +37,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(GZipMiddleware, minimum_size=512)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     app.include_router(auth_router.router)
     app.include_router(requests_route.router)

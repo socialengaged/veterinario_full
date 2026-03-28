@@ -13,6 +13,15 @@ veterinari_frontend/.env
 veterinari_frontend/.env.local
 veterinari_frontend/.env.*.local
 
+# Segreti locali (password DB, env produzione) — vedi secrets/README.md
+secrets/*
+!secrets/README.md
+!secrets/*.example
+
+# Artefatti deploy locale
+backend-deploy.tgz
+*-deploy.tgz
+
 # OS / IDE
 .DS_Store
 Thumbs.db

@@ -308,7 +308,7 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 | Modalità | Quando | Passi |
 |----------|--------|--------|
 | **A — Git (consigliato)** | `/var/www/veterinari` è un **clone** del monorepo | `cd /var/www/veterinari && git pull`, poi `cd backend`, `venv`, `pip install -r requirements.txt`, `pytest -q`, `alembic upgrade head`, `sudo systemctl restart veterinari` |
-| **B — Pacchetto senza Git** | Solo cartelle copiate (nessun `.git`) | Da PC: `npm run build` (frontend); creare archivio del **backend** senza `venv` (es. `tar` di `app/`, `alembic/`, `scripts/`, `tests/`, file root) → `scp` sul server → estrarre in `backend/`, poi stessa sequenza `pip` / `alembic` / `restart`. Frontend: `scp -r dist/*` → `frontend/dist/` + permessi (§2). |
+| **B — Pacchetto senza Git** | Solo cartelle copiate (nessun `.git`) | Da root repo: **`backend/deploy/package_backend_for_ovh.ps1`** (Windows) o **`bash backend/deploy/package_backend_for_ovh.sh`** (Git Bash/Linux) → genera **`backend-deploy.tgz`** escludendo **`venv`**, **`.env`**, cache pytest. Poi `scp backend-deploy.tgz ovh:/tmp/`, sul server `cd /var/www/veterinari && tar xzf /tmp/backend-deploy.tgz` (non sovrascrivere il `.env` già presente sul server se si estrae solo `backend/` sovrascrivendo file: meglio estrarre e poi **ripristinare** `.env` da backup o non includere `.env` nel tar — lo script già lo esclude). Frontend: `scp -r dist/*` → `frontend/dist/` + permessi (§2). |
 
 Per nuovi server, preferire **`git clone` del monorepo** in `/var/www/veterinari`, poi `venv` solo sotto `backend/` (come in `DEPLOY_OVH_DIRECT.md`), così `git pull` allinea codice e sintesi.
 
@@ -321,7 +321,8 @@ Per nuovi server, preferire **`git clone` del monorepo** in `/var/www/veterinari
 ### Sicurezza e operatività
 
 - **Backup DB** prima di `alembic upgrade` su migrazioni non banali: `pg_dump` (vedi `DEPLOY.md`).
-- **Secret:** `SECRET_KEY` e `DATABASE_URL` mai in repo; solo `.env.example` documentato.
+- **Secret:** `SECRET_KEY` e `DATABASE_URL` mai in repo; solo `.env.example` documentato. Copia locale consentita in **`secrets/`** (cartella in `.gitignore`, vedi `secrets/README.md`): lì puoi salvare `ovh_database.env` con la `DATABASE_URL` di produzione **solo sul PC**, mai in commit.
+- **Risposte API:** header minimi `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` e compressione **GZip** per payload ≥ 512 byte (`backend/app/main.py`).
 - **CORS e domini:** aggiornare `backend/app/main.py` se aggiungi un nuovo origin frontend.
 - **Monitoraggio:** `systemctl status veterinari`, log journal (`journalctl -u veterinari -n 100`), `curl` health locale e pubblico.
 
