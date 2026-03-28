@@ -297,7 +297,7 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 | Specialist | Colonne `cap`, `street_address`; matching con boost CAP utente; email admin con tabella + link mailto / `wa.me` per specialista; link team WhatsApp con `?text=` |
 | DB | Migrazione Alembic `0002_specialist_cap_address` (idempotente se colonne già create da `create_all`) |
 | Dashboard / profilo | `GET/PATCH /users/me`, CRUD indirizzi e animali; pagina `/dashboard/profilo/` |
-| Veterinari | `POST /specialists/register`, `GET /specialists/specialties`; footer link `/iscrizione-veterinari/`; migrazione `0003_profile_specialist_user_merge` (`profile_notes_for_vets`, `specialists.user_id`, `pending_specialist_profile`) |
+| Veterinari | `POST /specialists/register`, `GET /specialists/specialties`; footer link `/iscrizione-veterinari/`; migrazione Alembic `0003_usr_prof_spec` (`profile_notes_for_vets`, `specialists.user_id`, `pending_specialist_profile`) |
 
 **Deploy dopo questo blocco:** obbligatorio `alembic upgrade head` sul server; se `specialists.cap` / `street_address` sono NULL (seed non rieseguito), usare **`backend/scripts/backfill_specialist_cap_address.sql`** o **`python scripts/backfill_specialist_cap_address.py`** (vedi anche `sintesi/DATABASE.md`).
 

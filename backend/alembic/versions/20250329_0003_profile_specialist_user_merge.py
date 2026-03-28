@@ -6,7 +6,7 @@ from alembic import op
 from sqlalchemy import inspect
 from sqlalchemy.dialects.postgresql import UUID
 
-revision = "0003_profile_specialist_user_merge"
+revision = "0003_usr_prof_spec"
 down_revision = "0002_specialist_cap_address"
 branch_labels = None
 depends_on = None
