@@ -4,6 +4,10 @@ Runbook per portare **solo il backend** LIVE su VPS Ubuntu OVH, testare via **IP
 
 **Server di esempio in questo documento:** `80.225.90.151` (sostituire se diverso).
 
+**Porta API interna:** su server condivisi, **8000/8001 possono essere già occupati** da altri progetti. L’istanza veterinari usa **`127.0.0.1:8060`** (systemd + Nginx → stesso host pubblico sulla porta 80). Non modificare i processi sulle altre porte.
+
+**File da Windows:** se `alembic.ini` ha BOM UTF-8, `alembic upgrade` fallisce. Sul server: `python3 deploy/strip_bom.py` nella cartella `backend`, oppure salvare `alembic.ini` UTF-8 senza BOM prima del deploy.
+
 **Riferimenti nel repo:** [`deploy/veterinari.service`](../deploy/veterinari.service), [`deploy/nginx-veterinari.conf`](../deploy/nginx-veterinari.conf), [`sintesi/DEPLOY.md`](DEPLOY.md) (staging generico).
 
 ---
