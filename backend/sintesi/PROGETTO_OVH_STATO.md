@@ -296,7 +296,7 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 | Specialist | Colonne `cap`, `street_address`; matching con boost CAP utente; email admin con tabella + link mailto / `wa.me` per specialista; link team WhatsApp con `?text=` |
 | DB | Migrazione Alembic `0002_specialist_cap_address` (idempotente se colonne già create da `create_all`) |
 
-**Deploy dopo questo blocco:** obbligatorio `alembic upgrade head` sul server; opzionale aggiornare riga specialisti in PostgreSQL con CAP/indirizzo reali (`UPDATE specialists SET cap=…, street_address=…`).
+**Deploy dopo questo blocco:** obbligatorio `alembic upgrade head` sul server; se `specialists.cap` / `street_address` sono NULL (seed non rieseguito), usare **`backend/scripts/backfill_specialist_cap_address.sql`** o **`python scripts/backfill_specialist_cap_address.py`** (vedi anche `sintesi/DATABASE.md`).
 
 ---
 

@@ -6,7 +6,8 @@ Tabelle principali (PK UUID, timestamp `created_at` / `updated_at` dove definito
 - `user_addresses`: `city`, `province` indicizzati.
 - `animals`: `species` indicizzato.
 - `specialties`: `slug` unico, `category` indicizzato.
-- `specialists`: email, city, province indicizzati; `species_tags` JSON lista stringhe.
+- `specialists`: email, city, province indicizzati; `cap` e `street_address` (nullable, per tabella email e matching zona); `species_tags` JSON lista stringhe.
+- **Backfill CAP/indirizzo** su DB già popolato senza rieseguire seed: [`scripts/backfill_specialist_cap_address.sql`](../scripts/backfill_specialist_cap_address.sql) oppure [`scripts/backfill_specialist_cap_address.py`](../scripts/backfill_specialist_cap_address.py) (stessi default di `seed.py` per le email `@example.com`).
 - `specialist_specialties`: PK composta (specialist_id, specialty_id).
 - `vet_requests`: stato richiesta; FK a user, animal, address, specialty.
 - `request_matches`: score float; unique (request_id, specialist_id).
