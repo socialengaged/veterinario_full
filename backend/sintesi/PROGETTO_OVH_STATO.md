@@ -332,5 +332,7 @@ Per nuovi server, preferire **`git clone` del monorepo** in `/var/www/veterinari
 
 ```bash
 cd backend && python -m pytest -q && python scripts/smoke_test.py
-cd ../veterinari_frontend && npm ci && npm run build
+cd ../veterinari_frontend && npm ci && npm run test -- --run && npm run build
 ```
+
+**Test aggiunti (profilo / pubblici):** backend — guard 401 senza Bearer, validazione consensi iscrizione vet, unit su normalizzazione deduplica; integrazione profilo opzionale con `ENABLE_PROFILE_INTEGRATION=1` (vedi `backend/sintesi/API.md`). Frontend — Vitest su `ProtectedRoute` (redirect se non loggato).

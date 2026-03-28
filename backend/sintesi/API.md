@@ -20,3 +20,18 @@
 - `POST /dashboard/chats/{id}/messages` — Bearer, body `{"body":"..."}`
 
 Documentazione interattiva: `/docs`, `/openapi.json`.
+
+## Test automatici (backend)
+
+In `backend/tests/`:
+
+- **`test_auth_guards`** — route con Bearer (`/users/me/profile`, `/auth/me`, `/dashboard/chats`, …) rispondono **401** senza token (comportamento “utente non loggato”).
+- **`test_specialists_register_validation`** — `POST /specialists/register` rifiuta consensi mancanti senza dipendere da dati reali in DB.
+- **`test_specialist_registration_unit`** — normalizzazione CAP/via/nome per deduplica (senza DB).
+- **`test_users_profile_integration`** — flusso “utente loggato”: login, `GET/PATCH` profilo, CRUD indirizzo/animale, `DELETE` 204. **Opzionale:** eseguire solo con PostgreSQL raggiungibile e `ENABLE_PROFILE_INTEGRATION=1` (vedi docstring nel file), per non bloccare CI senza database.
+
+Altri test: schema richieste, payload admin, health/header; integrazione email duplicata se `DATABASE_URL` è esportato.
+
+## Test automatici (frontend)
+
+`npm run test` (Vitest): es. `ProtectedRoute` — senza token in `localStorage` si viene reindirizzati verso `/accedi/`; con token mock la dashboard protetta si renderizza.
