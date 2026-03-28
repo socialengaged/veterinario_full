@@ -43,7 +43,7 @@ export default function PrivacyPolicyPage() {
             <li>Nome</li>
             <li>Numero di telefono</li>
             <li>CAP / città / località</li>
-            <li>Informazioni sull'animale (specie, tipo di servizio richiesto, livello di urgenza)</li>
+            <li>Informazioni sull'animale (specie, tipo di servizio richiesto)</li>
             <li>Note descrittive facoltative</li>
             <li>Preferenza di contatto (telefono o WhatsApp)</li>
           </ul>

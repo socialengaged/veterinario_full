@@ -54,7 +54,7 @@ export default function ProfilePage() {
     { q: "Le informazioni su questo profilo sono verificate?", a: clinic.verified ? "Sì, questo profilo è stato verificato dal nostro team. I dati sono aggiornati e confermati." : "Questo profilo non è ancora stato verificato. Le informazioni sono raccolte da fonti pubbliche (Google Maps, sito web della struttura) e potrebbero non essere aggiornate. Contattaci per segnalare eventuali inesattezze." },
     { q: "Come posso richiedere un appuntamento?", a: `Puoi contattare direttamente ${clinic.name}${clinic.phone ? " al numero indicato" : ""} oppure inviare una richiesta gratuita tramite il nostro servizio. Ti risponderemo il prima possibile con le opzioni disponibili nella zona.` },
     { q: `Quali servizi offre ${clinic.name}?`, a: allServiceNames.length > 0 ? `${clinic.name} offre ${allServiceNames.slice(0, 10).join(", ")}${allServiceNames.length > 10 ? ` e altri ${allServiceNames.length - 10} servizi` : ""}. Contatta la struttura per confermare disponibilità, orari e costi.` : `Contatta direttamente ${clinic.name} per informazioni sui servizi disponibili.` },
-    { q: `${clinic.name} tratta emergenze?`, a: clinic.emergencyAvailable ? "Sì, questa struttura offre servizio di pronto soccorso veterinario. In caso di emergenza, chiama prima di recarti per avvisare del tuo arrivo e descrivere la situazione." : "Questa struttura non risulta offrire servizio di pronto soccorso dedicato. In caso di emergenza, cerca una clinica h24 nella zona o utilizza il nostro servizio per trovare la struttura più vicina con pronto soccorso." },
+    { q: `${clinic.name} ha orari estesi o reperibilità?`, a: "Orari e modalità di contatto dipendono dalla struttura. Ti consigliamo di chiamare per confermare disponibilità prima di recarti." },
     { q: `Quali animali tratta ${clinic.name}?`, a: clinic.animals.length > 0 ? `${clinic.name} tratta ${clinic.animals.join(", ")}. Per animali esotici o non convenzionali, ti consigliamo di verificare direttamente con la struttura la disponibilità di competenze specifiche.` : `Contatta direttamente la struttura per informazioni sulle specie trattate.` },
     ...(clinic.googleRating ? [{ q: `Qual è la valutazione di ${clinic.name}?`, a: `${clinic.name} ha una valutazione Google di ${clinic.googleRating}/5${clinic.googleReviewsCount ? ` basata su ${clinic.googleReviewsCount} recensioni` : ""}. ${clinic.googleRating >= 4.5 ? "Un punteggio eccellente che indica un alto livello di soddisfazione tra i clienti." : clinic.googleRating >= 4.0 ? "Un buon punteggio che riflette un servizio apprezzato dai proprietari di animali." : "Ti consigliamo di leggere le recensioni per farti un'idea più completa del servizio."}` }] : []),
     ...(clinic.homeVisits ? [{ q: `${clinic.name} offre visite a domicilio?`, a: `Sì, ${clinic.name} offre il servizio di visite veterinarie a domicilio, ideale per animali anziani, di grossa taglia o particolarmente stressati dal trasporto. Contatta la struttura per verificare disponibilità e copertura geografica.` }] : []),
@@ -148,7 +148,6 @@ export default function ProfilePage() {
             {clinic.name} è {typeLabels[clinic.type]?.toLowerCase() || "una struttura veterinaria"} a {city?.name || "zona non specificata"}.
             {clinic.googleRating ? ` Valutazione Google: ${clinic.googleRating}/5${clinic.googleReviewsCount ? ` (${clinic.googleReviewsCount} recensioni)` : ""}.` : ""}
             {allServiceNames.length > 0 ? ` Servizi: ${allServiceNames.slice(0, 6).join(", ")}${allServiceNames.length > 6 ? ` e altri ${allServiceNames.length - 6}` : ""}.` : ""}
-            {clinic.emergencyAvailable ? " Offre servizio di pronto soccorso." : ""}
             {clinic.homeVisits ? " Disponibile per visite a domicilio." : ""}
             {clinic.animals.length > 0 ? ` Tratta: ${clinic.animals.slice(0, 5).join(", ")}.` : ""}
           </AnswerSummary>
@@ -157,7 +156,6 @@ export default function ProfilePage() {
             { label: "Tipo", value: typeLabels[clinic.type] || clinic.type },
             { label: "Città", value: city ? `${city.name} (${city.cap})` : "-" },
             ...(clinic.googleRating ? [{ label: "Valutazione Google", value: `⭐ ${clinic.googleRating}/5 (${clinic.googleReviewsCount || 0} recensioni)` }] : []),
-            { label: "Pronto soccorso", value: clinic.emergencyAvailable ? "Disponibile" : "Non disponibile" },
             { label: "Visite a domicilio", value: clinic.homeVisits ? "Disponibili" : "Non disponibili" },
             ...(clinic.openingHours ? [{ label: "Orari", value: clinic.openingHours }] : []),
             ...(clinic.website ? [{ label: "Sito web", value: clinic.website }] : []),

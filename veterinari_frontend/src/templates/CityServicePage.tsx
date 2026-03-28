@@ -13,7 +13,7 @@ import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { EditorialInfo } from "@/components/EditorialInfo";
 import { Disclaimer } from "@/components/Disclaimer";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getCity, getProvince, getRegion, getService, getClinicsByCity, getAllServices } from "@/data";
+import { getCity, getProvince, getRegion, getService, getClinicsByCity, getPublicServices, isPublicListedService } from "@/data";
 import { cities as allCitiesMap } from "@/data/cities";
 import { getServiceCityContent } from "@/data/service-city-content";
 import { Clock, Euro, ClipboardList } from "lucide-react";
@@ -34,10 +34,10 @@ export default function CityServicePage() {
   const province = getProvince(provinceSlug || "");
   const region = getRegion(regionSlug || "");
   const service = getService(serviceSlug || "");
-  if (!city || !province || !region || !service) return <NotFound />;
+  if (!city || !province || !region || !service || !isPublicListedService(service)) return <NotFound />;
 
   const clinics = getClinicsByCity(city.slug).filter(c => c.services.includes(service.slug));
-  const allServices = getAllServices();
+  const allServices = getPublicServices();
   const nearbyCities = city.nearbyCities.map(s => allCitiesMap[s]).filter(c => c && getClinicsByCity(c.slug).length > 0);
   const enrichment = getServiceCityContent(service.slug);
 

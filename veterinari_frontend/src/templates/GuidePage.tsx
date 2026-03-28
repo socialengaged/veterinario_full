@@ -201,26 +201,6 @@ export default function GuidePage() {
             </section>
           )}
 
-          {/* ── Emergency signs ── */}
-          {guide.emergencySigns.length > 0 && (
-            <section className="p-6 rounded-xl border border-destructive/20 bg-destructive/5">
-              <h2 className="font-display text-lg font-bold text-foreground mb-3 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-destructive" /> Segnali di emergenza — Contatta subito il veterinario
-              </h2>
-              <p className="text-sm text-muted-foreground mb-3">
-                In presenza di uno o più di questi segnali, contatta immediatamente un veterinario o recati al pronto soccorso veterinario:
-              </p>
-              <ul className="space-y-2">
-                {guide.emergencySigns.map((sign, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                    <span className="text-destructive font-bold flex-shrink-0">⚠</span>
-                    {sign}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
           {/* ── When to contact ── */}
           <section className="p-6 rounded-xl border border-warning/20 bg-warning/5">
             <h2 className="font-display text-lg font-bold text-foreground mb-3 flex items-center gap-2">

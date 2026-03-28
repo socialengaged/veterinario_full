@@ -4,7 +4,6 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageMeta } from "@/components/PageMeta";
 import { PageCTA } from "@/components/PageCTA";
-import { EmergencyBlock } from "@/components/EmergencyBlock";
 import { FaqSection } from "@/components/FaqSection";
 import { RelatedLinks } from "@/components/RelatedLinks";
 import { AnswerSummary } from "@/components/AnswerSummary";
@@ -14,7 +13,7 @@ import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { RegionTerritorialContext } from "@/components/RegionTerritorialContext";
 import { EditorialInfo } from "@/components/EditorialInfo";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getRegion, getProvincesByRegion, getAllServices } from "@/data";
+import { getRegion, getProvincesByRegion, getPublicServices } from "@/data";
 import { cities } from "@/data/cities";
 import { regionRichContent } from "@/data/region-content";
 import { MapPin, Lightbulb } from "lucide-react";
@@ -30,16 +29,16 @@ export default function RegionPage() {
   if (!region) return <NotFound />;
 
   const provs = getProvincesByRegion(region.slug);
-  const services = getAllServices();
+  const services = getPublicServices();
   const featuredCities = region.featuredCities.map((s) => cities[s]).filter(Boolean);
   const richContent = regionRichContent[region.slug];
 
   const baseFaq = [
     { q: `Il servizio è disponibile in tutta la ${region.name}?`, a: `Attualmente il servizio è attivo nelle province di ${provs.map(p => p.name).join(", ")}. Stiamo lavorando per espandere la copertura a tutta la regione.` },
-    { q: "Come faccio a trovare un veterinario nella mia zona?", a: "Usa il modulo di ricerca in homepage: seleziona il tuo animale, il servizio di cui hai bisogno, l'urgenza e la tua posizione. La richiesta verrà inoltrata alle strutture della zona." },
+    { q: "Come faccio a trovare un veterinario nella mia zona?", a: "Usa il modulo di ricerca in homepage: seleziona il tuo animale, il servizio di cui hai bisogno e la tua posizione. La richiesta verrà inoltrata alle strutture della zona." },
     { q: "Il servizio è gratuito?", a: `Sì, ${siteConfig.name} è completamente gratuito per chi cerca un veterinario. Non ci sono costi nascosti per la ricerca.` },
     { q: `Quante strutture veterinarie ci sono in ${region.name}?`, a: `L'elenco in ${region.name} copre ${provs.length} province con strutture veterinarie in continuo aggiornamento. Seleziona la tua provincia per vedere le strutture disponibili.` },
-    { q: `Quali servizi veterinari sono disponibili in ${region.name}?`, a: `Attraverso ${siteConfig.name} puoi trovare veterinari per visite generiche, vaccinazioni, chirurgia, diagnostica avanzata, emergenze, nutrizione e molto altro in tutta la ${region.name}.` },
+    { q: `Quali servizi veterinari sono disponibili in ${region.name}?`, a: `Attraverso ${siteConfig.name} puoi trovare veterinari per visite generiche, vaccinazioni, chirurgia, diagnostica avanzata, nutrizione e molto altro in tutta la ${region.name}.` },
   ];
 
   const faq = richContent ? [...richContent.faq, ...baseFaq] : baseFaq;
@@ -92,8 +91,8 @@ export default function RegionPage() {
               Veterinario in {region.name}
             </h1>
             <AnswerSummary>
-              {siteConfig.name} ti aiuta a trovare il veterinario, la clinica veterinaria o il pronto soccorso veterinario
-              giusto in {region.name}. Il servizio di assistenza veterinaria è gratuito e attivo nelle province di {provs.map(p => p.name).join(", ")}.
+              {siteConfig.name} ti aiuta a trovare il veterinario o la clinica veterinaria
+              adatta alle tue esigenze in {region.name}. Il servizio di ricerca e contatto è gratuito e attivo nelle province di {provs.map(p => p.name).join(", ")}.
             </AnswerSummary>
           </section>
 
@@ -192,7 +191,6 @@ export default function RegionPage() {
             </div>
           </section>
 
-          <EmergencyBlock />
           <AreaCoverage currentArea={region.name} />
           <EditorialInfo lastUpdated="2026-03-01" />
           <FaqSection items={faq} />

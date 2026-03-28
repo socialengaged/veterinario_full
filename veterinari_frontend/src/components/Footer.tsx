@@ -11,8 +11,7 @@ export function Footer() {
             <h3 className="font-display font-bold text-lg mb-2">{siteConfig.name}</h3>
             <p className="text-sm opacity-80 leading-relaxed mb-4">
               {siteConfig.name} è un servizio gratuito di ricerca e contatto veterinario in Italia.
-              Consulta l'elenco di veterinari, cliniche veterinarie e pronto soccorso veterinario
-              nella tua zona e invia una richiesta di contatto.
+              Consulta l&apos;elenco di veterinari e cliniche nella tua zona e invia una richiesta di contatto.
             </p>
             <div className="text-xs opacity-60 leading-relaxed border-t border-primary-foreground/20 pt-3 mt-3">
               <p className="font-semibold mb-1">Disclaimer</p>
@@ -22,7 +21,7 @@ export function Footer() {
                 rappresentanza o subordinazione tra {siteConfig.name} e i professionisti. {siteConfig.name} non è responsabile
                 delle prestazioni, diagnosi o trattamenti effettuati dai professionisti. Le informazioni presenti sul sito
                 hanno finalità puramente informativa e non sostituiscono il parere di un medico veterinario.
-                In caso di emergenza, contatta direttamente il pronto soccorso veterinario più vicino.
+                Per la salute del tuo animale rivolgiti sempre a un professionista abilitato.
               </p>
             </div>
           </div>
@@ -33,7 +32,6 @@ export function Footer() {
             <nav className="space-y-2 text-sm" aria-label="Servizi veterinari">
               <Link to="/servizi/" className="block opacity-80 hover:opacity-100 transition-opacity font-semibold">Tutti i servizi veterinari</Link>
               <Link to="/visita-veterinaria/" className="block opacity-80 hover:opacity-100 transition-opacity">Visita veterinaria</Link>
-              <Link to="/pronto-soccorso-veterinario/" className="block opacity-80 hover:opacity-100 transition-opacity">Pronto soccorso veterinario</Link>
               <Link to="/vaccinazioni/" className="block opacity-80 hover:opacity-100 transition-opacity">Vaccinazioni animali</Link>
               <Link to="/veterinario-a-domicilio/" className="block opacity-80 hover:opacity-100 transition-opacity">Veterinario a domicilio</Link>
               <Link to="/chirurgia-veterinaria/" className="block opacity-80 hover:opacity-100 transition-opacity">Chirurgia veterinaria</Link>

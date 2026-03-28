@@ -68,7 +68,6 @@ export const serviceTaxonomy: ServiceTaxonomyCategory[] = [
       { id: "chirurgia-oculistica", label: "Chirurgia oculistica", description: "Interventi su occhi e palpebre" },
       { id: "chirurgia-dentale", label: "Chirurgia dentale", description: "Estrazioni, igiene sotto sedazione" },
       { id: "chirurgia-mininvasiva", label: "Chirurgia mininvasiva", description: "Laparoscopia e toracoscopia" },
-      { id: "chirurgia-urgenza", label: "Chirurgia d'urgenza", description: "Interventi immediati salvavita" },
     ],
   },
   {
@@ -114,20 +113,6 @@ export const serviceTaxonomy: ServiceTaxonomyCategory[] = [
       { id: "nutrizione-cucciolo", label: "Nutrizione cucciolo/gattino", description: "Alimentazione in fase di crescita" },
       { id: "nutrizione-senior", label: "Nutrizione senior", description: "Dieta per animali anziani" },
       { id: "intolleranze-alimentari", label: "Intolleranze alimentari", description: "Diete di eliminazione e test" },
-    ],
-  },
-  {
-    id: "emergenza",
-    label: "Emergenza e urgenza",
-    emoji: "🚨",
-    sub: [
-      { id: "pronto-soccorso", label: "Pronto soccorso H24", description: "Emergenza medica immediata" },
-      { id: "terapia-intensiva", label: "Terapia intensiva", description: "Ricovero e monitoraggio continuo" },
-      { id: "avvelenamento", label: "Avvelenamento", description: "Ingestione di sostanze tossiche" },
-      { id: "trauma", label: "Trauma / incidente", description: "Investimento, caduta, morso" },
-      { id: "difficolta-respiratoria", label: "Difficoltà respiratoria", description: "Dispnea, ostruzione, collasso" },
-      { id: "torsione-gastrica", label: "Torsione gastrica (GDV)", description: "Emergenza chirurgica addominale" },
-      { id: "colpo-calore", label: "Colpo di calore", description: "Ipertermia da esposizione" },
     ],
   },
   {

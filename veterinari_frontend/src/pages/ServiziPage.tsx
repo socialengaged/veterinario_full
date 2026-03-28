@@ -7,7 +7,7 @@ import { FaqSection } from "@/components/FaqSection";
 import { AnswerSummary } from "@/components/AnswerSummary";
 import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getAllServices, getServiceAnimalPagesByService } from "@/data";
+import { getPublicServices, getServiceAnimalPagesByService } from "@/data";
 import { siteConfig } from "@/config/site";
 import { breadcrumbJsonLd, faqJsonLd, webPageJsonLd, itemListJsonLd } from "@/lib/seo";
 import type { ServicePage } from "@/data/types";
@@ -21,7 +21,7 @@ interface ServiceGroup {
 }
 
 export default function ServiziPage() {
-  const allServices = getAllServices();
+  const allServices = getPublicServices();
 
   const groups: ServiceGroup[] = [
     {
@@ -60,13 +60,6 @@ export default function ServiziPage() {
       services: allServices.filter(s => s.category === "nutrizione"),
     },
     {
-      category: "emergenza",
-      label: "Emergenza e servizi speciali",
-      emoji: "🚨",
-      description: "Veterinario H24, pronto soccorso, assistenza notturna, veterinario rurale e equino.",
-      services: allServices.filter(s => s.category === "emergenza"),
-    },
-    {
       category: "cura",
       label: "Cura e benessere animale",
       emoji: "🏡",
@@ -76,16 +69,16 @@ export default function ServiziPage() {
   ].filter(g => g.services.length > 0);
 
   const faq = [
-    { q: "Quali servizi veterinari posso richiedere?", a: `Attraverso ${siteConfig.name} puoi richiedere visite di routine, vaccinazioni, interventi chirurgici, diagnostica, servizi specialistici, visite a domicilio e assistenza per emergenze.` },
+    { q: "Quali servizi veterinari posso richiedere?", a: `Attraverso ${siteConfig.name} puoi richiedere visite di routine, vaccinazioni, interventi chirurgici, diagnostica, servizi specialistici e visite a domicilio.` },
     { q: "Il servizio di ricerca è gratuito?", a: `Sì, ${siteConfig.name} è completamente gratuito per chi cerca un veterinario. Puoi consultare le strutture disponibili e inviare una richiesta di contatto.` },
     { q: "In quali zone sono disponibili i servizi?", a: `Attualmente il servizio è attivo in ${siteConfig.initialArea} e in espansione su tutto il territorio italiano.` },
-    { q: "Come faccio a richiedere un servizio specifico?", a: "Usa il nostro strumento di ricerca in homepage: seleziona l'animale, il servizio desiderato, il livello di urgenza e la tua posizione." },
+    { q: "Come faccio a richiedere un servizio specifico?", a: "Usa il nostro strumento di ricerca in homepage: seleziona l'animale, il servizio desiderato e la tua posizione." },
     { q: "Posso richiedere una visita specialistica direttamente?", a: "Sì, specifica il tipo di servizio nella tua richiesta di contatto e la inoltreremo alle strutture con la competenza appropriata nella tua zona." },
   ];
 
   const canonicalPath = "/servizi/";
   const metaTitle = "Servizi Veterinari — Tutti i servizi per il tuo animale";
-  const metaDescription = "Scopri tutti i servizi veterinari disponibili: visite, diagnostica, chirurgia, nutrizione, prevenzione e emergenze. Consulta le strutture nella tua zona.";
+  const metaDescription = "Scopri tutti i servizi veterinari disponibili: visite, diagnostica, chirurgia, nutrizione e prevenzione. Consulta le strutture nella tua zona.";
 
   return (
     <>
@@ -118,7 +111,7 @@ export default function ServiziPage() {
             </h1>
             <AnswerSummary>
               Tutti i servizi veterinari che puoi richiedere attraverso {siteConfig.name}: visite,
-              diagnostica, chirurgia, specialistica, prevenzione, nutrizione e assistenza per emergenze.
+              diagnostica, chirurgia, specialistica, prevenzione e nutrizione.
             </AnswerSummary>
           </section>
 

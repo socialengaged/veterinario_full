@@ -16,7 +16,6 @@ export function VetDisclaimer({ className }: VetDisclaimerProps) {
       Non forniamo diagnosi, consulti medici, terapie né prestazioni veterinarie dirette.
       Non esiste alcun rapporto di collaborazione, rappresentanza o subordinazione tra {siteConfig.name} e i professionisti.
       Le informazioni pubblicate hanno scopo puramente orientativo e non sostituiscono il parere di un medico veterinario qualificato.
-      In caso di emergenza, contatta direttamente il pronto soccorso veterinario o la clinica veterinaria più vicina.
     </Disclaimer>
   );
 }

@@ -5,7 +5,6 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageMeta } from "@/components/PageMeta";
 import { PageCTA } from "@/components/PageCTA";
-import { EmergencyBlock } from "@/components/EmergencyBlock";
 import { FaqSection } from "@/components/FaqSection";
 import { ClinicCard } from "@/components/ClinicCard";
 import { RelatedLinks } from "@/components/RelatedLinks";
@@ -32,7 +31,6 @@ export default function CityPage() {
   }>();
 
   const [filterService, setFilterService] = useState<string>("");
-  const [filterEmergency, setFilterEmergency] = useState(false);
   const [filterDomicilio, setFilterDomicilio] = useState(false);
 
   const city = getCity(citySlug || "");
@@ -41,14 +39,13 @@ export default function CityPage() {
   if (!city || !province || !region) return <NotFound />;
 
   const clinicsList = getClinicsByCity(city.slug);
-  const services = getAllServices();
+  const services = getPublicServices();
   const nearbyCities = city.nearbyCities.map(s => allCitiesMap[s]).filter(c => c && getClinicsByCity(c.slug).length > 0);
   const richContent = cityRichContent[city.slug];
   const cityEnrich = cityEnrichmentData[city.slug];
 
   let filtered = clinicsList;
   if (filterService) filtered = filtered.filter(c => c.services.includes(filterService));
-  if (filterEmergency) filtered = filtered.filter(c => c.emergencyAvailable);
   if (filterDomicilio) filtered = filtered.filter(c => c.homeVisits);
 
   // Compute service stats for enriched FAQ
@@ -58,8 +55,7 @@ export default function CityPage() {
     : null;
 
   const baseFaq = [
-    { q: `Come trovo un veterinario a ${city.name}?`, a: `Usa il nostro strumento di ricerca in homepage oppure sfoglia le ${clinicsList.length} strutture elencate in questa pagina. Puoi filtrare per servizio, disponibilità di pronto soccorso e visite a domicilio per trovare la soluzione ideale per il tuo animale.` },
-    { q: `Ci sono veterinari con pronto soccorso a ${city.name}?`, a: clinicsList.some(c => c.emergencyAvailable) ? `Sì, ${clinicsList.filter(c => c.emergencyAvailable).length} strutture a ${city.name} offrono servizio di pronto soccorso veterinario. In caso di urgenza, chiama prima di recarti per avvisare del tuo arrivo e descrivere la situazione.` : `Al momento non risultano strutture con pronto soccorso dedicato a ${city.name}. In caso di emergenza, cerca nelle città vicine della provincia.` },
+    { q: `Come trovo un veterinario a ${city.name}?`, a: `Usa il nostro strumento di ricerca in homepage oppure sfoglia le ${clinicsList.length} strutture elencate in questa pagina. Puoi filtrare per servizio e visite a domicilio per trovare la soluzione ideale per il tuo animale.` },
     { q: `Quante cliniche veterinarie ci sono a ${city.name}?`, a: `Abbiamo censito ${clinicsList.length} strutture veterinarie a ${city.name}, tra ambulatori, cliniche e studi professionali. Il numero è in costante aggiornamento.` },
     { q: `Quali servizi veterinari sono disponibili a ${city.name}?`, a: allCityServices.length > 0 ? `A ${city.name} sono disponibili ${allCityServices.length} tipologie di servizi, tra cui ${allCityServices.slice(0, 6).map(s => s.replace(/-/g, " ")).join(", ")}${allCityServices.length > 6 ? ` e altri ${allCityServices.length - 6}` : ""}. Contatta le strutture per verificare disponibilità e costi.` : `Contatta le strutture elencate per informazioni sui servizi disponibili.` },
     { q: `Quanto costa una visita veterinaria a ${city.name}?`, a: `Il costo di una visita base a ${city.name} varia indicativamente tra 30 e 70 €, a seconda della struttura e della complessità del caso. Per servizi specialistici (ecografia, radiografia, chirurgia) i costi possono essere superiori. Attraverso ${siteConfig.name} puoi confrontare le opzioni disponibili.` },
@@ -71,10 +67,7 @@ export default function CityPage() {
 
   // Parametric local tips when no richContent
   const parametricTips = !richContent ? [
-    `Cerca un veterinario vicino a casa: a ${city.name} la vicinanza è importante per le emergenze e le visite di routine.`,
-    clinicsList.some(c => c.emergencyAvailable)
-      ? `Salva il numero del pronto soccorso veterinario di ${city.name} nel telefono — in emergenza ogni minuto conta.`
-      : `Individua in anticipo la clinica h24 più vicina a ${city.name} — potrebbe trovarsi in un comune limitrofe.`,
+    `Cerca un veterinario vicino a casa: a ${city.name} la vicinanza facilita visite e follow-up.`,
     `Porta sempre con te il libretto sanitario del tuo animale e la documentazione delle vaccinazioni quando ti rechi dal veterinario.`,
     ...(cityEnrich?.attractions ? [`Se porti il cane nelle aree verdi e nei luoghi storici di ${city.name}, ricorda guinzaglio obbligatorio e sacchetti per la raccolta.`] : []),
     ...(clinicsList.some(c => c.homeVisits) ? [`Per animali anziani o stressati dal trasporto, valuta il servizio di visite a domicilio disponibile presso alcune strutture di ${city.name}.`] : []),
@@ -197,8 +190,7 @@ export default function CityPage() {
               Cerchi un veterinario a {city.name}? {siteConfig.name} ha censito {clinicsList.length} strutture veterinarie
               — tra cliniche veterinarie, ambulatori e veterinari — a {city.name} ({city.cap}), provincia di {province.name}.
               {avgRating && ` Valutazione media Google: ${avgRating}/5.`}
-              {" "}Puoi cercare per servizio veterinario, verificare la disponibilità di pronto soccorso veterinario
-              o richiedere assistenza veterinaria gratuita.
+              {" "}Puoi cercare per servizio veterinario o richiedere assistenza tramite il modulo di contatto.
             </AnswerSummary>
           </section>
 
@@ -207,7 +199,6 @@ export default function CityPage() {
             { label: "CAP", value: cityEnrich?.cap || city.cap },
             { label: "Provincia", value: cityEnrich?.provincia || province.name },
             { label: "Strutture censite", value: String(clinicsList.length) },
-            { label: "Pronto soccorso", value: String(clinicsList.filter(c => c.emergencyAvailable).length) },
             { label: "Visite a domicilio", value: String(clinicsList.filter(c => c.homeVisits).length) },
             ...(avgRating ? [{ label: "Rating medio", value: `${avgRating}/5 ⭐` }] : []),
             ...(allCityServices.length > 0 ? [{ label: "Servizi disponibili", value: String(allCityServices.length) }] : []),
@@ -280,8 +271,7 @@ export default function CityPage() {
             <p className="text-sm text-muted-foreground">
               In questa pagina trovi veterinari, cliniche veterinarie e ambulatori censiti a {city.name} e nei dintorni.
               {allCityServices.length > 0 && ` Sono disponibili ${allCityServices.length} tipologie di servizi, tra cui ${allCityServices.slice(0, 5).map(s => s.replace(/-/g, " ")).join(", ")}.`}
-              {" "}Puoi filtrare per tipo di servizio veterinario, cercare pronto soccorso veterinario,
-              visite veterinarie a domicilio o richiedere assistenza veterinaria gratuita tramite {siteConfig.name}.
+              {" "}Puoi filtrare per tipo di servizio veterinario, visite veterinarie a domicilio o richiedere un contatto tramite {siteConfig.name}.
             </p>
           </section>
 
@@ -311,10 +301,6 @@ export default function CityPage() {
                 <option value="">Tutti i servizi</option>
                 {services.map(s => <option key={s.slug} value={s.slug}>{s.name}</option>)}
               </select>
-              <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer">
-                <input type="checkbox" checked={filterEmergency} onChange={e => setFilterEmergency(e.target.checked)} className="rounded" />
-                Pronto soccorso
-              </label>
               <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer">
                 <input type="checkbox" checked={filterDomicilio} onChange={e => setFilterDomicilio(e.target.checked)} className="rounded" />
                 Visite a domicilio
@@ -361,8 +347,6 @@ export default function CityPage() {
               </div>
             )}
           </section>
-
-          <EmergencyBlock cityName={city.name} />
 
           {/* Nearby */}
           {nearbyCities.length > 0 && (

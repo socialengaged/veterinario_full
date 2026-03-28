@@ -9,12 +9,11 @@ import { RelatedLinks } from "@/components/RelatedLinks";
 import { AnswerSummary } from "@/components/AnswerSummary";
 import { QuickFacts } from "@/components/QuickFacts";
 import { ClinicCard } from "@/components/ClinicCard";
-import { EmergencyBlock } from "@/components/EmergencyBlock";
 import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { EditorialInfo } from "@/components/EditorialInfo";
 import { AreaCoverage } from "@/components/AreaCoverage";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getCity, getClinicsByCity, getService, getAllServices, getProvince } from "@/data";
+import { getCity, getClinicsByCity, getService, getPublicServices, getProvince, isPublicListedService } from "@/data";
 import { generateServiceCityProse } from "@/lib/content-generators";
 import { serviceCityKeywordPatterns, cityKeywordPatterns, type ServiceCityKeywordPattern } from "@/data/keywords";
 import { animalCategories } from "@/config/site";
@@ -32,9 +31,10 @@ export default function KeywordServiceCityPage({ pattern, citySlug }: Props) {
 
   const clinics = getClinicsByCity(citySlug);
   const service = getService(pattern.serviceSlug);
+  if (!service || !isPublicListedService(service)) return <NotFound />;
   const relevantClinics = clinics.filter(c => c.services.includes(pattern.serviceSlug));
   const nearbyCities = city.nearbyCities.map(s => getCity(s)).filter(c => c && getClinicsByCity(c.slug).length > 0);
-  const allServices = getAllServices();
+  const allServices = getPublicServices();
   const province = getProvince(city.provinceSlug);
   const provinceName = province?.name || city.provinceSlug;
 
@@ -193,7 +193,7 @@ export default function KeywordServiceCityPage({ pattern, citySlug }: Props) {
               {nearbyCities.length > 0 && (
                 <div className="pt-4 border-t border-border">
                   <p className="text-xs text-muted-foreground mb-2 text-center">
-                    In caso di urgenza, considera anche le strutture nelle città vicine:
+                    Puoi consultare anche le strutture nelle città vicine:
                   </p>
                   <div className="flex flex-wrap gap-1.5 justify-center">
                     {nearbyCities.slice(0, 5).map(c => (
@@ -207,8 +207,6 @@ export default function KeywordServiceCityPage({ pattern, citySlug }: Props) {
               )}
             </section>
           )}
-
-          <EmergencyBlock />
 
           {/* Other services in this city */}
           <section>

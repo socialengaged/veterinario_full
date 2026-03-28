@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { getService, getRegion, getServiceAnimalPage } from "@/data";
+import { getService, getRegion, getServiceAnimalPage, isPublicListedService } from "@/data";
 import { resolveKeywordSlug } from "@/data/keywords";
 import ServicePageTemplate from "@/templates/ServicePage";
 import RegionPage from "@/templates/RegionPage";
@@ -20,6 +20,8 @@ export default function SingleSlugResolver() {
   // 1. Check service+animal pages first (most specific content pages)
   const serviceAnimal = getServiceAnimalPage(s);
   if (serviceAnimal) {
+    const svc = getService(serviceAnimal.serviceSlug);
+    if (!svc || !isPublicListedService(svc)) return <NotFound />;
     return <ServiceAnimalPageTemplate slug={s} />;
   }
 
@@ -45,7 +47,10 @@ export default function SingleSlugResolver() {
 
   // 3. Check if it's a known service
   const service = getService(s);
-  if (service) return <ServicePageTemplate />;
+  if (service) {
+    if (!isPublicListedService(service)) return <NotFound />;
+    return <ServicePageTemplate />;
+  }
 
   // 4. Check if it's a known region
   const region = getRegion(s);

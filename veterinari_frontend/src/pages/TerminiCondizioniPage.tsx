@@ -81,11 +81,10 @@ export default function TerminiCondizioniPage() {
             veterinaria e non devono essere utilizzate come sostituto del parere di un medico veterinario qualificato.
           </p>
 
-          <h2>7. Emergenze</h2>
+          <h2>7. Limitazioni del servizio</h2>
           <p>
-            <strong>La Piattaforma NON è un servizio di emergenza.</strong> In caso di situazioni che
-            mettono in pericolo la vita dell'animale, l'utente deve contattare direttamente il pronto
-            soccorso veterinario più vicino senza attendere risposta dalla Piattaforma.
+            <strong>La Piattaforma non fornisce consulenza medica veterinaria in tempo reale né prestazioni sanitarie.</strong>{" "}
+            L'utente è responsabile di rivolgersi tempestivamente a una struttura veterinaria idonea quando l'animale necessita di cure immediate.
           </p>
 
           <h2>8. Pagamenti</h2>
@@ -100,7 +99,7 @@ export default function TerminiCondizioniPage() {
           <ul>
             <li>Fornire dati veritieri e accurati</li>
             <li>Non utilizzare il servizio per scopi illeciti o fraudolenti</li>
-            <li>Non utilizzare la Piattaforma per richiedere prestazioni sanitarie d'urgenza in sostituzione del pronto soccorso veterinario</li>
+            <li>Non utilizzare la Piattaforma per sostituire il contatto diretto con un medico veterinario quando necessario per la salute dell'animale</li>
           </ul>
 
           <h2>10. Proprietà intellettuale</h2>

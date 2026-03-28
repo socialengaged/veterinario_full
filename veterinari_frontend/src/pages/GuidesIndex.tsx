@@ -15,9 +15,9 @@ export default function GuidesIndex() {
   const guides = getAllGuides();
 
   const faq = [
-    { q: "Cosa trovo nelle guide veterinarie?", a: "Informazioni pratiche su sintomi, emergenze, prevenzione e cura degli animali domestici. Ogni guida ti aiuta a capire quando è il momento di contattare un veterinario." },
+    { q: "Cosa trovo nelle guide veterinarie?", a: "Informazioni pratiche su sintomi, prevenzione e cura degli animali domestici. Ogni guida ti aiuta a capire quando è il momento di contattare un veterinario." },
     { q: "Le guide sostituiscono il veterinario?", a: "No, le guide sono informative e non sostituiscono mai il parere di un professionista. In caso di dubbio, contatta sempre un veterinario." },
-    { q: "Quante guide sono disponibili?", a: `Attualmente sono disponibili ${guides.length} guide su argomenti diversi, dalla prevenzione alle emergenze veterinarie.` },
+    { q: "Quante guide sono disponibili?", a: `Attualmente sono disponibili ${guides.length} guide su argomenti diversi, dalla prevenzione alle cure specialistiche.` },
     { q: "Le guide riguardano tutti gli animali?", a: "Sì, le guide coprono cani, gatti, animali esotici, uccelli e animali da fattoria. Ogni guida specifica a quale animale si riferisce." },
     { q: "Come posso trovare un veterinario dopo aver letto una guida?", a: "In fondo a ogni guida trovi un link diretto per richiedere assistenza veterinaria nella tua zona, completamente gratuito." },
   ];
@@ -26,10 +26,10 @@ export default function GuidesIndex() {
     <>
       <PageMeta
         title="Guide veterinarie — Consigli utili per la salute del tuo animale"
-        description="Guide informative su sintomi, emergenze e cura degli animali domestici. Quando chiamare il veterinario e come prepararsi."
+        description="Guide informative su sintomi e cura degli animali domestici. Quando chiamare il veterinario e come prepararsi."
         canonical="/guide/"
         jsonLd={[
-          webPageJsonLd({ title: "Guide veterinarie", description: "Guide informative su sintomi, emergenze e cura degli animali domestici.", url: "/guide/" }),
+          webPageJsonLd({ title: "Guide veterinarie", description: "Guide informative su sintomi e cura degli animali domestici.", url: "/guide/" }),
           breadcrumbJsonLd([{ name: "Guide" }]),
           faqJsonLd(faq),
           itemListJsonLd({

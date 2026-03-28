@@ -13,7 +13,7 @@ import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { EditorialInfo } from "@/components/EditorialInfo";
 import { AreaCoverage } from "@/components/AreaCoverage";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getClinicsByAnimal, getAllServices, getAllCities } from "@/data";
+import { getClinicsByAnimal, getPublicServices, getAllCities } from "@/data";
 import { generateAnimalPageProse } from "@/lib/content-generators";
 import { type AnimalKeywordPage, animalKeywordPages, cityKeywordPatterns } from "@/data/keywords";
 import { siteConfig } from "@/config/site";
@@ -25,7 +25,7 @@ interface Props {
 
 export default function KeywordAnimalPageTemplate({ page }: Props) {
   const clinics = getClinicsByAnimal(page.animalId);
-  const relatedServices = page.commonServices.map(s => getAllServices().find(x => x.slug === s)).filter(Boolean);
+  const relatedServices = page.commonServices.map(s => getPublicServices().find(x => x.slug === s)).filter(Boolean);
   const sampleCities = getAllCities().filter(c => c.provinceSlug === "lecce").slice(0, 8);
 
   const canonicalPath = `/${page.slug}/`;

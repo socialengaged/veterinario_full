@@ -9,12 +9,11 @@ import { RelatedLinks } from "@/components/RelatedLinks";
 import { AnswerSummary } from "@/components/AnswerSummary";
 import { QuickFacts } from "@/components/QuickFacts";
 import { ClinicCard } from "@/components/ClinicCard";
-import { EmergencyBlock } from "@/components/EmergencyBlock";
 import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { EditorialInfo } from "@/components/EditorialInfo";
 import { AreaCoverage } from "@/components/AreaCoverage";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getCity, getClinicsByCity, getAllServices, getAllCities, getClinicsWithEmergency, getProvince } from "@/data";
+import { getCity, getClinicsByCity, getPublicServices, getAllCities, getProvince } from "@/data";
 import { generateKeywordCityProse } from "@/lib/content-generators";
 import { cityKeywordPatterns, animalCityKeywordPatterns, type CityKeywordPattern } from "@/data/keywords";
 import { animalCategories } from "@/config/site";
@@ -32,32 +31,19 @@ export default function KeywordCityPage({ pattern, citySlug }: KeywordCityPagePr
   if (!city) return <NotFound />;
 
   const clinics = getClinicsByCity(citySlug);
-  const allServices = getAllServices();
+  const allServices = getPublicServices();
   const nearbyCities = city.nearbyCities.map(s => getCity(s)).filter(c => c && getClinicsByCity(c.slug).length > 0);
   const province = getProvince(city.provinceSlug);
   const provinceName = province?.name || city.provinceSlug;
 
-  // Filter clinics based on angle
-  const relevantClinics = pattern.angle === "emergency" || pattern.angle === "h24"
-    ? clinics.filter(c => c.emergencyAvailable)
-    : clinics;
-
-  // If no local emergency clinics, show regional ones
-  const emergencyClinics = pattern.angle === "emergency" || pattern.angle === "h24"
-    ? (relevantClinics.length > 0 ? relevantClinics : getClinicsWithEmergency().slice(0, 4))
-    : [];
+  const relevantClinics = clinics;
 
   const canonicalPath = `/${pattern.prefix}${citySlug}/`;
   const h1 = pattern.h1Template(city.name);
 
   const faq = [
     { q: `Come trovo un ${pattern.label.toLowerCase()} a ${city.name}?`, a: `In questa pagina sono elencate le strutture disponibili a ${city.name} e dintorni. Puoi anche inviare una richiesta di contatto gratuita tramite il modulo.` },
-    ...(pattern.angle === "emergency" || pattern.angle === "h24" ? [
-      { q: `C'è un pronto soccorso veterinario a ${city.name}?`, a: `La disponibilità di servizi veterinari di emergenza a ${city.name} può variare. Il nostro servizio ti aiuta a trovare la struttura più vicina con disponibilità per urgenze.` },
-      { q: "Cosa faccio se il mio animale ha un'emergenza di notte?", a: "In caso di emergenza notturna, cerca una clinica con reperibilità H24 o pronto soccorso. Se non trovi una struttura aperta, contatta il servizio veterinario di guardia della tua ASL." },
-    ] : [
-      { q: `Quanto costa una visita veterinaria a ${city.name}?`, a: "I costi variano in base alla struttura e al tipo di prestazione. Il nostro servizio di ricerca è gratuito e ti mette in contatto con il professionista che potrà fornirti un preventivo." },
-    ]),
+    { q: `Quanto costa una visita veterinaria a ${city.name}?`, a: "I costi variano in base alla struttura e al tipo di prestazione. Il nostro servizio di ricerca è gratuito e ti mette in contatto con il professionista che potrà fornirti un preventivo." },
     { q: `Ci sono veterinari con visite a domicilio a ${city.name}?`, a: `Alcuni professionisti nella zona di ${city.name} offrono il servizio di visita a domicilio. Specificalo nella tua richiesta di contatto.` },
   ];
 
@@ -129,17 +115,11 @@ export default function KeywordCityPage({ pattern, citySlug }: KeywordCityPagePr
             ))}
           </section>
 
-          {(pattern.angle === "emergency" || pattern.angle === "h24") && (
-            <EmergencyBlock />
-          )}
-
           {/* Clinics */}
           {relevantClinics.length > 0 && (
             <section>
               <h2 className="font-display text-2xl font-bold text-foreground mb-6">
-                {pattern.angle === "emergency" || pattern.angle === "h24"
-                  ? `Strutture con servizio di emergenza a ${city.name}`
-                  : `Strutture veterinarie a ${city.name}`}
+                {`Strutture veterinarie a ${city.name}`}
               </h2>
               <div className="grid gap-4">
                 {relevantClinics.map(clinic => (
@@ -149,23 +129,7 @@ export default function KeywordCityPage({ pattern, citySlug }: KeywordCityPagePr
             </section>
           )}
 
-          {relevantClinics.length === 0 && emergencyClinics.length > 0 && (
-            <section>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-3">
-                Strutture con servizio di emergenza nelle vicinanze
-              </h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                Non abbiamo ancora strutture con pronto soccorso registrate a {city.name}. Ecco le più vicine nella provincia.
-              </p>
-              <div className="grid gap-4">
-                {emergencyClinics.map(clinic => (
-                  <ClinicCard key={clinic.slug} clinic={clinic} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {relevantClinics.length === 0 && emergencyClinics.length === 0 && (
+          {relevantClinics.length === 0 && (
             <section className="p-8 rounded-xl border border-border bg-card space-y-4">
               <div className="text-center">
                 <h3 className="font-display font-semibold text-foreground mb-2">

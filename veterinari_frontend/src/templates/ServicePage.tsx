@@ -13,13 +13,13 @@ import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { EditorialInfo } from "@/components/EditorialInfo";
 import { Disclaimer } from "@/components/Disclaimer";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getService, getAllServices, getAllCities, getAllServiceAnimalPages } from "@/data";
+import { getService, getPublicServices, getAllCities, getPublicServiceAnimalPages } from "@/data";
 import { serviceEditorials } from "@/data/service-editorial";
 import { serviceImages } from "@/data/service-images";
 import NotFound from "@/pages/NotFound";
 import { siteConfig } from "@/config/site";
 import { breadcrumbJsonLd, faqJsonLd, webPageJsonLd, serviceJsonLd } from "@/lib/seo";
-import { AlertTriangle, CheckCircle, List } from "lucide-react";
+import { CheckCircle, List } from "lucide-react";
 
 export default function ServicePageTemplate() {
   const params = useParams();
@@ -27,10 +27,12 @@ export default function ServicePageTemplate() {
   const service = getService(serviceSlug);
   if (!service) return <NotFound />;
 
-  const allServices = getAllServices();
-  const relatedServices = service.relatedServices.map(s => allServices.find(x => x.slug === s)).filter(Boolean);
+  const allServices = getPublicServices();
+  const relatedServices = service.relatedServices
+    .map((slug) => allServices.find((x) => x.slug === slug))
+    .filter((x): x is NonNullable<typeof x> => x != null);
   const sampleCities = getAllCities().filter(c => c.provinceSlug === "lecce").slice(0, 10);
-  const animalPages = getAllServiceAnimalPages().filter(p => p.serviceSlug === service.slug);
+  const animalPages = getPublicServiceAnimalPages().filter(p => p.serviceSlug === service.slug);
   const heroImage = serviceImages[service.slug];
   const editorial = serviceEditorials[service.slug];
   const canonicalPath = `/${service.slug}/`;
@@ -162,26 +164,6 @@ export default function ServicePageTemplate() {
               ))}
             </ul>
           </section>
-
-          {/* ── Emergency signs ── */}
-          {service.emergencySigns.length > 0 && (
-            <section className="p-6 rounded-xl border border-destructive/20 bg-destructive/5">
-              <h2 className="font-display text-lg font-bold text-foreground mb-3 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-destructive" /> Segnali di emergenza
-              </h2>
-              <p className="text-sm text-muted-foreground mb-3">
-                In presenza di questi segnali, contatta immediatamente un veterinario:
-              </p>
-              <ul className="space-y-2">
-                {service.emergencySigns.map((sign, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                    <span className="text-destructive font-bold flex-shrink-0">⚠</span>
-                    {sign}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
 
           {/* ── Who it's for ── */}
           <section className="p-5 rounded-xl border border-border bg-card">

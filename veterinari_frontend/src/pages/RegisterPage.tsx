@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, User, UserPlus, Loader2 } from "lucide-react";
-import { animals, urgencyLevels } from "@/config/site";
+import { animals } from "@/config/site";
 import { serviceTaxonomy, getSubcategories } from "@/data/service-taxonomy";
 import { cn } from "@/lib/utils";
 import { postRequests, setAccessToken } from "@/lib/api";
@@ -25,7 +25,6 @@ export default function RegisterPage() {
     animal: "",
     serviceCategory: "",
     subService: "",
-    urgency: "non-urgente",
     city: "",
     province: "",
     cap: "",
@@ -83,7 +82,6 @@ export default function RegisterPage() {
         animal: form.animal,
         serviceCategory: form.serviceCategory,
         subService: form.subService,
-        urgency: form.urgency || "normale",
         description: form.description,
         contactSecondary: form.contactSecondary,
         emailVerificationAck: form.emailVerificationAck,
@@ -193,17 +191,6 @@ export default function RegisterPage() {
                   <label className="block text-sm font-medium mb-1.5">CAP</label>
                   <input type="text" value={form.cap} onChange={e => set("cap", e.target.value)} className={inputClass} placeholder="73100" />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Urgenza</label>
-                <select value={form.urgency} onChange={e => set("urgency", e.target.value)} className={inputClass}>
-                  <option value="normale">Normale</option>
-                  {urgencyLevels.map(u => (
-                    <option key={u.id} value={u.id}>{u.label}</option>
-                  ))}
-                  <option value="emergenza">Emergenza</option>
-                </select>
               </div>
 
               <div>

@@ -8,7 +8,7 @@ import { PageCTA } from "@/components/PageCTA";
 import { ClinicCard } from "@/components/ClinicCard";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { AnswerSummary } from "@/components/AnswerSummary";
-import { getAllClinics, getAllServices, getAllCities, getAllRegions, getProvincesByRegion } from "@/data";
+import { getAllClinics, getPublicServices, getAllCities, getAllRegions, getProvincesByRegion } from "@/data";
 import { animals } from "@/config/site";
 import { Filter, X, Search, MapPin, Building2, Navigation, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ const DIR_PAGE_SIZE = 24;
 export default function DirectoryPage() {
   const geo = useGeoContext();
   const allClinics = useMemo(() => getAllClinics(), []);
-  const allServices = getAllServices();
+  const allServices = getPublicServices();
   const allCities = getAllCities();
   const allRegions = getAllRegions();
 
@@ -31,7 +31,6 @@ export default function DirectoryPage() {
   const [service, setService] = useState("");
   const [animal, setAnimal] = useState("");
   const [profileType, setProfileType] = useState("");
-  const [emergency, setEmergency] = useState(false);
   const [homeVisit, setHomeVisit] = useState(false);
   const [search, setSearch] = useState("");
   const [maxRadius, setMaxRadius] = useState<number>(0); // 0 = no limit
@@ -58,7 +57,6 @@ export default function DirectoryPage() {
     if (service) result = result.filter(c => c.services.includes(service));
     if (animal) result = result.filter(c => c.animals.includes(animal));
     if (profileType) result = result.filter(c => c.type === profileType);
-    if (emergency) result = result.filter(c => c.emergencyAvailable);
     if (homeVisit) result = result.filter(c => c.homeVisits);
     if (search) {
       const q = search.toLowerCase();
@@ -85,14 +83,14 @@ export default function DirectoryPage() {
       const rB = (b.googleRating || 0) * Math.log10((b.googleReviewsCount || 1) + 1);
       return rB - rA;
     });
-  }, [region, province, city, service, animal, profileType, emergency, homeVisit, search, allClinics, geo.position, maxRadius]);
+  }, [region, province, city, service, animal, profileType, homeVisit, search, allClinics, geo.position, maxRadius]);
 
   const visibleClinics = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
 
   const clearFilters = () => {
     setRegion(""); setProvince(""); setCity(""); setService(""); setAnimal(""); setProfileType("");
-    setEmergency(false); setHomeVisit(false); setSearch(""); setMaxRadius(0); setVisibleCount(DIR_PAGE_SIZE);
+    setHomeVisit(false); setSearch(""); setMaxRadius(0); setVisibleCount(DIR_PAGE_SIZE);
   };
 
   const selectClass = "px-3 py-2 rounded-lg border border-input bg-background text-sm text-foreground";
@@ -101,7 +99,7 @@ export default function DirectoryPage() {
     <>
       <PageMeta
         title="Trova un veterinario in Italia — Elenco strutture e professionisti"
-        description="Cerca tra le strutture veterinarie in Italia. Filtra per regione, provincia, città, servizio, animale, urgenza e disponibilità di visite a domicilio."
+        description="Cerca tra le strutture veterinarie in Italia. Filtra per regione, provincia, città, servizio, animale e disponibilità di visite a domicilio."
         canonical="/elenco/"
         jsonLd={[
           webPageJsonLd({ title: "Elenco veterinari in Italia", description: "Cerca tra le strutture veterinarie in Italia.", url: "/elenco/" }),
@@ -189,10 +187,6 @@ export default function DirectoryPage() {
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
-              <label className="inline-flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="checkbox" checked={emergency} onChange={e => setEmergency(e.target.checked)} className="rounded accent-primary" />
-                Pronto soccorso
-              </label>
               <label className="inline-flex items-center gap-1.5 text-sm cursor-pointer">
                 <input type="checkbox" checked={homeVisit} onChange={e => setHomeVisit(e.target.checked)} className="rounded accent-primary" />
                 Visite a domicilio

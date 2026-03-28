@@ -98,9 +98,24 @@ export const getCitiesByProvince = (provinceSlug: string): City[] =>
   Object.values(allCitiesMap).filter((c) => c.provinceSlug === provinceSlug);
 export const getAllCities = (): City[] => Object.values(allCitiesMap);
 
-// Services
+// Services — alcune schede servizio non sono pubblicate (nessun collegamento in elenco/sitemap)
+const EXCLUDED_PUBLIC_SERVICE_SLUGS = new Set<string>([
+  "pronto-soccorso-veterinario",
+  "veterinario-emergenza",
+  "veterinario-h24",
+  "veterinario-notturno",
+]);
+
+export function isPublicListedService(s: ServicePage | undefined): boolean {
+  if (!s) return false;
+  return !EXCLUDED_PUBLIC_SERVICE_SLUGS.has(s.slug);
+}
+
 export const getService = (slug: string): ServicePage | undefined => services[slug];
 export const getAllServices = (): ServicePage[] => Object.values(services);
+/** Servizi mostrati in elenchi, filtri, mappa sito e SEO (esclude schede “emergenza/pronto soccorso”). */
+export const getPublicServices = (): ServicePage[] =>
+  Object.values(services).filter(isPublicListedService);
 
 // Clinics
 export const getClinic = (slug: string): Clinic | undefined => allClinicsMap[slug];
@@ -134,5 +149,15 @@ export const getServiceAnimalPage = (slug: string): ServiceAnimalPage | undefine
   allServiceAnimalPages[slug];
 export const getAllServiceAnimalPages = (): ServiceAnimalPage[] =>
   Object.values(allServiceAnimalPages);
+
+export const getPublicServiceAnimalPages = (): ServiceAnimalPage[] =>
+  Object.values(allServiceAnimalPages).filter((p) => {
+    const svc = services[p.serviceSlug];
+    return svc ? isPublicListedService(svc) : false;
+  });
 export const getServiceAnimalPagesByService = (serviceSlug: string): ServiceAnimalPage[] =>
-  Object.values(allServiceAnimalPages).filter((p) => p.serviceSlug === serviceSlug);
+  Object.values(allServiceAnimalPages).filter((p) => {
+    if (p.serviceSlug !== serviceSlug) return false;
+    const svc = services[p.serviceSlug];
+    return svc ? isPublicListedService(svc) : false;
+  });

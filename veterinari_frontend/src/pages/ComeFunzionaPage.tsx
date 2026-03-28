@@ -47,8 +47,8 @@ export default function ComeFunzionaPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              {siteConfig.name} è il servizio gratuito che ti permette di cercare veterinari,
-              cliniche veterinarie e pronto soccorso veterinario nella tua zona e inviare una richiesta di contatto.
+              {siteConfig.name} è il servizio gratuito che ti permette di cercare veterinari
+              e cliniche veterinarie nella tua zona e inviare una richiesta di contatto.
               Ecco come funziona, passo dopo passo.
             </motion.p>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
@@ -99,18 +99,18 @@ export default function ComeFunzionaPage() {
                 },
                 {
                   icon: Stethoscope, num: "2", title: "Indica il servizio di cui hai bisogno",
-                  desc: "Visita di routine, vaccinazioni, chirurgia, pronto soccorso, dermatologia, ortopedia, nutrizione, check-up annuale e molto altro. Indica il servizio di cui hai bisogno.",
+                  desc: "Visita di routine, vaccinazioni, chirurgia, dermatologia, ortopedia, nutrizione, check-up annuale e molto altro. Indica il servizio di cui hai bisogno.",
                   detail: "Ogni servizio richiede competenze e attrezzature diverse. Specificando il servizio, possiamo indirizzarti verso strutture realmente attrezzate per il tuo caso.",
                 },
                 {
-                  icon: Clock, num: "3", title: "Specifica l'urgenza e la tua posizione",
-                  desc: "Dicci quanto è urgente la situazione (non urgente, da vedere presto, urgente oggi, emergenza) e indica la tua città o zona. Puoi anche attivare la geolocalizzazione per trovare strutture vicine.",
-                  detail: "Per le emergenze, ti consigliamo sempre di recarti direttamente al pronto soccorso veterinario più vicino senza attendere la nostra risposta.",
+                  icon: Clock, num: "3", title: "Indica la tua posizione",
+                  desc: "Inserisci la tua città o zona e, se vuoi, attiva la geolocalizzazione per trovare strutture vicine.",
+                  detail: "La posizione ci aiuta a inoltrare la richiesta alle strutture pertinenti nel territorio.",
                 },
                 {
                   icon: Send, num: "4", title: "Invia la richiesta e vieni ricontattato",
                   desc: "Compila il modulo con nome, telefono e una breve descrizione. La tua richiesta viene inoltrata alle strutture veterinarie della zona, che ti ricontatteranno direttamente.",
-                  detail: "Le strutture rispondono generalmente entro 24 ore per le richieste non urgenti. Il servizio di inoltro è completamente gratuito.",
+                  detail: "Le strutture rispondono di solito entro 24 ore lavorative. Il servizio di inoltro è completamente gratuito.",
                 },
               ].map((step, i) => (
                 <motion.div key={i} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.08 }}
@@ -149,9 +149,9 @@ export default function ComeFunzionaPage() {
             </motion.div>
             <div className="grid sm:grid-cols-2 gap-5">
               {[
-                { icon: Building2, title: "Cliniche veterinarie", desc: "Strutture attrezzate con diagnostica avanzata, chirurgia, ricovero e pronto soccorso." },
+                { icon: Building2, title: "Cliniche veterinarie", desc: "Strutture attrezzate con diagnostica avanzata, chirurgia e ricovero." },
                 { icon: Stethoscope, title: "Ambulatori veterinari", desc: "Studi veterinari per visite di routine, vaccinazioni, controlli e prestazioni di base." },
-                { icon: Phone, title: "Pronto soccorso veterinario", desc: "Strutture con servizio di emergenza H24 o reperibilità notturna e festiva." },
+                { icon: Phone, title: "Contatti e prenotazioni", desc: "Numeri utili per informazioni, appuntamenti e accoglienza in struttura." },
                 { icon: MapPin, title: "Veterinari a domicilio", desc: "Professionisti che effettuano visite direttamente a casa tua, ideale per animali stressati." },
                 { icon: Search, title: "Specialisti veterinari", desc: "Dermatologi, ortopedici, cardiologi, oculisti, nutrizionisti e altri specialisti." },
                 { icon: Shield, title: "Veterinari per animali esotici", desc: "Professionisti con competenze specifiche per rettili, uccelli, piccoli mammiferi." },
@@ -230,7 +230,7 @@ export default function ComeFunzionaPage() {
                 { q: "Come vengono scelte le strutture veterinarie?", a: `${siteConfig.name} non seleziona né raccomanda veterinari specifici. La tua richiesta viene inoltrata alle strutture veterinarie censite nella zona da te indicata. Il rapporto professionale si instaura direttamente tra te e la struttura.` },
                 { q: "Posso scegliere io il veterinario?", a: "Assolutamente sì. Puoi esplorare liberamente l'elenco delle strutture veterinarie, consultare le informazioni disponibili e contattarle direttamente. Il modulo di richiesta è un'opzione aggiuntiva per chi preferisce inviare una richiesta di contatto." },
                 { q: `${siteConfig.name} fornisce prestazioni mediche?`, a: `No. ${siteConfig.name} è un servizio di ricerca e inoltro richieste di contatto. Non forniamo consulenze veterinarie, diagnosi, terapie o prestazioni sanitarie di alcun tipo. Le informazioni sul sito hanno finalità puramente orientativa. Per qualsiasi problema di salute del tuo animale, consulta sempre un medico veterinario.` },
-                { q: "Quanto tempo ci vuole per ricevere risposta?", a: "Per le richieste non urgenti, rispondiamo generalmente entro 24 ore. Per le urgenze, cerchiamo di essere più rapidi possibile. In caso di vera emergenza, ti consigliamo sempre di recarti direttamente al pronto soccorso veterinario." },
+                { q: "Quanto tempo ci vuole per ricevere risposta?", a: "Di solito entro 24 ore lavorative le strutture della zona prendono in carico la richiesta e ti ricontattano." },
                 { q: "In quali zone è attivo il servizio?", a: `${siteConfig.name} è attivo in tutta Italia con oltre ${totalClinics.toLocaleString("it-IT")} strutture veterinarie censite. La rete è in continua espansione.` },
                 { q: "Come contattare il supporto?", a: `Puoi scriverci a ${siteConfig.contact.email} o chiamarci al ${siteConfig.contact.phone}. Siamo sempre disponibili per aiutarti.` },
               ].map((faq, i) => (

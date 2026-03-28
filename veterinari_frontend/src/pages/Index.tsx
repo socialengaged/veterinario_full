@@ -7,7 +7,6 @@ import { TrustBadge } from "@/components/TrustBadge";
 import { ServiceCard } from "@/components/ServiceCard";
 import { AnimalCard } from "@/components/AnimalCard";
 import { ClinicCard } from "@/components/ClinicCard";
-import { Disclaimer } from "@/components/Disclaimer";
 import { TrustModules } from "@/components/TrustModules";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { FaqSection } from "@/components/FaqSection";
@@ -15,10 +14,10 @@ import { PageMeta } from "@/components/PageMeta";
 import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { Button } from "@/components/ui/button";
 import { siteConfig, animals, popularServices, coveredAreas, animalCategories } from "@/config/site";
-import { getClinicsWithEmergency, getClinicsWithHomeVisits, getAllGuides, getAllServices, getAllClinics } from "@/data";
+import { getClinicsWithHomeVisits, getAllGuides, getAllClinics } from "@/data";
 import { HomepageClinics } from "@/components/HomepageClinics";
 import { NearbyClinics } from "@/components/NearbyClinics";
-import { ArrowRight, Phone, MapPin, Building2, BookOpen } from "lucide-react";
+import { ArrowRight, MapPin, Building2, BookOpen } from "lucide-react";
 import { faqJsonLd, webPageJsonLd, itemListJsonLd } from "@/lib/seo";
 
 const fadeUp = {
@@ -31,7 +30,6 @@ const fadeUp = {
 const serviceSlugMap: Record<string, string> = {
   visita: "visita-veterinaria",
   vaccinazioni: "vaccinazioni",
-  urgenza: "pronto-soccorso-veterinario",
   chirurgia: "chirurgia-veterinaria",
   domicilio: "veterinario-a-domicilio",
   esotici: "veterinario-animali-esotici",
@@ -42,7 +40,6 @@ const serviceSlugMap: Record<string, string> = {
 
 const Index = () => {
   const navigate = useNavigate();
-  const emergencyClinics = getClinicsWithEmergency();
   const homeVisitClinics = getClinicsWithHomeVisits();
   const totalClinics = getAllClinics().length;
   const guides = getAllGuides().slice(0, 3);
@@ -60,10 +57,10 @@ const Index = () => {
 
   const homepageFaqs = [
     { q: "Il servizio di VeterinarioVicino.it è gratuito?", a: `Sì, ${siteConfig.name} è completamente gratuito per chi cerca un veterinario. Il nostro obiettivo è facilitare il contatto tra utenti e strutture veterinarie nella tua zona.` },
-    { q: "Come funziona il servizio?", a: `Dopo aver compilato il modulo, ${siteConfig.name} inoltra la tua richiesta a veterinari e strutture veterinarie della zona in base all'animale, al servizio richiesto, all'urgenza e alla tua posizione. Il veterinario ti ricontatterà direttamente.` },
+    { q: "Come funziona il servizio?", a: `Dopo aver compilato il modulo, ${siteConfig.name} inoltra la tua richiesta a veterinari e strutture veterinarie della zona in base all'animale, al servizio richiesto e alla tua posizione. Il veterinario ti ricontatterà direttamente.` },
     { q: "In quali zone è attivo il servizio?", a: `Il servizio di ${siteConfig.name} è attivo in ${siteConfig.initialArea} con oltre ${totalClinics.toLocaleString("it-IT")} strutture veterinarie censite — tra veterinari, cliniche veterinarie e ambulatori. L'elenco è in continuo aggiornamento.` },
-    { q: "Quanto tempo ci vuole per ricevere risposta?", a: "Per le richieste non urgenti, le strutture rispondono generalmente entro 24 ore. In caso di emergenza, contatta direttamente il pronto soccorso veterinario più vicino senza attendere la nostra risposta." },
-    { q: `${siteConfig.name} è un pronto soccorso veterinario?`, a: `No. ${siteConfig.name} non è un servizio medico, non fornisce consulenze veterinarie né prestazioni sanitarie. In caso di pericolo per la vita dell'animale, recati direttamente alla clinica veterinaria con pronto soccorso più vicina.` },
+    { q: "Quanto tempo ci vuole per ricevere risposta?", a: "Le strutture rispondono di solito entro 24 ore lavorative. I tempi dipendono dalla disponibilità locale." },
+    { q: `${siteConfig.name} fornisce consulenze veterinarie online?`, a: `No. ${siteConfig.name} non è un servizio medico, non fornisce consulenze veterinarie né prestazioni sanitarie: mette in contatto con strutture della zona.` },
     { q: "Posso scegliere il veterinario?", a: `${siteConfig.name} inoltra la tua richiesta alle strutture veterinarie della zona. Puoi anche esplorare autonomamente l'elenco delle strutture e contattarle direttamente.` },
   ];
 
@@ -85,7 +82,6 @@ const Index = () => {
               { name: "Vaccinazioni", url: "/vaccinazioni/" },
               { name: "Chirurgia veterinaria", url: "/chirurgia-veterinaria/" },
               { name: "Check-up veterinario", url: "/check-up-veterinario/" },
-              { name: "Pronto soccorso veterinario", url: "/pronto-soccorso-veterinario/" },
               { name: "Dermatologia veterinaria", url: "/dermatologia-veterinaria/" },
               { name: "Ortopedia veterinaria", url: "/ortopedia-veterinaria/" },
               { name: "Nutrizione veterinaria", url: "/nutrizione-veterinaria/" },
@@ -113,7 +109,7 @@ const Index = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              Cerca veterinari, cliniche veterinarie e pronto soccorso veterinario nella tua zona.
+              Cerca veterinari e cliniche veterinarie nella tua zona.
               {siteConfig.name}: servizio gratuito di ricerca e contatto veterinario in {siteConfig.initialArea}.
             </motion.p>
             <motion.div
@@ -149,7 +145,7 @@ const Index = () => {
               {[
                 { num: "1", title: "Seleziona l'animale", desc: "Scegli il tipo di animale che ha bisogno di cure" },
                 { num: "2", title: "Indica il servizio", desc: "Seleziona il tipo di visita o assistenza necessaria" },
-                { num: "3", title: "Specifica urgenza e zona", desc: "Dicci quanto è urgente e dove ti trovi" },
+                { num: "3", title: "Indica la zona", desc: "Inserisci la città o attiva la geolocalizzazione" },
                 { num: "4", title: "Vieni ricontattato", desc: "La tua richiesta viene inoltrata ai veterinari della zona" },
               ].map((s, i) => (
                 <motion.div key={i} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.1 }} className="text-center">
@@ -192,7 +188,7 @@ const Index = () => {
                 <Link to="/chirurgia-veterinaria/" className="group p-6 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all">
                   <div className="text-3xl mb-3">🏥</div>
                   <h3 className="font-display text-lg font-bold text-foreground group-hover:text-primary transition-colors mb-1">Chirurgia veterinaria</h3>
-                  <p className="text-sm text-muted-foreground">Interventi chirurgici programmati e d'urgenza con anestesia e monitoraggio.</p>
+                  <p className="text-sm text-muted-foreground">Interventi chirurgici programmati con anestesia e monitoraggio.</p>
                 </Link>
                 <Link to="/sterilizzazione-veterinaria/" className="group p-6 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all">
                   <div className="text-3xl mb-3">✂️</div>
@@ -267,25 +263,7 @@ const Index = () => {
         {/* ── Quick find sections ── */}
         <section className="py-12 bg-surface border-y border-border">
           <div className="container">
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Emergency */}
-              <div className="p-5 rounded-xl border border-destructive/20 bg-destructive/5">
-                <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
-                  🚨 Pronto soccorso
-                </h3>
-                <p className="text-xs text-muted-foreground mb-3">
-                  {emergencyClinics.length} strutture con pronto soccorso nel Salento
-                </p>
-                <div className="space-y-1.5">
-                  {emergencyClinics.slice(0, 3).map(c => (
-                    <Link key={c.slug} to={c.type === "veterinario" ? `/veterinario/${c.slug}/` : `/struttura/${c.slug}/`}
-                      className="block text-xs font-medium text-foreground hover:text-primary transition-colors">
-                      {c.name} — <span className="text-muted-foreground">{c.citySlug}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
+            <div className="grid md:grid-cols-2 gap-6">
               {/* Home visits */}
               <div className="p-5 rounded-xl border border-border bg-card">
                 <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
@@ -382,30 +360,6 @@ const Index = () => {
                 <Link to="/puglia/">Esplora tutte le zone <ArrowRight className="ml-1 h-4 w-4" /></Link>
               </Button>
             </div>
-          </div>
-        </section>
-
-        {/* ── Emergency ── */}
-        <section className="py-16 md:py-24 bg-background">
-          <div className="container max-w-3xl">
-            <motion.div {...fadeUp}>
-              <div className="p-8 rounded-2xl border-2 border-destructive/20 bg-destructive/5 text-center">
-                <Phone className="h-10 w-10 text-destructive mx-auto mb-4" />
-                <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">Hai un'emergenza veterinaria?</h2>
-                <p className="text-muted-foreground mb-4 max-w-lg mx-auto">
-                  In caso di emergenza, contatta immediatamente la clinica veterinaria con pronto soccorso
-                  più vicina. Non attendere una risposta dal nostro servizio.
-                </p>
-                <Disclaimer variant="warning" className="text-left max-w-lg mx-auto mb-6">
-                  <strong>Nota importante:</strong> {siteConfig.name} non è un servizio medico di emergenza
-                  e non sostituisce l'intervento medico veterinario diretto.
-                  In caso di pericolo per la vita dell'animale, recati direttamente al pronto soccorso veterinario.
-                </Disclaimer>
-                <Button variant="cta" size="lg" asChild>
-                  <Link to="/richiedi-assistenza/?urgenza=emergenza">Invia una richiesta urgente</Link>
-                </Button>
-              </div>
-            </motion.div>
           </div>
         </section>
 

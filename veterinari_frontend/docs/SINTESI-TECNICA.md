@@ -45,7 +45,7 @@ src/
 ├── components/                # Componenti riutilizzabili
 │   ├── Header.tsx             # Navbar con logo e navigazione
 │   ├── Footer.tsx             # Footer con link e branding
-│   ├── SmartFinder.tsx        # Finder multi-step (animale → servizio → urgenza → città)
+│   ├── SmartFinder.tsx        # Finder multi-step → redirect /richiedi-assistenza/ (stesso flusso account+chat)
 │   ├── AnswerSummary.tsx      # Blocco risposta diretta per AI-search
 │   ├── QuickFacts.tsx         # Griglia fatti rapidi strutturati
 │   ├── ClinicCard.tsx         # Card per struttura veterinaria
@@ -61,7 +61,6 @@ src/
 │   ├── Breadcrumbs.tsx        # Breadcrumb navigazione
 │   ├── RelatedLinks.tsx       # Link correlati
 │   ├── StickyMobileCTA.tsx    # CTA mobile sticky bottom
-│   ├── RequestForm.tsx        # Form richiesta assistenza
 │   ├── TrustBadge.tsx         # Badge di fiducia
 │   ├── TrustModules.tsx       # Moduli fiducia homepage
 │   ├── Disclaimer.tsx         # Disclaimer generico
@@ -663,24 +662,24 @@ Con 8.000+ comuni, sarà necessario:
 
 ## 13. Flusso Richiesta Assistenza
 
-Il form in `/richiedi-assistenza/` cattura:
-- **Animale** (selezionato per categoria → animale)
-- **Servizio** necessario
-- **Livello di urgenza** (non urgente / presto / urgente / emergenza)
-- **Città**
-- **Nome, email, telefono**
-- **Messaggio opzionale**
+Il form in `/richiedi-assistenza/` e i form inline nelle pagine **servizio × animale** inviano a **`POST /api/requests`**: creano account (email + password obbligatoria), salvano la richiesta e reindirizzano alla **chat** (`/dashboard/chats/:id`). Stesso flusso della registrazione.
 
-Il form può essere pre-compilato tramite query string:
-- `?localita=Lecce`
+Campi principali:
+- **Animale**, **categoria/sottoservizio** (taxonomy), **urgenza**
+- **Città**, provincia, CAP
+- **Nome, email, password**, telefono (opzionale)
+- **Messaggio**, canali secondari (SMS/WhatsApp), consensi
+
+Pre-compilazione da query string (anche `citta` dalla home / SmartFinder):
+- `?localita=Lecce` o `?citta=Lecce`
 - `?animale=cane&localita=Lecce`
-- `?servizio=Dermatologia+veterinaria&localita=Lecce`
+- `?servizio=slug-pagina-servizio` (es. `dermatologia-veterinaria`) o id categoria taxonomy; `sottoservizio` opzionale
 
 ---
 
 ## 14. Note Tecniche
 
-- **Nessun backend**: attualmente tutti i dati sono statici. Per il futuro si può collegare Lovable Cloud (Supabase) per gestire cliniche, richieste e utenti
+- **Backend API**: richieste e utenti tramite FastAPI (`/requests`, auth JWT); frontend con `VITE_API_BASE_URL` in produzione
 - **Favicon**: icona personalizzata a forma di faccia di cane
 - **Logo**: stessa immagine della favicon usata come logo nel header
 - **Branding**: VeterinarioVicino.it con colori primari del design system

@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "VeterinarioVicino.it",
   tagline: "Cerca un veterinario vicino a te",
-  description: "VeterinarioVicino.it è un servizio gratuito di ricerca e contatto veterinario in Italia. Consulta l'elenco di veterinari, cliniche veterinarie e pronto soccorso veterinario nella tua zona e invia una richiesta di contatto.",
+  description: "VeterinarioVicino.it è un servizio gratuito di ricerca e contatto veterinario in Italia. Consulta l'elenco di veterinari e cliniche nella tua zona e invia una richiesta di contatto.",
   url: "https://veterinariovicino.it",
   initialArea: "Italia",
   contact: {
@@ -9,7 +9,7 @@ export const siteConfig = {
     phone: "+39 320 486 4478",
   },
   meta: {
-    title: "VeterinarioVicino.it — Cerca veterinario, clinica veterinaria e pronto soccorso vicino a te",
+    title: "VeterinarioVicino.it — Cerca veterinario e clinica veterinaria vicino a te",
     description: "Cerca veterinari nella tua zona. VeterinarioVicino.it: servizio gratuito di ricerca e contatto veterinario per cani, gatti e animali esotici in Italia.",
   },
 };
@@ -164,11 +164,6 @@ for (const cat of animalCategories) {
 // Override for equine animals
 servicesByAnimal["cavallo"] = equineServices;
 servicesByAnimal["cavallo-sportivo"] = equineServices;
-
-export const urgencyLevels = [
-  { id: "non-urgente", label: "Non urgente", description: "Posso aspettare qualche giorno", color: "success" as const },
-  { id: "presto", label: "Da vedere presto", description: "Entro 1–2 giorni", color: "secondary" as const },
-];
 
 export const coveredAreas = [
   { province: "Lecce", cities: ["Lecce", "Gallipoli", "Otranto", "Nardò", "Galatina", "Maglie", "Casarano"] },

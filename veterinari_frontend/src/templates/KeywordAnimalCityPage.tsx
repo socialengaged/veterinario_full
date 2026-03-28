@@ -9,18 +9,16 @@ import { RelatedLinks } from "@/components/RelatedLinks";
 import { AnswerSummary } from "@/components/AnswerSummary";
 import { QuickFacts } from "@/components/QuickFacts";
 import { ClinicCard } from "@/components/ClinicCard";
-import { EmergencyBlock } from "@/components/EmergencyBlock";
 import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { EditorialInfo } from "@/components/EditorialInfo";
 import { AreaCoverage } from "@/components/AreaCoverage";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getCity, getClinicsByCity, getClinicsByAnimal, getAllServices, getAllCities, getProvince } from "@/data";
+import { getCity, getClinicsByCity, getClinicsByAnimal, getPublicServices, getAllCities, getProvince } from "@/data";
 import { generateAnimalCityProse } from "@/lib/content-generators";
 import { animalCityKeywordPatterns, type AnimalCityKeywordPattern } from "@/data/keywords";
 import { siteConfig } from "@/config/site";
 import { breadcrumbJsonLd, faqJsonLd, webPageJsonLd, veterinaryCareJsonLd, itemListJsonLd } from "@/lib/seo";
 import NotFound from "@/pages/NotFound";
-import { AlertTriangle, CheckCircle } from "lucide-react";
 
 interface Props {
   pattern: AnimalCityKeywordPattern;
@@ -39,7 +37,7 @@ export default function KeywordAnimalCityPage({ pattern, citySlug }: Props) {
     ? getClinicsByAnimal(pattern.animalId).slice(0, 4)
     : [];
 
-  const allServices = getAllServices();
+  const allServices = getPublicServices();
   const nearbyCities = city.nearbyCities.map(s => getCity(s)).filter(c => c && getClinicsByCity(c.slug).length > 0);
   const province = getProvince(city.provinceSlug);
   const provinceName = province?.name || city.provinceSlug;
@@ -50,7 +48,7 @@ export default function KeywordAnimalCityPage({ pattern, citySlug }: Props) {
   const faq = [
     { q: `Come trovo un veterinario per ${pattern.animalNamePlural} a ${city.name}?`, a: `In questa pagina sono elencate le strutture disponibili a ${city.name}. Puoi anche inviare una richiesta di contatto gratuita tramite il modulo.` },
     { q: `Ci sono veterinari specializzati in ${pattern.animalNamePlural} a ${city.name}?`, a: `La disponibilità di specialisti per ${pattern.animalNamePlural} può variare. Consulta le strutture elencate nella zona di ${city.name} e dintorni.` },
-    { q: `Cosa faccio in caso di emergenza per il mio ${pattern.animalName} a ${city.name}?`, a: `Contatta immediatamente la clinica veterinaria più vicina con servizio di pronto soccorso. In questa pagina puoi individuare le strutture disponibili nella zona.` },
+    { q: `Come scelgo la struttura giusta per ${pattern.animalNamePlural} a ${city.name}?`, a: `Confronta le strutture elencate, orari e servizi offerti. Puoi anche inviare una richiesta di contatto dal modulo per essere ricontattato.` },
     { q: "Quanto costa una visita?", a: "I costi variano in base alla struttura e al tipo di prestazione. Il nostro servizio di ricerca è gratuito." },
   ];
 
@@ -193,7 +191,7 @@ export default function KeywordAnimalCityPage({ pattern, citySlug }: Props) {
               {nearbyCities.length > 0 && (
                 <div className="pt-4 border-t border-border">
                   <p className="text-xs text-muted-foreground mb-2 text-center">
-                    In caso di urgenza, considera anche le strutture nelle città vicine:
+                    Puoi consultare anche le strutture nelle città vicine:
                   </p>
                   <div className="flex flex-wrap gap-1.5 justify-center">
                     {nearbyCities.slice(0, 5).map(c => (
@@ -207,22 +205,6 @@ export default function KeywordAnimalCityPage({ pattern, citySlug }: Props) {
               )}
             </section>
           )}
-
-          {/* ── Emergency ── */}
-          <section className="p-6 rounded-xl border border-destructive/20 bg-destructive/5">
-            <h2 className="font-display text-lg font-bold text-foreground mb-3 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" /> Emergenze per {pattern.animalNamePlural} a {city.name}
-            </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              In caso di emergenza per il tuo {pattern.animalName}, contatta immediatamente la clinica veterinaria più vicina con servizio di pronto soccorso. Non tutti i pronto soccorso trattano {pattern.animalNamePlural} — verifica la disponibilità chiamando in anticipo.
-            </p>
-            <Link
-              to={`/pronto-soccorso-veterinario-${city.slug}/`}
-              className="inline-block mt-3 text-sm font-medium text-primary hover:underline"
-            >
-              Pronto soccorso veterinario a {city.name} →
-            </Link>
-          </section>
 
           {/* ── Nearby cities ── */}
           {nearbyCities.length > 0 && (

@@ -11,7 +11,6 @@ export type RequestFormFields = {
   animal: string;
   serviceCategory: string;
   subService: string;
-  urgency: string;
   description: string;
   /** "" | "sms" | "whatsapp" — email sempre inclusa */
   contactSecondary: string;
@@ -39,7 +38,7 @@ export function buildCreateRequestPayload(f: RequestFormFields): CreateRequestPa
     animal_name: null,
     service,
     sub_service: f.subService || null,
-    urgency: f.urgency || "normale",
+    urgency: "normale",
     description: f.description?.trim() || null,
     contact_secondary,
     email_verification_ack: f.emailVerificationAck,

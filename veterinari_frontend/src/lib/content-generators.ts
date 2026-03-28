@@ -56,10 +56,7 @@ export function generateProfileProse(clinic: Clinic, cityName?: string): string 
       }
     }
     if (svcText) {
-      svcText += ". ";
-      svcText += clinic.emergencyAvailable
-        ? `La struttura è dotata di servizio di pronto soccorso veterinario, garantendo assistenza anche in caso di emergenze urgenti, un aspetto fondamentale per la tranquillità dei proprietari.`
-        : `Per le emergenze, è consigliabile contattare preventivamente la struttura per verificare la disponibilità e gli orari del servizio urgenze.`;
+      svcText += ". Verifica orari e disponibilità dei servizi contattando direttamente la struttura.";
       parts.push(svcText);
     }
   }
@@ -185,23 +182,6 @@ export function generateCityProse(
     );
   }
 
-  // ── Emergency ──
-  if (emergencyCount > 0) {
-    parts.push(
-      `Per le situazioni di emergenza, ${pluralize(emergencyCount, "struttura offre", "strutture offrono")} ` +
-      `servizio di pronto soccorso veterinario a ${city.name}, garantendo assistenza anche ` +
-      `nelle ore notturne e nei giorni festivi. In caso di urgenza — avvelenamento, trauma, ` +
-      `difficoltà respiratoria o convulsioni — chiama prima di recarti per avvisare del tuo arrivo.`
-    );
-  } else {
-    parts.push(
-      `Al momento, nessuna struttura censita a ${city.name} offre servizio di pronto soccorso veterinario dedicato. ` +
-      `In caso di emergenza, è consigliabile contattare le cliniche h24 nelle città limitrofe ` +
-      `della provincia di ${provinceName} o inviare una richiesta tramite il nostro servizio per trovare ` +
-      `rapidamente la struttura più vicina con pronto soccorso.`
-    );
-  }
-
   // ── Home visits ──
   if (homeVisitsCount > 0) {
     parts.push(
@@ -270,27 +250,7 @@ export function generateKeywordCityProse(
 ): string {
   const parts: string[] = [];
 
-  if (angle === "emergency" || angle === "h24") {
-    parts.push(
-      `In caso di emergenza veterinaria a ${cityName}, la tempestività di intervento è il fattore più importante. ` +
-      `Avvelenamenti, traumi stradali, difficoltà respiratorie, crisi convulsive e torsione gastrica ` +
-      `sono tra le situazioni che richiedono assistenza immediata e non possono attendere il giorno successivo.`
-    );
-    parts.push(
-      emergencyCount > 0
-        ? `A ${cityName} sono presenti ${pluralize(emergencyCount, "struttura con servizio di emergenza", "strutture con servizio di emergenza")} veterinaria. ` +
-          `Ti consigliamo di salvare in anticipo il numero di telefono della clinica h24 più vicina, ` +
-          `così da poter agire rapidamente quando il tuo animale ha bisogno di aiuto urgente.`
-        : `Al momento non risultano strutture con pronto soccorso dedicato a ${cityName}. ` +
-          `In caso di emergenza, contatta le cliniche h24 nella provincia di ${provinceName} ` +
-          `o utilizza il nostro servizio per individuare rapidamente la struttura più vicina.`
-    );
-    parts.push(
-      `Prima di recarti al pronto soccorso veterinario, chiama per avvisare del tuo arrivo ` +
-      `e descrivere la situazione. Non somministrare farmaci umani all'animale senza indicazione ` +
-      `del veterinario e annota l'ora di inizio dei sintomi e qualsiasi sostanza potenzialmente ingerita.`
-    );
-  } else if (angle === "clinic") {
+  if (angle === "clinic") {
     parts.push(
       `Le cliniche veterinarie a ${cityName} offrono un livello di assistenza superiore rispetto ` +
       `ai semplici ambulatori, grazie alla disponibilità di sale chirurgiche attrezzate, ` +
@@ -325,9 +285,8 @@ export function generateKeywordCityProse(
     );
     parts.push(
       `Per individuare il veterinario a ${cityName}, considera la vicinanza alla tua abitazione, ` +
-      `i servizi offerti, la disponibilità di pronto soccorso, le recensioni degli altri proprietari ` +
-      `e la possibilità di visite a domicilio. Il nostro servizio di ricerca è completamente gratuito ` +
-      `e ti guida nella scelta migliore per il tuo animale.`
+      `i servizi offerti, le recensioni degli altri proprietari e la possibilità di visite a domicilio. ` +
+      `Il nostro servizio di ricerca è completamente gratuito e ti guida nella scelta migliore per il tuo animale.`
     );
   }
 

@@ -13,7 +13,7 @@ import { EditorialInfo } from "@/components/EditorialInfo";
 import { AreaCoverage } from "@/components/AreaCoverage";
 import { Disclaimer } from "@/components/Disclaimer";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getAllServices, getAllCities } from "@/data";
+import { getPublicServices, getAllCities } from "@/data";
 import { generateSpecialtyProse } from "@/lib/content-generators";
 import { type SpecialtyKeywordPage, specialtyKeywordPages } from "@/data/keywords";
 import { siteConfig } from "@/config/site";
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default function KeywordSpecialtyPageTemplate({ page }: Props) {
-  const relatedServices = page.relatedServices.map(s => getAllServices().find(x => x.slug === s)).filter(Boolean);
+  const relatedServices = page.relatedServices.map(s => getPublicServices().find(x => x.slug === s)).filter(Boolean);
   const sampleCities = getAllCities().filter(c => c.provinceSlug === "lecce").slice(0, 10);
 
   const canonicalPath = `/${page.slug}/`;

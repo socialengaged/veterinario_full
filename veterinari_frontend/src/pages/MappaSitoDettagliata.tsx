@@ -5,7 +5,7 @@ import { PageMeta } from "@/components/PageMeta";
 import { siteConfig } from "@/config/site";
 import {
   getAllRegions, getProvincesByRegion,
-  getAllServices, getAllGuides, getAllClinics, getAllServiceAnimalPages,
+  getPublicServices, getAllGuides, getAllClinics, getAllServiceAnimalPages,
 } from "@/data";
 import {
   animalKeywordPages, specialtyKeywordPages,
@@ -48,10 +48,10 @@ function SitemapLink({ to, children }: { to: string; children: React.ReactNode }
 
 export default function MappaSitoDettagliata() {
   const regions = useMemo(() => getAllRegions().sort((a, b) => a.name.localeCompare(b.name)), []);
-  const services = useMemo(() => getAllServices(), []);
+  const services = useMemo(() => getPublicServices(), []);
   const guides = useMemo(() => getAllGuides(), []);
   const clinics = useMemo(() => getAllClinics(), []);
-  const serviceAnimalPages = useMemo(() => getAllServiceAnimalPages(), []);
+  const serviceAnimalPages = useMemo(() => getPublicServiceAnimalPages(), []);
 
   const totalClinics = clinics.length;
 
@@ -109,12 +109,12 @@ export default function MappaSitoDettagliata() {
             {/* ── 2. Servizi veterinari ── */}
             <Section title="Servizi veterinari" icon={Stethoscope} count={services.length}>
               <div className="space-y-4">
-                {["base", "diagnostica", "specialistica", "prevenzione", "nutrizione", "emergenza", "benessere"].map(cat => {
+                {["base", "diagnostica", "specialistica", "prevenzione", "nutrizione", "benessere"].map(cat => {
                   const catServices = services.filter(s => (s as any).category === cat || (!('category' in s) && cat === "base"));
                   if (!catServices.length) return null;
                   const labels: Record<string, string> = {
                     base: "Servizi di base", diagnostica: "Diagnostica", specialistica: "Specialistica",
-                    prevenzione: "Prevenzione", nutrizione: "Nutrizione", emergenza: "Emergenza e H24", benessere: "Benessere",
+                    prevenzione: "Prevenzione", nutrizione: "Nutrizione", benessere: "Benessere",
                   };
                   return (
                     <div key={cat}>

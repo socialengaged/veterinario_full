@@ -21,7 +21,7 @@ Il **frontend** (build Vite) chiama l’API pubblica tramite **`VITE_API_BASE_UR
 
 **Contatti:** email sempre obbligatoria; telefono **facoltativo** se contatto solo email; se l’utente sceglie **SMS** o **WhatsApp** come canale aggiuntivo, il cellulare diventa obbligatorio. Payload: `email_verification_ack: true`, `contact_secondary` `null` | `"sms"` | `"whatsapp"`.
 
-Password opzionale sul modulo richiesta e obbligatoria in registrazione (`password` su `CreateRequestBody`, hash solo per **utente nuovo**).
+Password **obbligatoria** sul modulo **`/richiedi-assistenza/`**, su **`/registrati/`** e nei form inline (es. pagine servizio+animale) per creare l’account e aprire la chat (`password` su `CreateRequestBody`, hash per **utente nuovo**).
 
 **Build frontend produzione:** il file committato **`veterinari_frontend/.env.production`** imposta `VITE_API_BASE_URL=https://api.veterinariovicino.it`, così `npm run build` **senza** `.env` locale non punta più al fallback `127.0.0.1:8060` (causa tipica di login/registrazione e form “non agganciati” in produzione). Per sviluppo locale usare **`.env`** da **`.env.example`** con `http://127.0.0.1:8060`.
 
@@ -193,7 +193,7 @@ curl -sI https://veterinariovicino.it/assets/index-*.js   # sostituire hash real
 
 **Smoke test flusso utente (browser):**
 
-1. Aprire `https://veterinariovicino.it/richiedi-assistenza/`, compilare email (obbligatoria), provincia, città, specie animale, servizio, spuntare la conferma sulla verifica email e inviare → redirect a `/dashboard/chats/<uuid>`.
+1. Aprire `https://veterinariovicino.it/richiedi-assistenza/`, compilare email, **password** (≥8 caratteri), provincia, città, specie animale, servizio, spuntare la conferma sulla verifica email e inviare → redirect a `/dashboard/chats/<uuid>`.
 2. Verificare **banner** “Conferma la tua email” se l’account non è ancora verificato; aprire il link ricevuto per email (anche spam) → pagina **`/verify-email`** con successo → banner scompare al ricaricamento.
 3. Dopo verifica email, controllare che l’inoltro ai veterinari (e notifiche interne) avvenga come previsto (DB/log lato server).
 4. Opzionale: **Accedi** con email/password se impostate al primo invio o da registrazione.
@@ -267,4 +267,15 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 
 ---
 
-*Ultimo aggiornamento significativo: monorepo GitHub `veterinario_full`, `.env.production` frontend per API HTTPS, deploy SSH documentato, pytest schema richieste.*
+*Ultimo aggiornamento significativo: form `/richiedi-assistenza/` e inline servizio×animale con password obbligatoria, `POST /requests` + redirect chat; query `servizio` risolta da slug pagina; sintesi aggiornate.*
+
+---
+
+## 14. Modifiche recenti (marzo 2026)
+
+| Area | Modifica |
+|------|----------|
+| `/richiedi-assistenza/` | Password obbligatoria; prefill `animale`, `servizio` (slug o taxonomy), `sottoservizio`, `citta`/`localita`; submit → account + chat |
+| Pagine servizio × animale | Form inline reale (non stub): stesso flusso API + redirect chat; link CTA con `animale` + `servizio` (slug) |
+| `request-taxonomy.ts` | `resolveTaxonomyFromQuery` per mappare slug servizio → categoria/sottoservizio |
+| Codice morto | Rimossi `RequestForm.tsx` e `web3forms.ts` (flusso unico `POST /requests`) |

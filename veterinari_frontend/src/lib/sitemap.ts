@@ -4,8 +4,8 @@
 import { siteConfig } from "@/config/site";
 import {
   getAllRegions, getProvincesByRegion, getCitiesByProvince,
-  getAllServices, getAllGuides, getAllClinics, getAllServiceAnimalPages,
-  getClinicsByCity,
+  getPublicServices, getAllGuides, getAllClinics, getAllServiceAnimalPages,
+  getClinicsByCity, isPublicListedService, getService,
 } from "@/data";
 import {
   cityKeywordPatterns,
@@ -52,7 +52,7 @@ export function generateSitemapEntries(): SitemapEntry[] {
   }
 
   // ── Service pages ──
-  for (const service of getAllServices()) {
+  for (const service of getPublicServices()) {
     add({ loc: `${base}/${service.slug}/`, changefreq: "monthly", priority: 0.7 });
   }
 
@@ -123,6 +123,8 @@ export function generateSitemapEntries(): SitemapEntry[] {
 
   // ── Service + Animal pages ──
   for (const page of getAllServiceAnimalPages()) {
+    const svc = getService(page.serviceSlug);
+    if (!svc || !isPublicListedService(svc)) continue;
     add({ loc: `${base}/${page.slug}/`, changefreq: "monthly", priority: 0.8 });
   }
 

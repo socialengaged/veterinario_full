@@ -1,6 +1,5 @@
-import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -19,8 +18,13 @@ import { serviceAnimalRichContent } from "@/data/service-animal-content";
 import NotFound from "@/pages/NotFound";
 import { siteConfig } from "@/config/site";
 import { breadcrumbJsonLd, faqJsonLd, webPageJsonLd, serviceJsonLd } from "@/lib/seo";
-import { CheckCircle, AlertTriangle, Clock, Send, ArrowRight } from "lucide-react";
+import { CheckCircle, AlertTriangle, Clock, Send, ArrowRight, Loader2, Lock, Mail, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { animals } from "@/config/site";
+import { serviceTaxonomy, getSubcategories } from "@/data/service-taxonomy";
+import { postRequests, setAccessToken } from "@/lib/api";
+import { buildCreateRequestPayload } from "@/lib/build-request-payload";
+import { resolveTaxonomyFromQuery } from "@/lib/request-taxonomy";
 
 // Animal images map
 import caneImg from "@/assets/animals/cane.jpg";
@@ -237,10 +241,11 @@ export default function ServiceAnimalPageTemplate({ slug }: ServiceAnimalPageTem
 
           {/* ── Inline Contact Form ── */}
           <InlineRequestForm
+            serviceSlug={page.serviceSlug}
+            animalId={page.animalId}
             serviceName={page.serviceName}
             animalName={page.animalName}
             animalEmoji={page.animalEmoji}
-            slug={page.slug}
           />
 
           <Disclaimer variant="info">{page.disclaimer}</Disclaimer>
@@ -272,7 +277,7 @@ export default function ServiceAnimalPageTemplate({ slug }: ServiceAnimalPageTem
           {/* ── Secondary CTA ── */}
           <PageCTA
             title={`Cerchi un veterinario per ${page.serviceName.toLowerCase()} del ${page.animalName.toLowerCase()}?`}
-            href={`/richiedi-assistenza/?servizio=${encodeURIComponent(page.serviceSlug)}&animale=${encodeURIComponent(page.animalId)}`}
+            href={`/richiedi-assistenza/?animale=${encodeURIComponent(page.animalId)}&servizio=${encodeURIComponent(page.serviceSlug)}`}
           />
         </div>
       </main>
@@ -282,57 +287,107 @@ export default function ServiceAnimalPageTemplate({ slug }: ServiceAnimalPageTem
   );
 }
 
-// ── Inline Request Form Component ──
+// ── Inline Request Form: stesso flusso di Registrazione (account + chat) ──
 function InlineRequestForm({
+  serviceSlug,
+  animalId,
   serviceName,
   animalName,
   animalEmoji,
-  slug,
 }: {
+  serviceSlug: string;
+  animalId: string;
   serviceName: string;
   animalName: string;
   animalEmoji: string;
-  slug: string;
 }) {
-  const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
+  const initialTax = useMemo(() => resolveTaxonomyFromQuery(serviceSlug), [serviceSlug]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
+    email: "",
+    password: "",
     phone: "",
+    animal: animalId,
+    serviceCategory: initialTax.serviceCategory,
+    subService: initialTax.subService,
     city: "",
+    province: "",
+    cap: "",
     description: "",
+    contactSecondary: "" as "" | "sms" | "whatsapp",
+    emailVerificationAck: false,
+    marketing: false,
     consent: false,
   });
 
-  const handleChange = (field: string, value: string | boolean) => {
+  const set = (field: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleServiceCategoryChange = (value: string) => {
+    set("serviceCategory", value);
+    set("subService", "");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const subcategories = getSubcategories(form.serviceCategory);
+  const needsPhoneForChannels =
+    form.contactSecondary === "sms" || form.contactSecondary === "whatsapp";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.consent || !form.name || !form.phone) return;
-    console.log("Service-animal request:", { slug, ...form });
-    setSubmitted(true);
+    if (
+      !form.consent ||
+      !form.emailVerificationAck ||
+      !form.name ||
+      !form.email ||
+      !form.password ||
+      form.password.length < 8 ||
+      !form.animal ||
+      !form.serviceCategory ||
+      !form.city ||
+      !form.province
+    ) {
+      return;
+    }
+    if (needsPhoneForChannels && form.phone.trim().length < 3) {
+      setError("Inserisci un numero di cellulare valido per SMS o WhatsApp.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const payload = buildCreateRequestPayload({
+        email: form.email,
+        full_name: form.name,
+        phone: form.phone,
+        city: form.city,
+        province: form.province,
+        cap: form.cap,
+        animal: form.animal,
+        serviceCategory: form.serviceCategory,
+        subService: form.subService,
+        description: form.description,
+        contactSecondary: form.contactSecondary,
+        emailVerificationAck: form.emailVerificationAck,
+        marketing: form.marketing,
+        password: form.password,
+      });
+      const res = await postRequests(payload);
+      setAccessToken(res.access_token);
+      navigate(`/dashboard/chats/${res.conversation_id}`, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invio non riuscito");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputClass =
     "w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm";
-
-  if (submitted) {
-    return (
-      <motion.section
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="p-8 rounded-2xl border-2 border-primary/30 bg-primary/5 text-center"
-      >
-        <CheckCircle className="h-12 w-12 text-primary mx-auto mb-3" />
-        <h2 className="font-display text-xl font-bold text-foreground mb-2">Richiesta inviata!</h2>
-        <p className="text-sm text-muted-foreground">
-          Ti contatteremo al più presto per metterti in contatto con un veterinario qualificato
-          per {serviceName.toLowerCase()} del {animalName.toLowerCase()} nella tua zona.
-        </p>
-      </motion.section>
-    );
-  }
 
   return (
     <section className="p-6 md:p-8 rounded-2xl border-2 border-primary/30 bg-gradient-to-b from-primary/5 to-background">
@@ -343,85 +398,283 @@ function InlineRequestForm({
         </h2>
       </div>
       <p className="text-sm text-muted-foreground mb-6">
-        Compila il modulo e ti metteremo in contatto con un veterinario qualificato nella tua zona. Il servizio di ricerca è gratuito.
+        Crea un account con email e password: dopo l&apos;invio entri nella chat del servizio (come dalla pagina Registrati).
+        Il servizio di ricerca è gratuito.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">Nome e cognome *</label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                required
+                value={form.name}
+                onChange={(e) => set("name", e.target.value)}
+                placeholder="Mario Rossi"
+                className={cn(inputClass, "pl-10")}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">Email *</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(e) => set("email", e.target.value)}
+                placeholder="nome@email.it"
+                className={cn(inputClass, "pl-10")}
+                autoComplete="email"
+              />
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-foreground mb-1">Password * (min. 8 caratteri)</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="password"
+                required
+                minLength={8}
+                value={form.password}
+                onChange={(e) => set("password", e.target.value)}
+                placeholder="Scegli una password sicura"
+                className={cn(inputClass, "pl-10")}
+                autoComplete="new-password"
+              />
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Cellulare {needsPhoneForChannels ? "*" : "(facoltativo)"}
+            </label>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
+              placeholder="+39 333 123 4567"
+              className={inputClass}
+              required={needsPhoneForChannels}
+              autoComplete="tel"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1">Animale *</label>
+          <select
+            value={form.animal}
+            onChange={(e) => set("animal", e.target.value)}
+            className={inputClass}
+            required
+          >
+            <option value="">Seleziona animale</option>
+            {animals.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.emoji} {a.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">Categoria servizio *</label>
+            <select
+              value={form.serviceCategory}
+              onChange={(e) => handleServiceCategoryChange(e.target.value)}
+              className={inputClass}
+              required
+            >
+              <option value="">Seleziona categoria</option>
+              {serviceTaxonomy.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.emoji} {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">Servizio specifico</label>
+            <select
+              value={form.subService}
+              onChange={(e) => set("subService", e.target.value)}
+              className={inputClass}
+              disabled={!subcategories.length}
+            >
+              <option value="">{subcategories.length ? "Seleziona dettaglio" : "Scegli prima la categoria"}</option>
+              {subcategories.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">Città *</label>
             <input
               type="text"
               required
-              value={form.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Mario Rossi"
+              value={form.city}
+              onChange={(e) => set("city", e.target.value)}
+              placeholder="Lecce"
               className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Telefono *</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Provincia *</label>
             <input
-              type="tel"
+              type="text"
               required
-              value={form.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              placeholder="+39 333 123 4567"
+              maxLength={2}
+              value={form.province}
+              onChange={(e) => set("province", e.target.value.toUpperCase().slice(0, 2))}
+              placeholder="LE"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">CAP</label>
+            <input
+              type="text"
+              value={form.cap}
+              onChange={(e) => set("cap", e.target.value)}
+              placeholder="73100"
               className={inputClass}
             />
           </div>
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Città o zona</label>
-          <input
-            type="text"
-            value={form.city}
-            onChange={(e) => handleChange("city", e.target.value)}
-            placeholder="Es. Lecce, Milano, Roma..."
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Note aggiuntive</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Note</label>
           <textarea
-            rows={3}
+            rows={2}
             value={form.description}
-            onChange={(e) => handleChange("description", e.target.value)}
-            placeholder={`Descrivi brevemente la situazione del tuo ${animalName.toLowerCase()}...`}
+            onChange={(e) => set("description", e.target.value)}
+            placeholder={`Opzionale — situazione del tuo ${animalName.toLowerCase()}`}
             className={cn(inputClass, "resize-none")}
           />
         </div>
+
+        <div>
+          <span className="block text-sm font-medium text-foreground mb-2">Preferenze di contatto</span>
+          <div className="space-y-2 rounded-xl border border-border p-4 bg-muted/30">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="inlineContactSec"
+                checked={form.contactSecondary === ""}
+                onChange={() => set("contactSecondary", "")}
+                className="h-4 w-4 accent-primary"
+              />
+              <span className="text-sm">Solo email</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="inlineContactSec"
+                checked={form.contactSecondary === "sms"}
+                onChange={() => set("contactSecondary", "sms")}
+                className="h-4 w-4 accent-primary"
+              />
+              <span className="text-sm">Email e SMS</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="inlineContactSec"
+                checked={form.contactSecondary === "whatsapp"}
+                onChange={() => set("contactSecondary", "whatsapp")}
+                className="h-4 w-4 accent-primary"
+              />
+              <span className="text-sm">Email e WhatsApp</span>
+            </label>
+          </div>
+        </div>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.emailVerificationAck}
+            onChange={(e) => set("emailVerificationAck", e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-input accent-primary"
+            required
+          />
+          <span className="text-xs text-muted-foreground leading-relaxed">
+            Ho compreso che devo verificare il mio indirizzo email (anche in spam) perché la richiesta possa essere inoltrata ai
+            veterinari nella mia zona. *
+          </span>
+        </label>
+
         <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={form.consent}
-            onChange={(e) => handleChange("consent", e.target.checked)}
+            onChange={(e) => set("consent", e.target.checked)}
             className="mt-1 h-4 w-4 rounded border-input accent-primary"
+            required
           />
           <span className="text-xs text-muted-foreground leading-relaxed">
-            Acconsento al trattamento dei miei dati personali per la gestione della richiesta veterinaria,
-            ai sensi del GDPR. I dati saranno utilizzati esclusivamente per metterti in contatto con il veterinario adatto.
+            Acconsento al trattamento dei dati personali (GDPR) e autorizzo l&apos;invio della richiesta alle strutture veterinarie
+            della zona. *
           </span>
         </label>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.marketing}
+            onChange={(e) => set("marketing", e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-input accent-primary"
+          />
+          <span className="text-xs text-muted-foreground">Comunicazioni promozionali (facoltativo)</span>
+        </label>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm border border-destructive/20">{error}</div>
+        )}
+
         <Button
           type="submit"
           variant="cta"
           size="lg"
           className="w-full"
-          disabled={!form.consent || !form.name || !form.phone}
+          disabled={
+            submitting ||
+            !form.emailVerificationAck ||
+            !form.consent ||
+            (needsPhoneForChannels && form.phone.trim().length < 3)
+          }
         >
-          Invia richiesta gratuita <ArrowRight className="ml-2 h-4 w-4" />
+          {submitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Invio in corso…
+            </>
+          ) : (
+            <>
+              Crea account e apri chat <ArrowRight className="ml-2 h-4 w-4" />
+            </>
+          )}
         </Button>
       </form>
 
       <p className="text-center text-xs text-muted-foreground mt-4">
-        Oppure vai alla{" "}
+        Stesso modulo anche nella{" "}
         <Link
-          to={`/richiedi-assistenza/?servizio=${encodeURIComponent(serviceName)}&animale=${encodeURIComponent(animalName)}`}
+          to={`/richiedi-assistenza/?animale=${encodeURIComponent(animalId)}&servizio=${encodeURIComponent(serviceSlug)}`}
           className="text-primary hover:underline font-medium"
         >
-          pagina di richiesta completa
+          pagina dedicata alla richiesta
         </Link>
+        .
       </p>
     </section>
   );

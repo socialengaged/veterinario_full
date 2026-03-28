@@ -4,7 +4,6 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageMeta } from "@/components/PageMeta";
 import { PageCTA } from "@/components/PageCTA";
-import { EmergencyBlock } from "@/components/EmergencyBlock";
 import { FaqSection } from "@/components/FaqSection";
 import { ClinicCard } from "@/components/ClinicCard";
 import { AnswerSummary } from "@/components/AnswerSummary";
@@ -13,7 +12,7 @@ import { AreaCoverage } from "@/components/AreaCoverage";
 import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { EditorialInfo } from "@/components/EditorialInfo";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
-import { getProvince, getRegion, getCitiesByProvince, getClinicsByCity, getAllServices } from "@/data";
+import { getProvince, getRegion, getCitiesByProvince, getClinicsByCity, getPublicServices } from "@/data";
 import { provinceRichContent } from "@/data/province-content";
 import { MapPin, Building2, Lightbulb } from "lucide-react";
 import { ProvinceTerritorialContext, getProvinceAggregatedStats } from "@/components/ProvinceTerritorialContext";
@@ -28,9 +27,8 @@ export default function ProvincePage() {
   if (!province || !region) return <NotFound />;
 
   const allCitiesList = getCitiesByProvince(province.slug);
-  const services = getAllServices();
+  const services = getPublicServices();
   const allClinics = allCitiesList.flatMap((c) => getClinicsByCity(c.slug));
-  const emergencyClinics = allClinics.filter(c => c.emergencyAvailable);
   // Only show cities that have at least 1 clinic
   const citiesList = allCitiesList.filter(c => getClinicsByCity(c.slug).length > 0);
   const richContent = provinceRichContent[province.slug];
@@ -38,10 +36,10 @@ export default function ProvincePage() {
   const baseFaq = [
     { q: `Quanti veterinari sono disponibili in provincia di ${province.name}?`, a: `Il nostro database è in costante aggiornamento. Attualmente abbiamo ${allClinics.length} strutture censite in ${citiesList.length} comuni. Il numero cresce man mano che nuovi professionisti aderiscono.` },
     { q: `Come trovo un veterinario nella mia città in provincia di ${province.name}?`, a: "Seleziona la tua città dalla lista in questa pagina, oppure usa lo strumento di ricerca in homepage per una ricerca personalizzata." },
-    { q: `Ci sono veterinari con pronto soccorso in provincia di ${province.name}?`, a: emergencyClinics.length > 0 ? `Sì, ${emergencyClinics.length} strutture in provincia offrono servizio di pronto soccorso veterinario.` : "Al momento non risultano strutture censite con pronto soccorso in questa provincia. Puoi inviare una richiesta per ricevere assistenza." },
+    { q: `Come scelgo la struttura giusta in provincia di ${province.name}?`, a: "Confronta servizi offerti, recensioni e distanza dalla tua abitazione. Puoi filtrare l'elenco per città e inviare una richiesta di contatto dal modulo dedicato." },
     { q: `Quanto costa il servizio di ${siteConfig.name}?`, a: `Il servizio di ricerca è completamente gratuito. I costi delle prestazioni veterinarie variano in base alla struttura e al servizio richiesto.` },
     { q: "Il servizio copre anche i comuni più piccoli?", a: "Stiamo lavorando per coprire tutti i comuni della provincia. Se il tuo comune non è ancora elencato, puoi comunque inviare una richiesta indicando la tua posizione." },
-    { q: `Quali servizi veterinari sono disponibili in provincia di ${province.name}?`, a: `In provincia di ${province.name} sono disponibili servizi come visite generiche, vaccinazioni, chirurgia, diagnostica avanzata, emergenze e molto altro. Esplora i servizi nella sezione dedicata.` },
+    { q: `Quali servizi veterinari sono disponibili in provincia di ${province.name}?`, a: `In provincia di ${province.name} sono disponibili servizi come visite generiche, vaccinazioni, chirurgia, diagnostica avanzata e molto altro. Esplora i servizi nella sezione dedicata.` },
   ];
 
   const faq = richContent ? [...richContent.faq, ...baseFaq] : baseFaq;
@@ -114,7 +112,6 @@ export default function ProvincePage() {
             { label: "Provincia", value: province.name },
             { label: "Comuni coperti", value: String(citiesList.length) },
             { label: "Strutture censite", value: String(allClinics.length) },
-            { label: "Con pronto soccorso", value: String(emergencyClinics.length) },
             { label: "Servizio", value: "Gratuito" },
           ]} />
 
@@ -201,7 +198,6 @@ export default function ProvincePage() {
             </section>
           )}
 
-          <EmergencyBlock cityName={province.name} />
           <AreaCoverage currentArea={`provincia di ${province.name}`} />
           <EditorialInfo lastUpdated="2026-03-01" />
           <FaqSection items={faq} />

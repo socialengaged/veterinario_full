@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { siteConfig } from "@/config/site";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -8,13 +8,14 @@ import { PageMeta } from "@/components/PageMeta";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Button } from "@/components/ui/button";
-import { animals, urgencyLevels } from "@/config/site";
+import { animals } from "@/config/site";
 import { serviceTaxonomy, getSubcategories } from "@/data/service-taxonomy";
 import { cn } from "@/lib/utils";
 import { CheckCircle, Shield, Loader2 } from "lucide-react";
 import { webPageJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { postRequests, setAccessToken } from "@/lib/api";
 import { buildCreateRequestPayload } from "@/lib/build-request-payload";
+import { resolveTaxonomyFromQuery } from "@/lib/request-taxonomy";
 
 export default function RequestPage() {
   const [params] = useSearchParams();
@@ -23,23 +24,36 @@ export default function RequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [form, setForm] = useState({
-    animal: params.get("animale") || "",
-    serviceCategory: params.get("servizio") || "",
-    subService: params.get("sottoservizio") || "",
-    urgency: params.get("urgenza") || "non-urgente",
-    city: params.get("citta") || "",
+    animal: "",
+    serviceCategory: "",
+    subService: "",
+    city: "",
     province: "",
     cap: "",
     name: "",
     email: "",
     phone: "",
-    passwordOptional: "",
+    password: "",
     description: "",
     contactSecondary: "" as "" | "sms" | "whatsapp",
     emailVerificationAck: false,
     consent: false,
     marketing: false,
   });
+
+  useEffect(() => {
+    const servizio = params.get("servizio") || "";
+    const r = resolveTaxonomyFromQuery(servizio);
+    const city = params.get("citta") || params.get("localita") || "";
+    const sottoservizio = params.get("sottoservizio") || "";
+    setForm((f) => ({
+      ...f,
+      animal: params.get("animale") || f.animal,
+      serviceCategory: r.serviceCategory || f.serviceCategory,
+      subService: sottoservizio || r.subService || f.subService,
+      city: city || f.city,
+    }));
+  }, [params]);
 
   const set = (field: string, value: string | boolean) =>
     setForm(prev => ({ ...prev, [field]: value }));
@@ -61,6 +75,8 @@ export default function RequestPage() {
       !form.emailVerificationAck ||
       !form.name ||
       !form.email ||
+      !form.password ||
+      form.password.length < 8 ||
       !form.animal ||
       !form.serviceCategory ||
       !form.city ||
@@ -87,12 +103,11 @@ export default function RequestPage() {
         animal: form.animal,
         serviceCategory: form.serviceCategory,
         subService: form.subService,
-        urgency: form.urgency || "normale",
         description: form.description,
         contactSecondary: form.contactSecondary,
         emailVerificationAck: form.emailVerificationAck,
         marketing: form.marketing,
-        password: form.passwordOptional || undefined,
+        password: form.password,
       });
       const res = await postRequests(payload);
       setAccessToken(res.access_token);
@@ -127,9 +142,9 @@ export default function RequestPage() {
               Invia una richiesta di contatto veterinario
             </h1>
             <p className="text-muted-foreground">
-              L&apos;indirizzo email è obbligatorio. Dopo l&apos;invio riceverai un messaggio per verificare la tua email
-              (controlla anche lo spam): solo dopo la verifica inoltriamo la richiesta ai veterinari della tua zona per
-              trovare la prima disponibilità tra i nostri contatti. Il servizio è gratuito.
+              Compilando il modulo crei un account con email e password: dopo l&apos;invio accedi subito alla chat del servizio.
+              Riceverai anche un messaggio per verificare la tua email (controlla anche lo spam): solo dopo la verifica
+              inoltriamo la richiesta ai veterinari della tua zona. Il servizio è gratuito.
             </p>
           </section>
 
@@ -204,17 +219,6 @@ export default function RequestPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Urgenza</label>
-              <select value={form.urgency} onChange={e => set("urgency", e.target.value)} className={inputClass}>
-                <option value="normale">Normale</option>
-                {urgencyLevels.map(u => (
-                  <option key={u.id} value={u.id}>{u.label}</option>
-                ))}
-                <option value="emergenza">Emergenza</option>
-              </select>
-            </div>
-
             <hr className="border-border" />
 
             {/* Personal info */}
@@ -248,17 +252,18 @@ export default function RequestPage() {
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Password (opzionale)</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Password *</label>
                 <input
                   type="password"
-                  value={form.passwordOptional}
-                  onChange={e => set("passwordOptional", e.target.value)}
-                  placeholder="Min. 8 caratteri per accedere anche da altri dispositivi"
+                  value={form.password}
+                  onChange={e => set("password", e.target.value)}
+                  placeholder="Min. 8 caratteri"
                   minLength={8}
                   className={inputClass}
                   autoComplete="new-password"
+                  required
                 />
-                <p className="text-xs text-muted-foreground mt-1">Se la imposti, potrai usare &quot;Accedi&quot; con email e password.</p>
+                <p className="text-xs text-muted-foreground mt-1">Serve per creare l&apos;account e accedere alla chat e a &quot;Accedi&quot; in seguito.</p>
               </div>
             </div>
 
@@ -389,14 +394,15 @@ export default function RequestPage() {
                 !form.city ||
                 !form.province ||
                 (needsPhoneForChannels && form.phone.trim().length < 3) ||
-                (form.passwordOptional.length > 0 && form.passwordOptional.length < 8) ||
+                !form.password ||
+                form.password.length < 8 ||
                 submitting
               }
             >
               {submitting ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Invio in corso…</>
               ) : (
-                "Invia richiesta"
+                "Crea account e apri chat"
               )}
             </Button>
           </form>
@@ -419,17 +425,15 @@ export default function RequestPage() {
                 <h3 className="text-sm font-semibold text-foreground">Rispondiamo entro 24 ore</h3>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Per richieste non urgenti, il nostro team risponde entro 24 ore lavorative.
-                Per emergenze, contatta il pronto soccorso veterinario.
+                Il nostro team gestisce le richieste in arrivo e le inoltra alle strutture della zona;
+                di solito ricevi un riscontro entro 24 ore lavorative.
               </p>
             </div>
           </div>
 
           <Disclaimer variant="warning">
             <strong>Importante:</strong> {siteConfig.name} non è un servizio medico e non fornisce consulenze, diagnosi o prestazioni veterinarie.
-            L'invio del modulo non costituisce richiesta di prestazione sanitaria.
-            In caso di emergenza che mette in pericolo la vita del tuo animale, recati immediatamente
-            al pronto soccorso veterinario più vicino senza attendere risposta.
+            L&apos;invio del modulo non costituisce richiesta di prestazione sanitaria: è solo un contatto informativo verso strutture della zona.
           </Disclaimer>
         </div>
       </main>
