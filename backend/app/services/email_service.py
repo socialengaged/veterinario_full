@@ -121,9 +121,11 @@ class EmailService:
             whatsapp_text=whatsapp_text,
             admin_whatsapp_url=self.settings.admin_whatsapp_url,
             team_whatsapp_url_with_text=team_whatsapp_url_with_text,
+            frontend_url=self.settings.frontend_url.rstrip("/"),
         )
         text_lines = [
             "Nuova richiesta VeterinarioVicino",
+            f"Sito web: {self.settings.frontend_url.rstrip('/')}",
             f"Utente: {user_name} <{user_email}> {user_phone}",
             f"Animale: {animal_species}",
             f"Zona: {city} ({province})" + (f" CAP {user_cap}" if user_cap else ""),
@@ -140,7 +142,7 @@ class EmailService:
             "Testo da copiare:",
             whatsapp_text,
         ])
-        self._send(admin_email, f"[Admin] Nuova richiesta — {city}", html, "\n".join(text_lines))
+        self._send(admin_email, f"Nuova richiesta veterinario - {city} ({urgency})", html, "\n".join(text_lines))
 
     def send_test_ping(self) -> None:
         """Email minima per verificare SMTP in produzione."""

@@ -7,6 +7,70 @@ from urllib.parse import quote
 
 from app.models.entities import Specialist
 
+# Spezza più numeri nello stesso campo (es. "0832 / 333 …")
+PHONE_SPLIT_RE = re.compile(r"\s*(?:/|\||;|\n|(?:\s+-\s+))\s*")
+
+
+def split_phone_segments(raw: Optional[str]) -> list[str]:
+    if not raw or not str(raw).strip():
+        return []
+    return [p.strip() for p in PHONE_SPLIT_RE.split(raw.strip()) if p.strip()]
+
+
+def classify_it_phone_label(segment: str) -> str:
+    d = re.sub(r"\D", "", segment)
+    if not d:
+        return "Tel."
+    if d.startswith("39"):
+        d = d[2:]
+    if d.startswith("0"):
+        return "Fisso"
+    if len(d) >= 9 and d[0] == "3":
+        return "Mobile"
+    return "Tel."
+
+
+def specialist_phone_lines_for_email(raw: Optional[str]) -> list[dict[str, str]]:
+    segs = split_phone_segments(raw)
+    if not segs:
+        return []
+    if len(segs) == 1:
+        return [{"label": "Tel.", "number": segs[0]}]
+    return [{"label": classify_it_phone_label(seg), "number": seg} for seg in segs]
+
+
+def first_phone_segment_for_tel_link(raw: Optional[str]) -> Optional[str]:
+    segs = split_phone_segments(raw)
+    return segs[0] if segs else None
+
+
+def pick_phone_for_whatsapp(raw: Optional[str]) -> Optional[str]:
+    segs = split_phone_segments(raw)
+    if not segs:
+        return (raw or "").strip() or None
+    for seg in segs:
+        if classify_it_phone_label(seg) == "Mobile":
+            return seg
+    return segs[0]
+
+
+def normalize_specialist_website_href(raw: Optional[str]) -> Optional[str]:
+    if not raw or not str(raw).strip():
+        return None
+    u = raw.strip()
+    if u.startswith(("http://", "https://")):
+        return u
+    return f"https://{u}"
+
+
+def tel_href(phone: Optional[str]) -> Optional[str]:
+    if not phone or not str(phone).strip():
+        return None
+    compact = re.sub(r"\s+", "", phone.strip())
+    if not compact:
+        return None
+    return f"tel:{compact}"
+
 
 def normalize_phone_for_wa(phone: Optional[str]) -> Optional[str]:
     """Restituisce solo cifre per wa.me (es. 393201234567) o None."""
@@ -167,7 +231,11 @@ def enrich_specialist_matches(
             subject=subj,
             body=body,
         )
-        wa_url = build_whatsapp_url(sp.phone, wa_txt)
+        wa_url = build_whatsapp_url(pick_phone_for_whatsapp(sp.phone), wa_txt)
+        phone_lines = specialist_phone_lines_for_email(sp.phone)
+        first_tel = first_phone_segment_for_tel_link(sp.phone)
+        web_href = normalize_specialist_website_href(getattr(sp, "website_url", None))
+        spec_labels = ", ".join(s.name for s in (sp.specialties or []))
         out.append(
             {
                 "id": str(sp.id),
@@ -178,7 +246,11 @@ def enrich_specialist_matches(
                 "street_address": sp.street_address or "",
                 "email": sp.email,
                 "phone": sp.phone or "",
+                "phone_lines": phone_lines,
+                "tel_href": tel_href(first_tel or sp.phone),
+                "website_href": web_href or "",
                 "specialty_name": specialty_name,
+                "specialties_display": spec_labels or specialty_name,
                 "score": sc,
                 "mailto_url": mailto,
                 "whatsapp_url": wa_url,

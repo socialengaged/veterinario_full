@@ -2,6 +2,10 @@
 <html lang="it">
 <head><meta charset="utf-8"/><title>Nuova richiesta admin</title></head>
 <body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111;">
+  <p style="font-size:14px;margin:0 0 16px;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+    <strong>Sito web:</strong>
+    <a href="{{ frontend_url }}/" style="color:#0f766e;">VeterinarioVicino.it</a>
+  </p>
   <h2>Nuova richiesta</h2>
   <p><strong>Utente:</strong> {{ user_name }} &lt;{{ user_email }}&gt; — {{ user_phone }}</p>
   <p><strong>Animale:</strong> {{ animal_species }}</p>
@@ -12,14 +16,16 @@
   {% if description %}<p><strong>Note della richiesta:</strong> {{ description }}</p>{% endif %}
 
   <h3>Specialisti in zona (match)</h3>
-  <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:900px;font-size:14px;">
+  <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:1000px;font-size:14px;">
     <thead>
       <tr style="background:#f0f0f0;">
         <th align="left">Nome</th>
         <th align="left">Indirizzo</th>
         <th>CAP</th>
+        <th align="left">Sito web</th>
         <th align="left">Specialità</th>
         <th>Score</th>
+        <th align="left">Telefoni</th>
         <th>Email</th>
         <th>WhatsApp</th>
       </tr>
@@ -30,8 +36,21 @@
         <td>{{ m.name }}</td>
         <td>{{ m.street_address or "—" }}</td>
         <td align="center">{{ m.cap or "—" }}</td>
-        <td>{{ m.specialty_name }}</td>
+        <td style="font-size:13px;max-width:200px;word-break:break-all;">{% if m.website_href %}<a href="{{ m.website_href }}">{{ m.website_href }}</a>{% else %}—{% endif %}</td>
+        <td>{{ m.specialties_display or m.specialty_name }}</td>
         <td align="center">{{ m.score|round(1) }}</td>
+        <td style="font-size:13px;white-space:normal;max-width:240px;">
+          {% if m.phone_lines %}
+            {% for pl in m.phone_lines %}
+              <strong>{{ pl.label }}</strong> {{ pl.number }}{% if not loop.last %}<br/>{% endif %}
+            {% endfor %}
+            {% if m.tel_href %}<br/><a href="{{ m.tel_href }}">Chiama (1°)</a>{% endif %}
+          {% elif m.phone %}
+            {{ m.phone }}{% if m.tel_href %}<br/><a href="{{ m.tel_href }}">Chiama</a>{% endif %}
+          {% else %}
+            —
+          {% endif %}
+        </td>
         <td><a href="{{ m.mailto_url }}">Apri email</a></td>
         <td>{% if m.whatsapp_url %}<a href="{{ m.whatsapp_url }}">Apri WhatsApp</a>{% else %}—{% endif %}</td>
       </tr>
