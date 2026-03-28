@@ -10,11 +10,11 @@ echo "DEPLOY_ROOT=$DEPLOY_ROOT"
 
 cd "$DEPLOY_ROOT"
 
-if [[ -d .git ]]; then
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "Pulling latest code..."
-  git pull
+  git pull --ff-only
 else
-  echo "WARN: no .git in $DEPLOY_ROOT — skipping git pull (sync code via clone/rsync/CI, then re-run)."
+  echo "WARN: not a Git work tree under $DEPLOY_ROOT — skipping git pull (clone/rsync/CI)."
 fi
 
 echo "Activating venv..."
