@@ -173,6 +173,19 @@ Esempi utili:
 
 ## 8. Test rapidi post-deploy
 
+**E2E (Playwright)** — dalla cartella `veterinari_frontend/`:
+
+```bash
+npm install
+npx playwright install chromium
+# Default: produzione (stessi URL di `E2E_*` sotto)
+npm run test:e2e
+# Esplicito:
+E2E_BASE_URL=https://veterinariovicino.it E2E_API_URL=https://api.veterinariovicino.it npm run test:e2e
+```
+
+Copre: `/health`, home, `/accedi/` (POST `/auth/login` verso API pubblica), `/registrati/`, `/richiedi-assistenza/`, `/verify-email` senza token.
+
 ```bash
 curl -s https://api.veterinariovicino.it/health
 curl -sI https://veterinariovicino.it/assets/index-*.js   # sostituire hash reale; deve essere 200, non 403
