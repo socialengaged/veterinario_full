@@ -66,6 +66,7 @@ def mailto_body_for_specialist(
     specialty_name: str,
     description: Optional[str],
     specialist_name: str,
+    profile_notes: Optional[str] = None,
 ) -> str:
     lines = [
         "Messaggio da VeterinarioVicino.it",
@@ -79,8 +80,10 @@ def mailto_body_for_specialist(
         f"Zona utente: {city} ({province})" + (f" — CAP {user_cap}" if user_cap else ""),
         f"Servizio richiesto: {specialty_name}",
     ]
+    if profile_notes and str(profile_notes).strip():
+        lines.extend(["", "Note profilo utente (persistenti):", str(profile_notes).strip()])
     if description and str(description).strip():
-        lines.extend(["", "Nota dell'utente:", str(description).strip()])
+        lines.extend(["", "Nota della richiesta:", str(description).strip()])
     lines.extend(["", "---", "Rispondere all'utente utilizzando i contatti sopra."])
     return "\n".join(lines)
 
@@ -97,6 +100,7 @@ def whatsapp_text_for_specialist(
     specialty_name: str,
     description: Optional[str],
     specialist_name: str,
+    profile_notes: Optional[str] = None,
 ) -> str:
     """Testo breve per WA verso un singolo specialista."""
     parts = [
@@ -107,8 +111,10 @@ def whatsapp_text_for_specialist(
         + (f", CAP {user_cap}" if user_cap else ""),
         f"Servizio: {specialty_name}",
     ]
+    if profile_notes and str(profile_notes).strip():
+        parts.append(f"Note profilo: {str(profile_notes).strip()[:400]}")
     if description and str(description).strip():
-        parts.append(f"Nota: {str(description).strip()}")
+        parts.append(f"Nota richiesta: {str(description).strip()}")
     return "\n".join(parts)
 
 
@@ -124,6 +130,7 @@ def enrich_specialist_matches(
     province: str,
     user_cap: Optional[str],
     description: Optional[str],
+    profile_notes: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     """Arricchisce i match con campi per template email (tabella + link)."""
     out: list[dict[str, Any]] = []
@@ -140,6 +147,7 @@ def enrich_specialist_matches(
             specialty_name=specialty_name,
             description=description,
             specialist_name=sp.full_name,
+            profile_notes=profile_notes,
         )
         wa_txt = whatsapp_text_for_specialist(
             user_name=user_name,
@@ -152,6 +160,7 @@ def enrich_specialist_matches(
             specialty_name=specialty_name,
             description=description,
             specialist_name=sp.full_name,
+            profile_notes=profile_notes,
         )
         mailto = build_mailto_specialist_url(
             specialist_email=sp.email,

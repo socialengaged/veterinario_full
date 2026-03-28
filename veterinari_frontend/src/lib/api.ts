@@ -198,3 +198,149 @@ export async function postResendVerification(): Promise<{ ok: boolean }> {
     auth: true,
   });
 }
+
+export type AddressRow = {
+  id: string;
+  city: string;
+  province: string;
+  cap: string | null;
+  street: string | null;
+  label: string | null;
+  created_at: string;
+};
+
+export type AnimalRow = {
+  id: string;
+  species: string;
+  name: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type SpecialistLink = {
+  id: string;
+  full_name: string;
+  email: string;
+  city: string;
+  province: string;
+  is_active: boolean;
+};
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string | null;
+  email_verified: boolean;
+  profile_notes_for_vets: string | null;
+  addresses: AddressRow[];
+  animals: AnimalRow[];
+  linked_specialist: SpecialistLink | null;
+};
+
+export async function getUserProfile(): Promise<UserProfile> {
+  return apiFetch<UserProfile>("/users/me/profile", { auth: true });
+}
+
+export async function patchUserProfile(body: {
+  full_name?: string;
+  phone?: string | null;
+  profile_notes_for_vets?: string | null;
+}): Promise<UserProfile> {
+  return apiFetch<UserProfile>("/users/me", { method: "PATCH", body, auth: true });
+}
+
+export async function postUserAddress(body: {
+  city: string;
+  province: string;
+  cap?: string | null;
+  street?: string | null;
+  label?: string | null;
+}): Promise<AddressRow> {
+  return apiFetch<AddressRow>("/users/me/addresses", { method: "POST", body, auth: true });
+}
+
+export async function patchUserAddress(
+  id: string,
+  body: {
+    city?: string;
+    province?: string;
+    cap?: string | null;
+    street?: string | null;
+    label?: string | null;
+  },
+): Promise<AddressRow> {
+  return apiFetch<AddressRow>(`/users/me/addresses/${id}`, { method: "PATCH", body, auth: true });
+}
+
+export async function deleteUserAddress(id: string): Promise<void> {
+  await apiFetch<unknown>(`/users/me/addresses/${id}`, { method: "DELETE", auth: true });
+}
+
+export async function postUserAnimal(body: {
+  species: string;
+  name?: string | null;
+  notes?: string | null;
+}): Promise<AnimalRow> {
+  return apiFetch<AnimalRow>("/users/me/animals", { method: "POST", body, auth: true });
+}
+
+export async function patchUserAnimal(
+  id: string,
+  body: { species?: string; name?: string | null; notes?: string | null },
+): Promise<AnimalRow> {
+  return apiFetch<AnimalRow>(`/users/me/animals/${id}`, { method: "PATCH", body, auth: true });
+}
+
+export async function deleteUserAnimal(id: string): Promise<void> {
+  await apiFetch<unknown>(`/users/me/animals/${id}`, { method: "DELETE", auth: true });
+}
+
+export type SpecialtyPublic = { slug: string; name: string; category: string };
+
+export async function getSpecialtiesPublic(): Promise<SpecialtyPublic[]> {
+  return apiFetch<SpecialtyPublic[]>("/specialists/specialties", { auth: false });
+}
+
+export type SpecialistDuplicateDetail = {
+  candidates: {
+    id: string;
+    full_name: string;
+    email: string;
+    city: string;
+    province: string;
+    cap: string | null;
+    street_address: string | null;
+  }[];
+};
+
+export async function postSpecialistRegister(
+  body: Record<string, unknown>,
+): Promise<{ success: boolean; user_id: string; email_verified: boolean; merge_pending: boolean }> {
+  const res = await fetch(`${getApiBaseUrl()}/specialists/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  let json: unknown = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = null;
+  }
+  if (res.status === 409 && json && typeof json === "object" && json !== null && "detail" in json) {
+    const err = new Error("DUPLICATE_CANDIDATES");
+    const det = (json as { detail: unknown }).detail;
+    (err as Error & { detail: SpecialistDuplicateDetail }).detail =
+      typeof det === "object" && det !== null && "candidates" in (det as object)
+        ? (det as SpecialistDuplicateDetail)
+        : { candidates: [] };
+    throw err;
+  }
+  if (!res.ok) {
+    const errObj = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    throw new Error(parseApiError(errObj.detail ?? text));
+  }
+  return json as { success: boolean; user_id: string; email_verified: boolean; merge_pending: boolean };
+}

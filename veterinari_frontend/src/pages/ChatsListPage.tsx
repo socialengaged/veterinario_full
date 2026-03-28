@@ -85,7 +85,10 @@ export default function ChatsListPage() {
             </ul>
           )}
 
-          <div className="mt-10">
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Button variant="outline" asChild>
+              <Link to="/dashboard/profilo/">Il mio profilo</Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link to="/richiedi-assistenza/">Nuova richiesta</Link>
             </Button>

@@ -55,12 +55,20 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
+    profile_notes_for_vets: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    pending_specialist_profile: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
 
     addresses: Mapped[List["UserAddress"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     animals: Mapped[List["Animal"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
     requests: Mapped[List["VetRequest"]] = relationship(back_populates="user")
     conversations: Mapped[List["Conversation"]] = relationship(back_populates="user")
     email_verifications: Mapped[List["EmailVerification"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    specialist_profile: Mapped[Optional["Specialist"]] = relationship(
+        "Specialist",
+        back_populates="user_account",
+        foreign_keys="Specialist.user_id",
+        uselist=False,
+    )
 
 
 class UserAddress(Base):
@@ -114,6 +122,9 @@ class Specialist(Base):
     __tablename__ = "specialists"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     email: Mapped[str] = mapped_column(String(320), unique=True, nullable=False, index=True)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     city: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
@@ -125,6 +136,9 @@ class Specialist(Base):
     species_tags: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
+    user_account: Mapped[Optional["User"]] = relationship(
+        "User", back_populates="specialist_profile", foreign_keys=[user_id]
+    )
     specialties: Mapped[List["Specialty"]] = relationship(secondary=specialist_specialties, back_populates="specialists")
     matches: Mapped[List["RequestMatch"]] = relationship(back_populates="specialist")
 

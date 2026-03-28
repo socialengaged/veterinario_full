@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime
 from typing import List, Optional
@@ -11,6 +11,7 @@ class AnimalOut(BaseModel):
     id: UUID
     species: str
     name: Optional[str]
+    notes: Optional[str] = None
     created_at: datetime
 
     class Config:

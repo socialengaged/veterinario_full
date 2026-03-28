@@ -16,6 +16,7 @@ def build_admin_whatsapp_payload(
     urgency: str,
     description: str | None,
     matches: list[dict[str, Any]],
+    profile_notes: str | None = None,
 ) -> dict[str, Any]:
     lines = [
         "*Nuova richiesta VeterinarioVicino*",
@@ -27,8 +28,10 @@ def build_admin_whatsapp_payload(
         f"Servizio: {specialty}",
         f"Urgenza: {urgency}",
     ]
+    if profile_notes and str(profile_notes).strip():
+        lines.append(f"Note profilo: {str(profile_notes).strip()[:500]}")
     if description:
-        lines.append(f"Note: {description}")
+        lines.append(f"Note richiesta: {description}")
     lines.append("")
     lines.append("*Match specialisti:*")
     if not matches:

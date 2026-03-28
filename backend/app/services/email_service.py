@@ -103,6 +103,7 @@ class EmailService:
         whatsapp_text: str,
         team_whatsapp_url_with_text: str,
         user_cap: str | None = None,
+        profile_notes: str | None = None,
     ) -> None:
         html = _env.get_template("admin_request.html").render(
             user_email=user_email,
@@ -115,6 +116,7 @@ class EmailService:
             specialty_name=specialty_name,
             urgency=urgency,
             description=description or "",
+            profile_notes=profile_notes or "",
             matches=matches,
             whatsapp_text=whatsapp_text,
             admin_whatsapp_url=self.settings.admin_whatsapp_url,
@@ -127,13 +129,17 @@ class EmailService:
             f"Zona: {city} ({province})" + (f" CAP {user_cap}" if user_cap else ""),
             f"Specialità: {specialty_name}",
             f"Urgenza: {urgency}",
+        ]
+        if profile_notes and str(profile_notes).strip():
+            text_lines.append(f"Note profilo utente: {str(profile_notes).strip()}")
+        text_lines.extend([
             "",
             f"WhatsApp team (testo incluso): {team_whatsapp_url_with_text}",
             f"WhatsApp team (base): {self.settings.admin_whatsapp_url}",
             "",
             "Testo da copiare:",
             whatsapp_text,
-        ]
+        ])
         self._send(admin_email, f"[Admin] Nuova richiesta — {city}", html, "\n".join(text_lines))
 
     def send_test_ping(self) -> None:

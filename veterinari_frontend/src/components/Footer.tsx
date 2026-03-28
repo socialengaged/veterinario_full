@@ -75,10 +75,13 @@ export function Footer() {
         <div className="border-t border-primary-foreground/20 mt-10 pt-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs opacity-60">
             <p>© {new Date().getFullYear()} {siteConfig.name} — Servizio gratuito di ricerca veterinaria in Italia.</p>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center sm:justify-end items-center">
               <Link to="/privacy-policy/" className="hover:opacity-100 transition-opacity">Privacy Policy</Link>
               <Link to="/cookie-policy/" className="hover:opacity-100 transition-opacity">Cookie Policy</Link>
               <Link to="/termini-condizioni/" className="hover:opacity-100 transition-opacity">Termini di servizio</Link>
+              <Link to="/iscrizione-veterinari/" className="hover:opacity-100 transition-opacity text-primary-foreground/90 underline underline-offset-2">
+                Iscrizione professionisti
+              </Link>
             </div>
           </div>
         </div>

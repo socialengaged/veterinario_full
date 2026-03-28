@@ -8,7 +8,8 @@
   <p><strong>Zona:</strong> {{ city }} ({{ province }}){% if user_cap %} — <strong>CAP utente:</strong> {{ user_cap }}{% endif %}</p>
   <p><strong>Specialità:</strong> {{ specialty_name }}</p>
   <p><strong>Urgenza:</strong> {{ urgency }}</p>
-  {% if description %}<p><strong>Note utente (form):</strong> {{ description }}</p>{% endif %}
+  {% if profile_notes %}<p><strong>Note profilo utente (persistenti):</strong> {{ profile_notes }}</p>{% endif %}
+  {% if description %}<p><strong>Note della richiesta:</strong> {{ description }}</p>{% endif %}
 
   <h3>Specialisti in zona (match)</h3>
   <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:900px;font-size:14px;">

@@ -35,6 +35,8 @@ const ContentAuditPage = lazy(() => import("./pages/ContentAuditPage"));
 const ChatsListPage = lazy(() => import("./pages/ChatsListPage"));
 const ChatDetailPage = lazy(() => import("./pages/ChatDetailPage"));
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const AccountProfilePage = lazy(() => import("./pages/AccountProfilePage"));
+const VetRegisterPage = lazy(() => import("./pages/VetRegisterPage"));
 
 const queryClient = new QueryClient();
 
@@ -64,6 +66,7 @@ const App = () => (
               <Route path="/accedi/" element={<LoginPage />} />
               <Route path="/registrati/" element={<RegisterPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/iscrizione-veterinari/" element={<VetRegisterPage />} />
               <Route
                 path="/dashboard/chat"
                 element={
@@ -77,6 +80,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ChatDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/profilo"
+                element={
+                  <ProtectedRoute>
+                    <AccountProfilePage />
                   </ProtectedRoute>
                 }
               />

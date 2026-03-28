@@ -149,6 +149,7 @@ class RequestService:
         for sp, sc in matches:
             self.db.add(RequestMatch(request_id=req.id, specialist_id=sp.id, score=sc))
 
+        profile_notes = (user.profile_notes_for_vets or "").strip() or None
         matched_specs = enrich_specialist_matches(
             matches,
             specialty_name=specialty.name,
@@ -160,6 +161,7 @@ class RequestService:
             province=province,
             user_cap=user_cap,
             description=req.description,
+            profile_notes=profile_notes,
         )
 
         wa_payload = build_admin_whatsapp_payload(
@@ -174,6 +176,7 @@ class RequestService:
             urgency=urgency,
             description=req.description,
             matches=matched_specs,
+            profile_notes=profile_notes,
         )
 
         notif = AdminNotification(
@@ -203,6 +206,7 @@ class RequestService:
                 whatsapp_text=wa_payload["whatsapp_text"],
                 team_whatsapp_url_with_text=team_wa,
                 user_cap=user_cap,
+                profile_notes=profile_notes,
             )
         except Exception:
             logger.exception("Email admin fallita dopo inoltro richiesta")
@@ -319,6 +323,7 @@ class RequestService:
             )
             for sp, sc in matches:
                 self.db.add(RequestMatch(request_id=req.id, specialist_id=sp.id, score=sc))
+            pn = (user.profile_notes_for_vets or "").strip() or None
             matched_specs = enrich_specialist_matches(
                 matches,
                 specialty_name=specialty.name,
@@ -330,6 +335,7 @@ class RequestService:
                 province=province,
                 user_cap=user_cap,
                 description=description,
+                profile_notes=pn,
             )
             wa_payload = build_admin_whatsapp_payload(
                 user_email=user.email,
@@ -343,6 +349,7 @@ class RequestService:
                 urgency=urgency,
                 description=description,
                 matches=matched_specs,
+                profile_notes=pn,
             )
 
         conv = Conversation(request_id=req.id, user_id=user.id)
@@ -422,6 +429,7 @@ class RequestService:
                     whatsapp_text=wa_payload["whatsapp_text"],
                     team_whatsapp_url_with_text=team_wa,
                     user_cap=uc,
+                    profile_notes=pn,
                 )
             except Exception:
                 logger.exception("Email admin fallita dopo persistenza richiesta")
