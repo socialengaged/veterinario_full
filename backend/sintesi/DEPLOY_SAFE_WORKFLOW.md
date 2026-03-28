@@ -61,7 +61,7 @@ chmod +x scripts/db_backup.sh scripts/deploy_safe.sh scripts/post_deploy_check.s
 ./scripts/post_deploy_check.sh
 ```
 
-**Cartella senza `.git` (caso OVH attuale):** `deploy_safe.sh` salta `git pull` e stampa un avviso. Per aggiornare solo gli script dalla macchina di sviluppo: `scp backend/scripts/{db_backup,deploy_safe,post_deploy_check}.sh ubuntu@HOST:/var/www/veterinari/backend/scripts/` (poi `chmod +x scripts/*.sh`). Per avere `git pull` sul server, va creato un clone Git in quella path (o spostato il deploy su checkout CI).
+**Layout OVH consigliato (monorepo):** clone in `/var/www/veterinari/veterinario_full`, symlink `ln -sfn .../veterinario_full/backend /var/www/veterinari/backend`. `deploy_safe.sh` esegue `git pull --ff-only` perché la cwd backend è dentro il work tree Git (anche senza cartella `.git` locale). Migrazione una tantum: `backend/deploy/clone_migrate_ovh_backend.sh` (salva il vecchio backend in `backend.legacy.<timestamp>`). **Tutte le revisioni Alembic usate in produzione** devono essere nel branch `master` su GitHub, altrimenti `alembic upgrade head` fallisce dopo il clone.
 
 **Nota:** `deploy_safe.sh` interrompe tutto se una fase fallisce (`set -e`). Se `alembic upgrade head` fallisce, **non** viene eseguito il restart (il comando precedente ha già fallito). Comunque **verificare** i log prima di rilanciare.
 

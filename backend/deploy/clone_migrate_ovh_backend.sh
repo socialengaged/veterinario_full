@@ -41,6 +41,7 @@ echo "=== Alembic ==="
 alembic upgrade head
 
 chmod +x scripts/*.sh 2>/dev/null || true
+chmod +x deploy/*.sh 2>/dev/null || true
 
 echo "=== Avvio servizio ==="
 sudo systemctl start veterinari
