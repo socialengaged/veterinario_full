@@ -1,8 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { fillRichiediAssistenza } from "./helpers-forms";
-import { uniqueEmail, defaultApiUrl } from "./helpers";
-
-const API = defaultApiUrl();
+import { uniqueEmail } from "./helpers";
 
 test.describe("Percorsi anonimi — navigazione e moduli", () => {
   test("home: titolo e link al modulo richiesta", async ({ page }) => {
@@ -20,9 +18,8 @@ test.describe("Percorsi anonimi — navigazione e moduli", () => {
 
   test("accedi: credenziali errate → 401", async ({ page }) => {
     await page.goto("/accedi/", { waitUntil: "networkidle" });
-    const loginUrl = `${API}/auth/login`;
     const responsePromise = page.waitForResponse(
-      r => r.url() === loginUrl && r.request().method() === "POST",
+      r => r.url().includes("/auth/login") && r.request().method() === "POST",
       { timeout: 25_000 },
     );
     await page.fill("#email", "e2e-non-esiste@example.com");
