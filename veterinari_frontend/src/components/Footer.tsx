@@ -66,8 +66,11 @@ export function Footer() {
             </nav>
             <h4 className="font-semibold text-sm mt-5 mb-2 uppercase tracking-wide opacity-70">Contatti</h4>
             <div className="space-y-1 text-sm opacity-80">
-              <p>{siteConfig.contact.email}</p>
-              <p>{siteConfig.contact.phone}</p>
+              <p>
+                <a href={`mailto:${siteConfig.contact.email}`} className="hover:opacity-100 underline underline-offset-2">
+                  {siteConfig.contact.email}
+                </a>
+              </p>
             </div>
           </div>
         </div>

@@ -23,6 +23,18 @@ function statusLabel(s: string) {
   return m[s] || s;
 }
 
+function contactMethodLabel(raw: string | null | undefined) {
+  if (!raw) return "—";
+  const s = raw.toLowerCase();
+  if (s === "email") return "Email";
+  if (s === "telefono" || s === "phone") return "Telefono";
+  if (s.startsWith("email+")) {
+    if (s.includes("sms")) return "Email e SMS";
+    if (s.includes("whatsapp")) return "Email e WhatsApp";
+  }
+  return raw;
+}
+
 export default function DashboardRequestsPage() {
   const [items, setItems] = useState<UserRequestSummary[] | null>(null);
   const [error, setError] = useState("");
@@ -32,9 +44,15 @@ export default function DashboardRequestsPage() {
     (async () => {
       try {
         const list = await getUserRequests();
-        if (!cancelled) setItems(list);
+        if (!cancelled) {
+          setItems(list);
+          setError("");
+        }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Errore caricamento");
+        if (!cancelled) {
+          setItems(null);
+          setError(e instanceof Error ? e.message : "Errore caricamento");
+        }
       }
     })();
     return () => {
@@ -48,7 +66,8 @@ export default function DashboardRequestsPage() {
       <div className="max-w-3xl">
         <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">Le mie richieste</h1>
         <p className="text-muted-foreground text-sm mb-8">
-          Ogni richiesta ha una chat dedicata per messaggi con il team dopo l&apos;inoltro.
+          Qui trovi tutti i dati che hai inviato con ogni richiesta. Ogni richiesta ha una chat dedicata con il team dopo
+          l&apos;inoltro.
         </p>
 
         {error && (
@@ -68,32 +87,65 @@ export default function DashboardRequestsPage() {
         )}
 
         {items && items.length > 0 && (
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {items.map((r) => (
-              <li
-                key={r.id}
-                className="rounded-xl border border-border bg-card p-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="font-medium text-foreground">{r.specialty_name || r.specialty_slug || "Richiesta"}</p>
-                  <p className="text-xs text-muted-foreground">{formatDate(r.created_at)}</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    <span className="font-medium text-foreground">{statusLabel(r.status)}</span>
-                    {r.urgency && r.urgency !== "normale" ? ` · Urgenza: ${r.urgency}` : ""}
-                  </p>
-                  {r.description_preview && (
-                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{r.description_preview}</p>
-                  )}
-                </div>
-                <div className="shrink-0 flex flex-wrap gap-2">
+              <li key={r.id} className="rounded-xl border border-border bg-card p-5 space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="font-display font-semibold text-lg text-foreground">
+                      {r.specialty_name || r.specialty_slug || "Richiesta"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{formatDate(r.created_at)}</p>
+                  </div>
                   {r.conversation_id && (
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="shrink-0 w-fit">
                       <Link to={`/dashboard/chat/${r.conversation_id}`}>
-                        <MessageCircle className="h-4 w-4 mr-1" /> Chat
+                        <MessageCircle className="h-4 w-4 mr-1" /> Apri chat
                       </Link>
                     </Button>
                   )}
                 </div>
+
+                <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <dt className="text-xs font-medium uppercase text-muted-foreground">Stato richiesta</dt>
+                    <dd className="text-foreground">{statusLabel(r.status)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-muted-foreground">Urgenza</dt>
+                    <dd className="text-foreground capitalize">{r.urgency || "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-muted-foreground">Preferenza contatto</dt>
+                    <dd className="text-foreground">{contactMethodLabel(r.contact_method)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-muted-foreground">Animale</dt>
+                    <dd className="text-foreground capitalize">
+                      {r.animal_species || "—"}
+                      {r.animal_name ? ` (${r.animal_name})` : ""}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-muted-foreground">Zona</dt>
+                    <dd className="text-foreground">
+                      {[r.city, r.province].filter(Boolean).join(" — ") || "—"}
+                      {r.cap ? ` — CAP ${r.cap}` : ""}
+                    </dd>
+                  </div>
+                  {r.sub_service && (
+                    <div className="sm:col-span-2">
+                      <dt className="text-xs font-medium uppercase text-muted-foreground">Dettaglio servizio</dt>
+                      <dd className="text-foreground">{r.sub_service}</dd>
+                    </div>
+                  )}
+                  {(r.description || r.description_preview) && (
+                    <div className="sm:col-span-2 rounded-lg bg-muted/50 p-3 border border-border/60">
+                      <dt className="text-xs font-medium uppercase text-muted-foreground mb-1">Testo della richiesta</dt>
+                      <dd className="text-foreground whitespace-pre-wrap">{r.description ?? r.description_preview}</dd>
+                    </div>
+                  )}
+                </dl>
               </li>
             ))}
           </ul>

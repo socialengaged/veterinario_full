@@ -125,6 +125,14 @@ export type UserRequestSummary = {
   specialty_name: string | null;
   conversation_id: string | null;
   description_preview: string | null;
+  description?: string | null;
+  animal_species?: string | null;
+  animal_name?: string | null;
+  city?: string | null;
+  province?: string | null;
+  cap?: string | null;
+  contact_method?: string | null;
+  sub_service?: string | null;
 };
 
 export async function getUserRequests(): Promise<UserRequestSummary[]> {

@@ -28,6 +28,14 @@ class RequestSummary(BaseModel):
     specialty_name: Optional[str] = None
     conversation_id: Optional[UUID] = None
     description_preview: Optional[str] = None
+    description: Optional[str] = None
+    animal_species: Optional[str] = None
+    animal_name: Optional[str] = None
+    city: Optional[str] = None
+    province: Optional[str] = None
+    cap: Optional[str] = None
+    contact_method: Optional[str] = None
+    sub_service: Optional[str] = None
 
 
 class RequestContextOut(BaseModel):

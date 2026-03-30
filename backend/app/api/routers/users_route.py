@@ -5,11 +5,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.models.entities import Animal, Conversation, Specialist, Specialty, User, UserAddress, VetRequest
+from app.models.entities import Animal, Specialist, Specialty, User, UserAddress, VetRequest
 from app.schemas.dashboard import AnimalOut, RequestSummary
 from app.schemas.profile import (
     AddressCreateBody,
@@ -227,19 +227,34 @@ def my_requests(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> List[RequestSummary]:
-    rows = db.execute(
-        select(VetRequest, Specialty, Conversation.id)
-        .join(Specialty, VetRequest.specialty_id == Specialty.id)
-        .outerjoin(Conversation, Conversation.request_id == VetRequest.id)
-        .where(VetRequest.user_id == user.id)
-        .order_by(VetRequest.created_at.desc())
+    reqs = (
+        db.scalars(
+            select(VetRequest)
+            .where(VetRequest.user_id == user.id)
+            .options(
+                selectinload(VetRequest.specialty),
+                selectinload(VetRequest.animal),
+                selectinload(VetRequest.address),
+                selectinload(VetRequest.conversation),
+            )
+            .order_by(VetRequest.created_at.desc())
+        )
     ).all()
     out: List[RequestSummary] = []
-    for req, spec, conv_id in rows:
+    for req in reqs:
+        spec = req.specialty
+        if not spec:
+            continue
+        conv = req.conversation
+        animal = req.animal
+        addr = req.address
         desc = (req.description or "").strip()
         preview: str | None = None
         if desc:
             preview = desc[:120] + ("…" if len(desc) > 120 else "")
+        cap_val = None
+        if addr and (addr.cap or "").strip():
+            cap_val = (addr.cap or "").strip()
         out.append(
             RequestSummary(
                 id=req.id,
@@ -248,8 +263,16 @@ def my_requests(
                 created_at=req.created_at,
                 specialty_slug=spec.slug,
                 specialty_name=spec.name,
-                conversation_id=conv_id,
+                conversation_id=conv.id if conv else None,
                 description_preview=preview,
+                description=req.description,
+                animal_species=animal.species if animal else None,
+                animal_name=animal.name if animal else None,
+                city=addr.city if addr else None,
+                province=addr.province if addr else None,
+                cap=cap_val,
+                contact_method=req.contact_method,
+                sub_service=req.sub_service,
             )
         )
     return out

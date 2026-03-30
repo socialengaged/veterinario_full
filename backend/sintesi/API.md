@@ -7,7 +7,7 @@
 - `GET /auth/me` — Bearer
 - `POST /auth/verify-email` — body `{"token":"..."}`
 - `POST /auth/resend-verification` — Bearer
-- `GET /users/me/requests` — Bearer: elenco richieste con `specialty_name`, `conversation_id`, `description_preview` (oltre a `specialty_slug`, stato, urgenza)
+- `GET /users/me/requests` — Bearer: elenco richieste con `specialty_name`, `conversation_id`, `description` / `description_preview`, dati **animale** e **zona** (`animal_species`, `animal_name`, `city`, `province`, `cap`), `contact_method`, `sub_service` (oltre a `specialty_slug`, stato, urgenza). Caricamento tramite ORM (`selectinload`) su relazioni `VetRequest`.
 - `GET /users/me/profile` — Bearer: anagrafica, `profile_notes_for_vets`, indirizzi, animali (con `notes`), eventuale `linked_specialist` se `specialists.user_id` collegato
 - `PATCH /users/me` — Bearer: `full_name`, `phone`, `profile_notes_for_vets`
 - `POST /users/me/addresses` — Bearer; `PATCH/DELETE /users/me/addresses/{id}` — eliminazione bloccata se indirizzo usato da una richiesta

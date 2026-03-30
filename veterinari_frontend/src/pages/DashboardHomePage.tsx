@@ -11,21 +11,42 @@ export default function DashboardHomePage() {
   const [nRequests, setNRequests] = useState<number | null>(null);
   const [nChats, setNChats] = useState<number | null>(null);
   const [err, setErr] = useState("");
+  const [partialWarn, setPartialWarn] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const [me, reqs, chats] = await Promise.all([getMe(), getUserRequests(), getChats()]);
-        if (!cancelled) {
-          setName(me.full_name);
-          setVerified(me.email_verified);
-          setNRequests(reqs.length);
-          setNChats(chats.length);
-        }
-      } catch (e) {
-        if (!cancelled) setErr(e instanceof Error ? e.message : "Errore");
+      setErr("");
+      setPartialWarn("");
+      setLoading(true);
+      const [meRes, reqsRes, chatsRes] = await Promise.allSettled([getMe(), getUserRequests(), getChats()]);
+      if (cancelled) return;
+
+      if (meRes.status === "fulfilled") {
+        setName(meRes.value.full_name);
+        setVerified(meRes.value.email_verified);
+      } else {
+        setErr(meRes.reason instanceof Error ? meRes.reason.message : "Impossibile caricare il profilo");
       }
+
+      if (reqsRes.status === "fulfilled") {
+        setNRequests(reqsRes.value.length);
+      } else {
+        setNRequests(null);
+        const msg = reqsRes.reason instanceof Error ? reqsRes.reason.message : "errore sconosciuto";
+        setPartialWarn((w) => (w ? `${w} Elenco richieste: ${msg}.` : `Elenco richieste: ${msg}.`));
+      }
+
+      if (chatsRes.status === "fulfilled") {
+        setNChats(chatsRes.value.length);
+      } else {
+        setNChats(null);
+        const msg = chatsRes.reason instanceof Error ? chatsRes.reason.message : "errore sconosciuto";
+        setPartialWarn((w) => (w ? `${w} Chat: ${msg}.` : `Chat: ${msg}.`));
+      }
+
+      setLoading(false);
     })();
     return () => {
       cancelled = true;
@@ -49,6 +70,12 @@ export default function DashboardHomePage() {
           </div>
         )}
 
+        {partialWarn && !err && (
+          <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 text-foreground text-sm mb-6">
+            <strong>Attenzione:</strong> {partialWarn}
+          </div>
+        )}
+
         {verified === false && (
           <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-foreground mb-8">
             <strong>Email non ancora verificata.</strong> Controlla la posta (anche spam) e usa il link di conferma per
@@ -60,13 +87,13 @@ export default function DashboardHomePage() {
           <div className="rounded-xl border border-border bg-card p-5">
             <p className="text-xs font-medium uppercase text-muted-foreground">Richieste inviate</p>
             <p className="mt-2 font-display text-3xl font-bold text-foreground">
-              {nRequests === null ? "—" : nRequests}
+              {loading ? "—" : nRequests ?? "—"}
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
             <p className="text-xs font-medium uppercase text-muted-foreground">Conversazioni</p>
             <p className="mt-2 font-display text-3xl font-bold text-foreground">
-              {nChats === null ? "—" : nChats}
+              {loading ? "—" : nChats ?? "—"}
             </p>
           </div>
         </div>
@@ -89,7 +116,7 @@ export default function DashboardHomePage() {
           </Button>
         </div>
 
-        {nRequests === null && !err && (
+        {loading && (
           <div className="flex items-center gap-2 text-muted-foreground mt-8">
             <Loader2 className="h-5 w-5 animate-spin" /> Caricamento…
           </div>
