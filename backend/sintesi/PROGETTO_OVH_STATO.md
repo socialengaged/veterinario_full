@@ -2,6 +2,8 @@
 
 Documento unico per continuità: architettura, server, comandi, problemi noti e modifiche recenti. Aggiornare questo file quando cambiano infrastruttura o flussi critici.
 
+**Standard operativo deploy produzione (checklist, regole ferree, merge):** [`sintesi/DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md).
+
 ---
 
 ## 1. Panoramica
@@ -246,6 +248,8 @@ Repository GitHub: [https://github.com/socialengaged/veterinario_full](https://g
 | Email solo in test Resend | Limite destinatari | Solo SMTP Gmail + password app |
 | Email admin saltata se falliva utente | Un solo `try` | Due `try/except` separati in `request_service.py` |
 | Login/registrazione OK in dev, no in prod | Build senza `VITE_API_BASE_URL` → fallback localhost | `.env.production` nel repo + `npm run build` + upload `dist/` |
+| **502** su `api.*` | Uvicorn su porta diversa da `proxy_pass` Nginx (es. unit su 8000, Nginx → 8060) | Allineare `ExecStart --port` e `nginx-veterinari-api.conf`; `daemon-reload` + `restart veterinari` |
+| **502** / API assente | Crash all’avvio (es. FastAPI: DELETE con `status_code=204` e annotazione `-> None` con `from __future__ import annotations` → `response_model` implicito non valido per 204) | Su `@router.delete(..., status_code=204)` impostare **`response_model=None`** esplicito |
 
 ---
 
@@ -289,6 +293,10 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 
 | Area | Modifica |
 |------|----------|
+| Deploy | **`DEPLOY_SAFE_WORKFLOW.md`**: procedura fissa branch → test → backup → `git pull` → `pip` → `alembic` → restart → health → E2E → log → aggiornamento sintesi → merge |
+| Priorità contatto / admin | Ordinamento match per **priorità** (score + tentativi/successi/ultimo contatto); email admin con **priorità**, `tel:`, WA, link **firmati** per esito contatto; API `GET /admin/matches`, `POST /admin/match/{id}/update`, `GET .../contact-done`; `GET /admin/requests` espone **`matches_url`** |
+| DB | Migrazione Alembic **`0008_contact_tracking_priority`**: colonne su `specialists` e `request_matches` per tracking contatti |
+| Admin auth | `X-Admin-Key` opzionale anche come **`?admin_key=`** (client interni) |
 | `/richiedi-assistenza/` | Password obbligatoria; consensi email + registrazione al sito + GDPR; prefill `animale`, `servizio`, `citta`/`localita`; submit → account + redirect `/dashboard/chat/:id` |
 | Pagine servizio × animale | Form inline reale (non stub): stesso flusso API + redirect chat; link CTA con `animale` + `servizio` (slug) |
 | `request-taxonomy.ts` | `resolveTaxonomyFromQuery` per mappare slug servizio → categoria/sottoservizio |
@@ -297,13 +305,18 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 | Specialist | Colonne `cap`, `street_address`; matching con boost CAP utente; email admin con tabella + link mailto / `wa.me` per specialista; link team WhatsApp con `?text=` |
 | DB | Migrazione Alembic `0002_specialist_cap_address` (idempotente se colonne già create da `create_all`) |
 | Dashboard / profilo | `GET/PATCH /users/me`, CRUD indirizzi e animali; pagina `/dashboard/profilo/` |
+| **Area riservata (hub)** | `/dashboard` con panoramica, **Le mie richieste** (`GET /users/me/requests` con `conversation_id`, `specialty_name`, anteprima descrizione), **Account**, chat e profilo in layout unico; **messaggio utente** con note modulo sempre in `create_request` (no duplicato post-verify); **`request_context`** su `GET /dashboard/chats/{id}`; lista chat con `specialty_name`; header desktop **Area riservata** / Esci; login → `/dashboard`; E2E aggiornati |
 | Veterinari | `POST /specialists/register`, `GET /specialists/specialties`; footer link `/iscrizione-veterinari/`; migrazione Alembic `0003_usr_prof_spec` (`profile_notes_for_vets`, `specialists.user_id`, `pending_specialist_profile`) |
 
-**Deploy dopo questo blocco:** obbligatorio `alembic upgrade head` sul server; se `specialists.cap` / `street_address` sono NULL (seed non rieseguito), usare **`backend/scripts/backfill_specialist_cap_address.sql`** o **`python scripts/backfill_specialist_cap_address.py`** (vedi anche `sintesi/DATABASE.md`).
+**Checkpoint Git (rollback rapido):** tag annotato **`checkpoint/ovh-2026-03-30-pre-dashboard`** sul commit `master` immediatamente **prima** del merge/deploy di questa release. Rollback codice: `git checkout checkpoint/ovh-2026-03-30-pre-dashboard` (o `git reset --hard` su quel tag), poi `git push --force` solo se il team accetta sovrascrittura remota; in alternativa `git revert` del commit di release. Sul server: `git fetch && git checkout` sul tag o commit precedente, poi `pip` / `alembic` / `restart` come da [`DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md).
+
+**Deploy dopo questo blocco:** obbligatorio `alembic upgrade head` sul server; se `specialists.cap` / `street_address` sono NULL (seed non rieseguito), usare **`backend/scripts/backfill_specialist_cap_address.sql`** o **`python scripts/backfill_specialist_cap_address.py`** (vedi anche `sintesi/DATABASE.md`). **Release dashboard (mar 2026):** nessuna nuova migrazione Alembic; obbligatorio **build frontend** + upload `dist/` + **permessi** asset (vedi §2 `PROGETTO_OVH_STATO`).
 
 ---
 
 ## 15. Best practice — deploy, Git e verifiche
+
+Procedura completa passo-passo (branch, backup, checklist output, regole ferree): **[`DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md)**.
 
 ### Due modalità di aggiornamento backend sul VPS
 

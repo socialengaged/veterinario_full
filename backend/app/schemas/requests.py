@@ -64,6 +64,11 @@ class CreateRequestBody(BaseModel):
 
     password: Optional[str] = Field(default=None, max_length=128)
 
+    source_page: Optional[str] = None
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+
     @field_validator("password")
     @classmethod
     def password_min_length_if_set(cls, v: Optional[str]) -> Optional[str]:
@@ -141,6 +146,8 @@ class CreateRequestBody(BaseModel):
 
 class CreateRequestResponse(BaseModel):
     success: bool
+    ok: bool = True
+    warning: Optional[str] = None
     user_id: str
     request_id: str
     conversation_id: str

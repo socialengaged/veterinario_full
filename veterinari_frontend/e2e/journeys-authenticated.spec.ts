@@ -42,7 +42,8 @@ test.describe("Utente loggato — chat, profilo, login UI", () => {
   test("dashboard chat: invio messaggio nella conversazione", async ({ page }) => {
     await injectAccessToken(page, token);
     await page.goto(`/dashboard/chat/${conversationId}`, { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: /Conversazione/i })).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator("h1").first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/Messaggio automatico test E2E/i)).toBeVisible({ timeout: 15_000 });
     const msg = `Messaggio E2E ${Date.now()}`;
     await page.getByPlaceholder(/Scrivi un messaggio/i).fill(msg);
     await page.getByRole("button", { name: /^Invia$/ }).click();
@@ -53,7 +54,7 @@ test.describe("Utente loggato — chat, profilo, login UI", () => {
     await injectAccessToken(page, token);
     await page.goto("/dashboard/chat", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { name: /Le mie chat/i })).toBeVisible({ timeout: 15_000 });
-    await page.getByRole("link", { name: /Il mio profilo/i }).click();
+    await page.getByRole("link", { name: /Profilo e animali/i }).click();
     await expect(page).toHaveURL(/\/dashboard\/profilo/);
     await expect(page.getByRole("heading", { name: /Il mio profilo/i })).toBeVisible();
   });
@@ -87,6 +88,6 @@ test.describe("Utente loggato — chat, profilo, login UI", () => {
     await page.getByRole("button", { name: "Accedi" }).click();
     const loginRes = await loginPost;
     expect(loginRes.ok(), `login ${loginRes.status()}`).toBeTruthy();
-    await page.waitForURL(/\/dashboard\/chat/, { timeout: 25_000 });
+    await page.waitForURL(/\/dashboard\/?$/, { timeout: 25_000 });
   });
 });

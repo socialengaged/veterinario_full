@@ -37,6 +37,10 @@ const ChatDetailPage = lazy(() => import("./pages/ChatDetailPage"));
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
 const AccountProfilePage = lazy(() => import("./pages/AccountProfilePage"));
 const VetRegisterPage = lazy(() => import("./pages/VetRegisterPage"));
+const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
+const DashboardHomePage = lazy(() => import("./pages/DashboardHomePage"));
+const DashboardRequestsPage = lazy(() => import("./pages/DashboardRequestsPage"));
+const DashboardAccountPage = lazy(() => import("./pages/DashboardAccountPage"));
 
 const queryClient = new QueryClient();
 
@@ -68,45 +72,22 @@ const App = () => (
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/iscrizione-veterinari/" element={<VetRegisterPage />} />
               <Route
-                path="/dashboard/chat"
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <ChatsListPage />
+                    <DashboardLayout />
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/dashboard/chat/:conversationId"
-                element={
-                  <ProtectedRoute>
-                    <ChatDetailPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/profilo"
-                element={
-                  <ProtectedRoute>
-                    <AccountProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/chats"
-                element={
-                  <ProtectedRoute>
-                    <ChatsListPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/chats/:conversationId"
-                element={
-                  <ProtectedRoute>
-                    <ChatDetailPage />
-                  </ProtectedRoute>
-                }
-              />
+              >
+                <Route index element={<DashboardHomePage />} />
+                <Route path="richieste" element={<DashboardRequestsPage />} />
+                <Route path="account" element={<DashboardAccountPage />} />
+                <Route path="chat" element={<ChatsListPage />} />
+                <Route path="chat/:conversationId" element={<ChatDetailPage />} />
+                <Route path="chats" element={<ChatsListPage />} />
+                <Route path="chats/:conversationId" element={<ChatDetailPage />} />
+                <Route path="profilo" element={<AccountProfilePage />} />
+              </Route>
               <Route path="/privacy-policy/" element={<PrivacyPolicyPage />} />
               <Route path="/cookie-policy/" element={<CookiePolicyPage />} />
               <Route path="/termini-condizioni/" element={<TerminiCondizioniPage />} />

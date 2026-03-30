@@ -6,11 +6,11 @@ Tabelle principali (PK UUID, timestamp `created_at` / `updated_at` dove definito
 - `user_addresses`: `city`, `province` indicizzati.
 - `animals`: `species` indicizzato.
 - `specialties`: `slug` unico, `category` indicizzato.
-- `specialists`: email, city, province indicizzati; `cap` e `street_address` (nullable); `user_id` nullable FK verso `users` (account collegato, unicità parziale dove valorizzato); `species_tags` JSON lista stringhe.
+- `specialists`: email, city, province indicizzati; `cap` e `street_address` (nullable); `user_id` nullable FK verso `users` (account collegato, unicità parziale dove valorizzato); `species_tags` JSON lista stringhe; **`last_contacted_at`**, **`contact_success_count`**, **`contact_attempts`** (tracking contatti admin — migrazione `0008_contact_tracking_priority`).
 - **Backfill CAP/indirizzo** su DB già popolato senza rieseguire seed: [`scripts/backfill_specialist_cap_address.sql`](../scripts/backfill_specialist_cap_address.sql) oppure [`scripts/backfill_specialist_cap_address.py`](../scripts/backfill_specialist_cap_address.py) (stessi default di `seed.py` per le email `@example.com`).
 - `specialist_specialties`: PK composta (specialist_id, specialty_id).
 - `vet_requests`: stato richiesta; FK a user, animal, address, specialty.
-- `request_matches`: score float; unique (request_id, specialist_id).
+- `request_matches`: score float; unique (request_id, specialist_id); **`contacted`**, **`contacted_at`**, **`outcome`** (testo: success, no_answer, busy, refused — migrazione `0008_contact_tracking_priority`).
 - `conversations`: unique su `request_id`.
 - `messages`: `sender_role` stringa (user|specialist|system|admin).
 - `email_verifications`: `token_hash` unico; scadenza e consumo.

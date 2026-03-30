@@ -81,6 +81,7 @@ export type ConversationListItem = {
   request_id: string;
   created_at: string;
   last_message_preview: string | null;
+  specialty_name?: string | null;
 };
 
 export type MessageOut = {
@@ -90,12 +91,45 @@ export type MessageOut = {
   created_at: string;
 };
 
+export type RequestContext = {
+  request_id: string;
+  status: string;
+  urgency: string;
+  created_at: string;
+  specialty_name: string;
+  specialty_slug: string;
+  animal_species: string;
+  animal_name: string | null;
+  city: string;
+  province: string;
+  cap: string | null;
+  description: string | null;
+  contact_method: string;
+  sub_service: string | null;
+};
+
 export type ConversationDetail = {
   id: string;
   request_id: string;
   created_at: string;
   messages: MessageOut[];
+  request_context?: RequestContext | null;
 };
+
+export type UserRequestSummary = {
+  id: string;
+  status: string;
+  urgency: string;
+  created_at: string;
+  specialty_slug: string | null;
+  specialty_name: string | null;
+  conversation_id: string | null;
+  description_preview: string | null;
+};
+
+export async function getUserRequests(): Promise<UserRequestSummary[]> {
+  return apiFetch<UserRequestSummary[]>("/users/me/requests", { auth: true });
+}
 
 type FetchOpts = {
   method?: string;

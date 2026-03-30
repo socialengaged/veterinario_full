@@ -1,5 +1,5 @@
 import { siteConfig } from "@/config/site";
-import { Menu, X, Download, LogIn, Share, MoreVertical, MapPin, Loader2, MessageCircle, LogOut } from "lucide-react";
+import { Menu, X, Download, LogIn, Share, MoreVertical, MapPin, Loader2, MessageCircle, LogOut, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -137,9 +137,30 @@ export function Header() {
                 Installa
               </button>
             )}
-            <Link to="/accedi/" className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
-              <LogIn className="h-4 w-4" /> Accedi
-            </Link>
+            {sessionToken ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+                >
+                  <LayoutDashboard className="h-4 w-4" /> Area riservata
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearAccessToken();
+                    navigate("/");
+                  }}
+                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <LogOut className="h-4 w-4" /> Esci
+                </button>
+              </>
+            ) : (
+              <Link to="/accedi/" className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
+                <LogIn className="h-4 w-4" /> Accedi
+              </Link>
+            )}
             {isHome ? (
               <Button variant="cta" size="sm" onClick={() => scrollTo("smart-finder")}>
                 Cerca veterinario
@@ -192,6 +213,9 @@ export function Header() {
             )}
             {sessionToken ? (
               <>
+                <Link to="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <LayoutDashboard className="h-4 w-4" /> Area riservata
+                </Link>
                 <Link to="/dashboard/chat" onClick={() => setOpen(false)} className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <MessageCircle className="h-4 w-4" /> Le mie chat
                 </Link>

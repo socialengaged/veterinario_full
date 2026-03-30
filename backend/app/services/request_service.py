@@ -229,15 +229,7 @@ class RequestService:
             self._dispatch_request_to_vets(req, phone_fallback=phone_fb, urgency=req.urgency)
             conv = self.db.scalar(select(Conversation).where(Conversation.request_id == req.id).limit(1))
             if conv:
-                desc = (req.description or "").strip()
-                if desc:
-                    self.db.add(
-                        Message(
-                            conversation_id=conv.id,
-                            sender_role=MessageSenderRole.user.value,
-                            body=desc,
-                        )
-                    )
+                # Messaggio utente con le note del modulo già creato in create_request
                 self.db.add(
                     Message(
                         conversation_id=conv.id,
@@ -355,6 +347,16 @@ class RequestService:
         conv = Conversation(request_id=req.id, user_id=user.id)
         self.db.add(conv)
         self.db.flush()
+
+        desc_stripped = (description or "").strip()
+        if desc_stripped:
+            self.db.add(
+                Message(
+                    conversation_id=conv.id,
+                    sender_role=MessageSenderRole.user.value,
+                    body=desc_stripped,
+                )
+            )
 
         if forward_to_vets:
             welcome = (

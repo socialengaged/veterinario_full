@@ -18,3 +18,11 @@ def test_security_headers_present() -> None:
     assert r.headers.get("X-Content-Type-Options") == "nosniff"
     assert r.headers.get("X-Frame-Options") == "DENY"
     assert r.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+    assert r.headers.get("X-Request-ID")
+
+
+def test_request_id_header_uuid_like() -> None:
+    client = TestClient(app)
+    r = client.get("/health")
+    rid = r.headers.get("X-Request-ID")
+    assert rid and len(rid) >= 32

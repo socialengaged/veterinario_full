@@ -7,7 +7,7 @@
 - `GET /auth/me` — Bearer
 - `POST /auth/verify-email` — body `{"token":"..."}`
 - `POST /auth/resend-verification` — Bearer
-- `GET /users/me/requests` — Bearer
+- `GET /users/me/requests` — Bearer: elenco richieste con `specialty_name`, `conversation_id`, `description_preview` (oltre a `specialty_slug`, stato, urgenza)
 - `GET /users/me/profile` — Bearer: anagrafica, `profile_notes_for_vets`, indirizzi, animali (con `notes`), eventuale `linked_specialist` se `specialists.user_id` collegato
 - `PATCH /users/me` — Bearer: `full_name`, `phone`, `profile_notes_for_vets`
 - `POST /users/me/addresses` — Bearer; `PATCH/DELETE /users/me/addresses/{id}` — eliminazione bloccata se indirizzo usato da una richiesta
@@ -15,9 +15,21 @@
 - `GET /users/me/animals` — Bearer
 - `GET /specialists/specialties` — pubblico, elenco specialità (slug, nome, categoria)
 - `POST /specialists/register` — pubblico, iscrizione professionista; consensi e `specialty_slugs` richiesti; se esistono profili `specialists` senza account compatibili → **409** con `detail.candidates`; ripetere la richiesta con `merge_candidate_specialist_id` per unire dopo verifica email (`POST /auth/verify-email` attiva anche il merge)
-- `GET /dashboard/chats` — Bearer
-- `GET /dashboard/chats/{id}` — Bearer
+- `GET /dashboard/chats` — Bearer; ogni voce può includere `specialty_name` per la lista
+- `GET /dashboard/chats/{id}` — Bearer; include `messages` e opzionale `request_context` (riepilogo richiesta: servizio, animale, zona, stato, testo richiesta)
 - `POST /dashboard/chats/{id}/messages` — Bearer, body `{"body":"..."}`
+
+### Admin (header `X-Admin-Key` = `ADMIN_API_KEY` nel `.env`; opzionale query `?admin_key=`)
+
+- `GET /admin/stats` — metriche aggregate (cache breve).
+- `GET /admin/requests` — ultime richieste; ogni voce include **`matches_url`** verso lista match.
+- `GET /admin/matches?request_id=<uuid>` — match per richiesta: `priority_score`, `contacted`, `outcome`, dati specialist.
+- `POST /admin/match/{match_id}/update` — body `{"outcome":"success"|"no_answer"|"busy"|"refused"}`; aggiorna `request_matches` e statistiche su `specialists`; log `CONTACT UPDATE`.
+- `GET /admin/match/{match_id}/contact-done?outcome=...&exp=...&sig=...` — conferma esito da **link firmato** (HMAC) nelle email admin, senza API key nell’URL.
+
+### Internal SEO (stesso header admin)
+
+Vedi router `/internal/...` in OpenAPI.
 
 Documentazione interattiva: `/docs`, `/openapi.json`.
 

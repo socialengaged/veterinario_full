@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.models.entities import Animal, Specialist, Specialty, User, UserAddress, VetRequest
+from app.models.entities import Animal, Conversation, Specialist, Specialty, User, UserAddress, VetRequest
 from app.schemas.dashboard import AnimalOut, RequestSummary
 from app.schemas.profile import (
     AddressCreateBody,
@@ -228,13 +228,18 @@ def my_requests(
     db: Session = Depends(get_db),
 ) -> List[RequestSummary]:
     rows = db.execute(
-        select(VetRequest, Specialty)
+        select(VetRequest, Specialty, Conversation.id)
         .join(Specialty, VetRequest.specialty_id == Specialty.id)
+        .outerjoin(Conversation, Conversation.request_id == VetRequest.id)
         .where(VetRequest.user_id == user.id)
         .order_by(VetRequest.created_at.desc())
     ).all()
     out: List[RequestSummary] = []
-    for req, spec in rows:
+    for req, spec, conv_id in rows:
+        desc = (req.description or "").strip()
+        preview: str | None = None
+        if desc:
+            preview = desc[:120] + ("…" if len(desc) > 120 else "")
         out.append(
             RequestSummary(
                 id=req.id,
@@ -242,6 +247,9 @@ def my_requests(
                 urgency=req.urgency,
                 created_at=req.created_at,
                 specialty_slug=spec.slug,
+                specialty_name=spec.name,
+                conversation_id=conv_id,
+                description_preview=preview,
             )
         )
     return out

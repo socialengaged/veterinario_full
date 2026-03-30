@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import {
   deleteUserAddress,
   deleteUserAnimal,
@@ -138,10 +135,7 @@ export default function AccountProfilePage() {
         title="Il mio profilo — VeterinarioVicino.it"
         description="Dati account, indirizzi, animali e note per i professionisti."
       />
-      <Header />
-      <EmailVerificationBanner />
-      <main className="bg-background min-h-[70vh]">
-        <div className="container max-w-2xl py-10 md:py-14">
+      <div className="max-w-2xl">
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
               <User className="h-7 w-7" /> Il mio profilo
@@ -298,9 +292,7 @@ export default function AccountProfilePage() {
               </section>
             </div>
           )}
-        </div>
-      </main>
-      <Footer />
+      </div>
     </>
   );
 }

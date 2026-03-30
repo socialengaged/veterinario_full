@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -54,6 +55,7 @@ def test_logged_in_profile_and_address_animal_crud(client: TestClient) -> None:
             full_name="Pytest Profilo",
             hashed_password=hash_password(password),
             phone=None,
+            email_verified_at=datetime.now(timezone.utc),
         )
         db.add(user)
         db.commit()

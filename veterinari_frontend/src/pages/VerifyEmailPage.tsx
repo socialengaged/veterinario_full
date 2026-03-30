@@ -57,7 +57,7 @@ export default function VerifyEmailPage() {
               <h1 className="font-display text-xl font-bold text-foreground">Perfetto!</h1>
               <p className="text-muted-foreground text-sm">{message}</p>
               <Button variant="cta" asChild className="mt-4">
-                <Link to="/dashboard/chat">Vai alle tue chat</Link>
+                <Link to="/dashboard">Vai all&apos;area riservata</Link>
               </Button>
             </>
           )}

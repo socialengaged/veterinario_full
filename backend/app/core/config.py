@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     api_public_url: str = "http://localhost:8000"
 
     admin_email: str = "seomantis@gmail.com"
+    # Se valorizzato, GET /admin/* richiede header X-Admin-Key uguale a questo valore
+    admin_api_key: str | None = Field(default=None, validation_alias="ADMIN_API_KEY")
     # Link mostrato nelle email admin (nessun invio automatico a WhatsApp)
     admin_whatsapp_url: str = "https://wa.me/393204864478"
 
