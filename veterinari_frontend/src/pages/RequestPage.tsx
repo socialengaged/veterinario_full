@@ -69,25 +69,30 @@ export default function RequestPage() {
   const needsPhoneForChannels =
     form.contactSecondary === "sms" || form.contactSecondary === "whatsapp";
 
+  const describeRequestFormIssues = (): string | null => {
+    if (needsPhoneForChannels && form.phone.trim().length < 3) {
+      return "Inserisci un numero di cellulare valido per SMS o WhatsApp.";
+    }
+    const missing: string[] = [];
+    if (!form.name.trim()) missing.push("nome e cognome");
+    if (!form.email.trim()) missing.push("email");
+    if (!form.password || form.password.length < 8) missing.push("password (almeno 8 caratteri)");
+    if (!form.animal) missing.push("tipo di animale");
+    if (!form.serviceCategory) missing.push("categoria di servizio");
+    if (!form.city.trim()) missing.push("città");
+    if (!form.province.trim()) missing.push("provincia (sigla)");
+    if (!form.emailVerificationAck) missing.push("conferma sulla verifica email (in fondo al modulo)");
+    if (!form.registrationConsent) missing.push("consenso per creare l'account");
+    if (!form.consent) missing.push("consenso privacy e inoltro della richiesta");
+    if (missing.length === 0) return null;
+    return `Completa ancora: ${missing.join("; ")}.`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !form.consent ||
-      !form.registrationConsent ||
-      !form.emailVerificationAck ||
-      !form.name ||
-      !form.email ||
-      !form.password ||
-      form.password.length < 8 ||
-      !form.animal ||
-      !form.serviceCategory ||
-      !form.city ||
-      !form.province
-    ) {
-      return;
-    }
-    if (needsPhoneForChannels && form.phone.trim().length < 3) {
-      setSubmitError("Inserisci un numero di cellulare valido per SMS o WhatsApp.");
+    const issues = describeRequestFormIssues();
+    if (issues) {
+      setSubmitError(issues);
       return;
     }
 
@@ -456,21 +461,7 @@ export default function RequestPage() {
               variant="cta"
               size="lg"
               className="w-full"
-              disabled={
-                !form.consent ||
-                !form.registrationConsent ||
-                !form.emailVerificationAck ||
-                !form.name ||
-                !form.email ||
-                !form.animal ||
-                !form.serviceCategory ||
-                !form.city ||
-                !form.province ||
-                (needsPhoneForChannels && form.phone.trim().length < 3) ||
-                !form.password ||
-                form.password.length < 8 ||
-                submitting
-              }
+              disabled={submitting}
             >
               {submitting ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Invio in corso…</>
