@@ -35,6 +35,7 @@ Due consumi distinti degli stessi dati anagrafici (studi / ambulatori), con **un
 
 - [`scripts/import_from_frontend_dataset.py`](../scripts/import_from_frontend_dataset.py) — legge `veterinari.csv` (default: path sotto `veterinari_frontend/src/data/`), crea `Specialist` con email reale o sintetica `...@noemail.local`, collega **specialty** euristiche (`visite-generali`, `emergenze`, `domicilio`, `chirurgia`). Opzioni: `--dry-run`, `--limit`, `--offset`, `--city "Lecce"`.
 - [`scripts/import_italia_pg_wave.py`](../scripts/import_italia_pg_wave.py) — ondata **PagineGialle** da `veterinari_italia_completo_dedup.csv` (root repo): dedup URL, geo da path URL, genera `veterinari_italia_wave.csv` (merge in `csv-importer.ts`) con `source=italia_pg_2026` e `profile_slug`; imposta `import_batch` e campi vuoti dove mancano dati; `--csv-only` solo CSV senza DB.
+- [`scripts/backfill_cap_italia_pg_wave.py`](../scripts/backfill_cap_italia_pg_wave.py) — aggiorna **solo** `specialists.cap` per righe con `import_batch` (default `italia_pg_2026_04`) e CAP ancora vuoto, usando `veterinari_frontend/src/data/comuni_italiani_full.csv` (match comune+provincia, fuzzy opzionale). **Non** modifica specialist fuori dall’ondata. `--dry-run` per statistiche.
 - [`scripts/import_specialists_seed.py`](../scripts/import_specialists_seed.py) — alternativa per CSV **strutturato** con colonne esplicite (`specialties` JSON, ecc.); utile per batch curati o integrazioni OTA.
 
 **Ordine operativo sicuro (ondata nuova):**
