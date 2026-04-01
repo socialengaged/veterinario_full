@@ -98,6 +98,12 @@ class EmailService:
         except Exception as e:
             logger.exception("SMTP send failed: %s", e)
             raise
+        logger.info(
+            "Email inviata via SMTP: to=%s subject=%s allegati=%s",
+            to,
+            (subject[:100] + "…") if len(subject) > 100 else subject,
+            len(attachments) if attachments else 0,
+        )
 
     def send_user_request_confirmation(
         self,
@@ -134,6 +140,7 @@ class EmailService:
             else "Conferma richiesta — VeterinarioVicino.it"
         )
         self._send(to_email, subj, html, text)
+        logger.info("Email conferma utente inviata: to=%s request_id=%s", to_email, request_id)
 
     def send_admin_new_request(
         self,
@@ -155,6 +162,7 @@ class EmailService:
         profile_notes: str | None = None,
         is_online_consultation: bool = False,
         attachments: list[tuple[str, bytes, str]] | None = None,
+        pending_email_verification: bool = False,
     ) -> None:
         attachment_names = [a[0] for a in attachments] if attachments else []
         html = _env.get_template("admin_request.html").render(
@@ -176,12 +184,22 @@ class EmailService:
             frontend_url=self.settings.frontend_url.rstrip("/"),
             is_online_consultation=is_online_consultation,
             attachment_names=attachment_names,
+            pending_email_verification=pending_email_verification,
         )
         text_lines = [
             (
-                "[CONSULENZA ONLINE — video Google Meet] Nuova richiesta VeterinarioVicino"
-                if is_online_consultation
-                else "Nuova richiesta VeterinarioVicino"
+                "[ATTESA VERIFICA EMAIL] "
+                + (
+                    "[CONSULENZA ONLINE] Nuova richiesta VeterinarioVicino"
+                    if is_online_consultation
+                    else "Nuova richiesta VeterinarioVicino"
+                )
+                if pending_email_verification
+                else (
+                    "[CONSULENZA ONLINE — video Google Meet] Nuova richiesta VeterinarioVicino"
+                    if is_online_consultation
+                    else "Nuova richiesta VeterinarioVicino"
+                )
             ),
             f"Sito web: {self.settings.frontend_url.rstrip('/')}",
             f"Utente: {user_name} <{user_email}> {user_phone}",
@@ -202,12 +220,25 @@ class EmailService:
             "Testo da copiare:",
             whatsapp_text,
         ])
-        subj = (
-            f"[Consulenza online] Nuova richiesta veterinario - {city} ({urgency})"
-            if is_online_consultation
-            else f"Nuova richiesta veterinario - {city} ({urgency})"
-        )
+        if pending_email_verification:
+            subj = (
+                f"[Attesa verifica email] [Consulenza online] {city} ({urgency})"
+                if is_online_consultation
+                else f"[Attesa verifica email] Nuova richiesta - {city} ({urgency})"
+            )
+        else:
+            subj = (
+                f"[Consulenza online] Nuova richiesta veterinario - {city} ({urgency})"
+                if is_online_consultation
+                else f"Nuova richiesta veterinario - {city} ({urgency})"
+            )
         self._send(admin_email, subj, html, "\n".join(text_lines), attachments=attachments)
+        logger.info(
+            "Email admin nuova richiesta inviata: admin=%s city=%s pending=%s",
+            admin_email,
+            city,
+            pending_email_verification,
+        )
 
     def send_test_ping(self) -> None:
         """Email minima per verificare SMTP in produzione."""

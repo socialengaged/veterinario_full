@@ -352,45 +352,41 @@ class RequestService:
         self.db.add(req)
         self.db.flush()
 
-        matches: list[tuple[Specialist, float]] = []
-        matched_specs: list[dict[str, Any]] = []
-
-        wa_payload: Optional[dict[str, Any]] = None
+        user_cap = (addr.cap or "").strip() or None
+        pn = (user.profile_notes_for_vets or "").strip() or None
+        matches = self._match_specialists(
+            specialty.id, city, province, animal.species, user_cap=user_cap
+        )
+        matched_specs = enrich_specialist_matches(
+            matches,
+            specialty_name=specialty.name,
+            user_name=user.full_name,
+            user_email=user.email,
+            user_phone=user.phone or (phone or ""),
+            animal_species=animal.species,
+            city=city,
+            province=province,
+            user_cap=user_cap,
+            description=merged_description or None,
+            profile_notes=pn,
+        )
+        wa_payload = build_admin_whatsapp_payload(
+            user_email=user.email,
+            user_name=user.full_name,
+            user_phone=user.phone or (phone or ""),
+            animal_species=animal.species,
+            animal_name=animal.name,
+            city=city,
+            province=province,
+            specialty=specialty.name,
+            urgency=urgency,
+            description=merged_description or None,
+            matches=matched_specs,
+            profile_notes=pn,
+        )
         if forward_to_vets:
-            user_cap = (addr.cap or "").strip() or None
-            matches = self._match_specialists(
-                specialty.id, city, province, animal.species, user_cap=user_cap
-            )
             for sp, sc in matches:
                 self.db.add(RequestMatch(request_id=req.id, specialist_id=sp.id, score=sc))
-            pn = (user.profile_notes_for_vets or "").strip() or None
-            matched_specs = enrich_specialist_matches(
-                matches,
-                specialty_name=specialty.name,
-                user_name=user.full_name,
-                user_email=user.email,
-                user_phone=user.phone or (phone or ""),
-                animal_species=animal.species,
-                city=city,
-                province=province,
-                user_cap=user_cap,
-                description=merged_description or None,
-                profile_notes=pn,
-            )
-            wa_payload = build_admin_whatsapp_payload(
-                user_email=user.email,
-                user_name=user.full_name,
-                user_phone=user.phone or (phone or ""),
-                animal_species=animal.species,
-                animal_name=animal.name,
-                city=city,
-                province=province,
-                specialty=specialty.name,
-                urgency=urgency,
-                description=merged_description or None,
-                matches=matched_specs,
-                profile_notes=pn,
-            )
 
         conv = Conversation(request_id=req.id, user_id=user.id)
         self.db.add(conv)
@@ -452,7 +448,7 @@ class RequestService:
 
         redirect_url = f"{self.settings.frontend_url.rstrip('/')}/verify-email?token={raw_token}"
 
-        if forward_to_vets and wa_payload is not None:
+        if forward_to_vets:
             notif = AdminNotification(
                 channel="whatsapp",
                 title=f"Nuova richiesta {req.id}",
@@ -481,36 +477,36 @@ class RequestService:
         except Exception:
             logger.exception("Email conferma utente fallita dopo persistenza richiesta")
 
-        if forward_to_vets and wa_payload is not None:
-            try:
-                uc = (cap or "").strip() or None
-                team_wa = admin_team_whatsapp_url_with_text(
-                    self.settings.admin_whatsapp_url, wa_payload["whatsapp_text"]
-                )
-                att_admin: list[tuple[str, bytes, str]] | None = None
-                if consultation_online and uploaded_files:
-                    att_admin = uploaded_files
-                self.email.send_admin_new_request(
-                    admin_email=self.settings.admin_email,
-                    user_email=user.email,
-                    user_name=user.full_name,
-                    user_phone=phone or "",
-                    animal_species=animal.species,
-                    city=city,
-                    province=province,
-                    specialty_name=specialty.name,
-                    urgency=urgency,
-                    description=merged_description or None,
-                    matches=matched_specs,
-                    whatsapp_text=wa_payload["whatsapp_text"],
-                    team_whatsapp_url_with_text=team_wa,
-                    user_cap=uc,
-                    profile_notes=pn,
-                    is_online_consultation=consultation_online,
-                    attachments=att_admin,
-                )
-            except Exception:
-                logger.exception("Email admin fallita dopo persistenza richiesta")
+        try:
+            uc = (cap or "").strip() or None
+            team_wa = admin_team_whatsapp_url_with_text(
+                self.settings.admin_whatsapp_url, wa_payload["whatsapp_text"]
+            )
+            att_admin: list[tuple[str, bytes, str]] | None = None
+            if consultation_online and uploaded_files:
+                att_admin = uploaded_files
+            self.email.send_admin_new_request(
+                admin_email=self.settings.admin_email,
+                user_email=user.email,
+                user_name=user.full_name,
+                user_phone=phone or "",
+                animal_species=animal.species,
+                city=city,
+                province=province,
+                specialty_name=specialty.name,
+                urgency=urgency,
+                description=merged_description or None,
+                matches=matched_specs,
+                whatsapp_text=wa_payload["whatsapp_text"],
+                team_whatsapp_url_with_text=team_wa,
+                user_cap=uc,
+                profile_notes=pn,
+                is_online_consultation=consultation_online,
+                attachments=att_admin,
+                pending_email_verification=not forward_to_vets,
+            )
+        except Exception:
+            logger.exception("Email admin fallita dopo persistenza richiesta")
 
         email_verified = user.email_verified_at is not None
 
