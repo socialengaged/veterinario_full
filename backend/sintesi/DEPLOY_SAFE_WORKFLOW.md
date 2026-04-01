@@ -260,4 +260,4 @@ Compilare a mano o in ticket:
 
 ---
 
-*Ultimo aggiornamento: workflow standard operativo permanente (marzo 2026). Deploy **2026-04-01:** email admin con `ADMIN_EMAIL_CC` documentato in `PROGETTO_OVH_STATO.md` §4 e `merge_email_env.py`. **Checkpoint rollback** (stato buono verificato): tag **`checkpoint/ovh-2026-04-01-email-cc-verified`** (`git rev-parse` sul tag per lo SHA; vedi `PROGETTO_OVH_STATO.md` §14 e super sintesi §1).*
+*Ultimo aggiornamento: workflow standard operativo permanente (marzo 2026). Deploy **2026-04-01:** email admin con `ADMIN_EMAIL_CC` documentato in `PROGETTO_OVH_STATO.md` §4 e `merge_email_env.py`. **Checkpoint rollback** (stato buono verificato): tag **`checkpoint/ovh-2026-04-01-email-cc-verified`** → **`7e4add3`** (`git rev-parse checkpoint/ovh-2026-04-01-email-cc-verified^{commit}`; vedi `PROGETTO_OVH_STATO.md` §14 e super sintesi §1).*
