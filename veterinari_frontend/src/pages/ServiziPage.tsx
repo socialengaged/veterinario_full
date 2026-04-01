@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Video, ArrowRight } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
@@ -113,6 +114,32 @@ export default function ServiziPage() {
               Tutti i servizi veterinari che puoi richiedere attraverso {siteConfig.name}: visite,
               diagnostica, chirurgia, specialistica, prevenzione e nutrizione.
             </AnswerSummary>
+          </section>
+
+          <section aria-labelledby="servizio-online-heading">
+            <Link
+              to="/consulenza-veterinaria-online/"
+              className="group flex flex-col gap-4 rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/15 via-emerald-500/12 to-teal-500/10 p-6 shadow-lg shadow-primary/15 ring-1 ring-primary/30 transition hover:border-primary/60 hover:shadow-xl hover:shadow-primary/20 md:flex-row md:items-center md:justify-between md:p-8"
+            >
+              <div className="flex min-w-0 flex-1 items-start gap-4">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/25 text-primary ring-2 ring-primary/35">
+                  <Video className="h-7 w-7" aria-hidden />
+                </span>
+                <div>
+                  <h2 id="servizio-online-heading" className="font-display text-xl font-bold text-foreground md:text-2xl">
+                    Veterinario online
+                  </h2>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground md:text-base">
+                    Consulenza in video da casa: niente file in sala d&apos;attesa. Scegli la durata, paga in sicurezza e
+                    parla con un professionista via Meet.
+                  </p>
+                </div>
+              </div>
+              <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-md transition group-hover:bg-primary/90 md:self-center">
+                Scopri tariffe e prenotazione
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" aria-hidden />
+              </span>
+            </Link>
           </section>
 
           {groups.map((group) => (

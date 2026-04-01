@@ -1,5 +1,18 @@
 import { siteConfig } from "@/config/site";
-import { Menu, X, Download, LogIn, Share, MoreVertical, MapPin, Loader2, MessageCircle, LogOut, LayoutDashboard } from "lucide-react";
+import {
+  Menu,
+  X,
+  Download,
+  LogIn,
+  Share,
+  MoreVertical,
+  MapPin,
+  Loader2,
+  MessageCircle,
+  LogOut,
+  LayoutDashboard,
+  ChevronDown,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -14,6 +27,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function InstallInstructions({ platform }: { platform: string }) {
   if (platform === "ios") {
@@ -74,8 +94,11 @@ export function Header() {
     setOpen(false);
   };
 
-  const navItems = [
-    { label: "Servizi", href: "/servizi/", scrollId: "servizi" },
+  const navItems: {
+    label: string;
+    href: string;
+    scrollId?: string;
+  }[] = [
     { label: "Elenco", href: "/elenco/" },
     { label: "Zone coperte", href: "/puglia/", scrollId: "zone" },
     { label: "Guide", href: "/guide/" },
@@ -83,7 +106,7 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
+      <header className="sticky top-[5.5rem] z-50 border-b border-border bg-card/95 backdrop-blur-sm md:top-[7rem]">
         <div className="container flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             <img src={logoImg} alt={siteConfig.name} className="h-9 w-9" width={36} height={36} />
@@ -116,16 +139,49 @@ export function Header() {
                 Localizzato
               </span>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-md text-sm font-medium text-muted-foreground outline-none ring-offset-background transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=open]:text-foreground">
+                Servizi
+                <ChevronDown className="h-4 w-4 opacity-70" aria-hidden />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="z-[110] w-56">
+                {isHome && (
+                  <DropdownMenuItem
+                    className="cursor-pointer font-medium"
+                    onSelect={() => scrollTo("servizi")}
+                  >
+                    Servizi in homepage
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem asChild>
+                  <Link to="/servizi/">Tutti i servizi</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link
+                    to="/consulenza-veterinaria-online/"
+                    className="font-semibold text-primary focus:text-primary"
+                  >
+                    Veterinario online
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {navItems.map((item) =>
               isHome && item.scrollId ? (
-                <button key={item.label} onClick={() => scrollTo(item.scrollId!)} className="hover:text-foreground transition-colors">
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => scrollTo(item.scrollId!)}
+                  className="hover:text-foreground transition-colors"
+                >
                   {item.label}
                 </button>
               ) : (
                 <Link key={item.label} to={item.href} className="hover:text-foreground transition-colors">
                   {item.label}
                 </Link>
-              )
+              ),
             )}
             {canInstall && (
               <button
@@ -197,8 +253,42 @@ export function Header() {
                 <MapPin className="h-3.5 w-3.5" /> Posizione attiva — risultati ordinati per distanza
               </span>
             )}
+            <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Servizi</p>
+              {isHome && (
+                <button
+                  type="button"
+                  className="block w-full text-left text-sm font-medium text-foreground"
+                  onClick={() => {
+                    scrollTo("servizi");
+                    setOpen(false);
+                  }}
+                >
+                  Servizi in homepage
+                </button>
+              )}
+              <Link
+                to="/servizi/"
+                onClick={() => setOpen(false)}
+                className="block text-sm font-medium text-foreground"
+              >
+                Tutti i servizi
+              </Link>
+              <Link
+                to="/consulenza-veterinaria-online/"
+                onClick={() => setOpen(false)}
+                className="block text-sm font-semibold text-primary"
+              >
+                Veterinario online
+              </Link>
+            </div>
             {navItems.map((item) => (
-              <Link key={item.label} to={item.href} onClick={() => setOpen(false)} className="block text-sm font-medium text-foreground">
+              <Link
+                key={item.label}
+                to={item.href}
+                onClick={() => setOpen(false)}
+                className="block text-sm font-medium text-foreground"
+              >
                 {item.label}
               </Link>
             ))}
