@@ -182,6 +182,25 @@ def whatsapp_text_for_specialist(
     return "\n".join(parts)
 
 
+def specialist_email_for_contact(sp: Specialist) -> str:
+    """Email reale da scheda (es. PG) se presente, altrimenti email record."""
+    ce = getattr(sp, "contact_email", None)
+    if ce and str(ce).strip():
+        return str(ce).strip()
+    return sp.email
+
+
+def specialist_phone_combined(sp: Specialist) -> str:
+    """Campo legacy `phone` oppure combinato fisso/mobile."""
+    if sp.phone and str(sp.phone).strip():
+        return str(sp.phone).strip()
+    fx = (getattr(sp, "phone_fixed", None) or "").strip()
+    mb = (getattr(sp, "phone_mobile", None) or "").strip()
+    if fx and mb:
+        return f"{fx} / {mb}"
+    return fx or mb
+
+
 def enrich_specialist_matches(
     scored: list[tuple[Specialist, float]],
     *,
@@ -227,13 +246,14 @@ def enrich_specialist_matches(
             profile_notes=profile_notes,
         )
         mailto = build_mailto_specialist_url(
-            specialist_email=sp.email,
+            specialist_email=specialist_email_for_contact(sp),
             subject=subj,
             body=body,
         )
-        wa_url = build_whatsapp_url(pick_phone_for_whatsapp(sp.phone), wa_txt)
-        phone_lines = specialist_phone_lines_for_email(sp.phone)
-        first_tel = first_phone_segment_for_tel_link(sp.phone)
+        phone_raw = specialist_phone_combined(sp)
+        wa_url = build_whatsapp_url(pick_phone_for_whatsapp(phone_raw), wa_txt)
+        phone_lines = specialist_phone_lines_for_email(phone_raw)
+        first_tel = first_phone_segment_for_tel_link(phone_raw)
         web_href = normalize_specialist_website_href(getattr(sp, "website_url", None))
         spec_labels = ", ".join(s.name for s in (sp.specialties or []))
         out.append(
@@ -244,10 +264,10 @@ def enrich_specialist_matches(
                 "province": sp.province,
                 "cap": sp.cap or "",
                 "street_address": sp.street_address or "",
-                "email": sp.email,
-                "phone": sp.phone or "",
+                "email": specialist_email_for_contact(sp),
+                "phone": phone_raw or "",
                 "phone_lines": phone_lines,
-                "tel_href": tel_href(first_tel or sp.phone),
+                "tel_href": tel_href(first_tel or phone_raw),
                 "website_href": web_href or "",
                 "specialty_name": specialty_name,
                 "specialties_display": spec_labels or specialty_name,
