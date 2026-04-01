@@ -204,12 +204,7 @@ class RequestService:
             profile_notes=profile_notes,
         )
 
-        notif = AdminNotification(
-            channel="whatsapp",
-            title=f"Nuova richiesta {req.id}",
-            payload_json=wa_payload,
-        )
-        self.db.add(notif)
+        # Notifica già creata al submit; qui si persistono i match e si invia email di conferma inoltro.
         req.status = "open"
 
         try:
@@ -448,13 +443,20 @@ class RequestService:
 
         redirect_url = f"{self.settings.frontend_url.rstrip('/')}/verify-email?token={raw_token}"
 
-        if forward_to_vets:
-            notif = AdminNotification(
+        # Stesso payload WhatsApp (match + testo) per admin anche se l'utente non ha ancora verificato l'email:
+        # così dashboard/notifiche e flusso operativo coincidono con l'email admin inviata subito dopo il commit.
+        notif_title = (
+            f"Nuova richiesta {req.id}"
+            if forward_to_vets
+            else f"Nuova richiesta {req.id} (attesa verifica email)"
+        )
+        self.db.add(
+            AdminNotification(
                 channel="whatsapp",
-                title=f"Nuova richiesta {req.id}",
+                title=notif_title,
                 payload_json=wa_payload,
             )
-            self.db.add(notif)
+        )
 
         self.db.commit()
 
