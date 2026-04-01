@@ -112,6 +112,10 @@ scp -r * ovh:/var/www/veterinari/frontend/dist/
 
 **Obbligatorio dopo ogni upload:** i file creati da `scp` possono lasciare `assets/` con permessi `700`. **Nginx (`www-data`) non può leggere `/assets/*.js` → HTTP 403 → schermata bianca con spinner infinito.**
 
+**Cache PWA / Service Worker:** dopo un deploy frontend, se la UI non cambia (es. banner, nuove route), provare **navigazione in incognito**, **svuota cache** per il sito, o **hard refresh** (Ctrl+F5). Il worker precache può servire ancora il vecchio `index.html` fino a aggiornamento.
+
+**Checklist rapida post-deploy UI:** confermare che le modifiche siano nel **bundle** (es. testo del banner presente in `App.tsx` e componente **montato** nel JSX, non solo importato).
+
 Eseguire sul server:
 
 ```bash
@@ -311,7 +315,8 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 | **Checkpoint rollback** | Tag **`checkpoint/ovh-2026-03-30-pre-dashboard-footer-requests`** → commit **`8a92d71`** (stato immediatamente prima della release footer/richieste); release merge: **`def8143`**; docs commit **`81a0192`** |
 | **Deploy produzione (3)** | **2026-03-30:** `git pull` OVH fino a **`81a0192`**, `alembic` OK, restart API, health OK; frontend **`scp`** `dist/` + permessi |
 | **UX / richiesta e registrazione** | Pulsanti **Richiedi assistenza** e **Registrati** non più disabilitati in silenzio: messaggio **“Completa ancora: …”** al submit; commit **`1c3d080`**; deploy: build locale + **`scp`** su `/var/www/veterinari/frontend/dist/` + script permessi; health OK, asset JS **200** |
-| **Consulenza online** | Pagina **`/consulenza-veterinaria-online/`** (solo cani/gatti): tariffe 15′/30′/specialistica, Meet, PayPal **`vet.stella@gmail.com`** (`VITE_ONLINE_CONSULT_PAYPAL_EMAIL` / `ONLINE_CONSULT_PAYPAL_EMAIL`); banner sito; API `consultation_online` + `consultation_tier`; oggetto email admin **`[Consulenza online]`**; email utente **Conferma consulenza online** |
+| **Consulenza online** | Pagina **`/consulenza-veterinaria-online/`** (solo cani/gatti): tariffe 15′/30′/specialistica, Meet, PayPal **`vet.stella@gmail.com`** (`VITE_ONLINE_CONSULT_PAYPAL_EMAIL` / `ONLINE_CONSULT_PAYPAL_EMAIL`); **banner** `PromoBanner` in `App.tsx` (deve essere **renderizzato**, non solo importato); API `consultation_online` + `consultation_tier`; oggetto email admin **`[Consulenza online]`**; email utente **Conferma consulenza online** |
+| **Fix banner consulenza online** | Bug: `PromoBanner` importato ma non in JSX → nessuna barra in produzione; correzione + redeploy `dist/`; sintesi: ordine deploy in [`DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md) sezione *Deploy produzione OVH* |
 | Veterinari | `POST /specialists/register`, `GET /specialists/specialties`; footer link `/iscrizione-veterinari/`; migrazione Alembic `0003_usr_prof_spec` (`profile_notes_for_vets`, `specialists.user_id`, `pending_specialist_profile`) |
 
 **Checkpoint Git (rollback rapido):** tag annotato **`checkpoint/ovh-2026-03-30-pre-dashboard`** sul commit `master` immediatamente **prima** del merge/deploy di questa release. Rollback codice: `git checkout checkpoint/ovh-2026-03-30-pre-dashboard` (o `git reset --hard` su quel tag), poi `git push --force` solo se il team accetta sovrascrittura remota; in alternativa `git revert` del commit di release. Sul server: `git fetch && git checkout` sul tag o commit precedente, poi `pip` / `alembic` / `restart` come da [`DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md).

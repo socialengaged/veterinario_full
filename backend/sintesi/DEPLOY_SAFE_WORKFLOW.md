@@ -69,6 +69,23 @@ chmod +x scripts/db_backup.sh scripts/deploy_safe.sh scripts/post_deploy_check.s
 
 ---
 
+## Deploy produzione OVH — ordine operativo tipico (frontend + backend)
+
+Flusso **effettivo** quando la release tocca **sito statico** e **API** (path e permessi: [`PROGETTO_OVH_STATO.md`](PROGETTO_OVH_STATO.md) §2 e §9).
+
+| Step | Dove | Azione |
+|------|------|--------|
+| 1 | Locale | `git push origin master` (commit già fatto) |
+| 2 | SSH `ovh` | `cd /var/www/veterinari/backend` → `git pull --ff-only origin master` → `source venv/bin/activate` → `pip install -r requirements.txt` → se serve: `alembic upgrade head` → `sudo systemctl restart veterinari` → `curl -s http://127.0.0.1:8060/health` |
+| 3 | PC | `cd veterinari_frontend` → `npm run build` (legge `.env.production`) |
+| 4 | PC | Da `veterinari_frontend/dist/`: `scp -r * ovh:/var/www/veterinari/frontend/dist/` (PowerShell: vedi §Deploy frontend in `PROGETTO_OVH_STATO`) |
+| 5 | SSH `ovh` | **Permessi:** `sudo bash /var/www/veterinari/backend/deploy/fix_frontend_dist_permissions.sh /var/www/veterinari/frontend/dist` |
+| 6 | Browser | Verifica UI; se non cambia: **incognito** o **hard refresh** (Ctrl+F5) — la **PWA** può cacheare il vecchio `index.html`. |
+
+**Errore comune:** componente aggiunto in repo ma **non montato nel JSX** (es. import senza `<Componente />` in `App.tsx`): il deploy file è corretto ma in produzione non compare nulla.
+
+---
+
 ## Flusso fisso (ogni modifica)
 
 ### 1) Prima di ogni modifica — branch

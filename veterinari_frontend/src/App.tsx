@@ -59,6 +59,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <PromoBanner />
           <Suspense fallback={<Loading />}>
             <PluralRedirects />
             <Routes>
