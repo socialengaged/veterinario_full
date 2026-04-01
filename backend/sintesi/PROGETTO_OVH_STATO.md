@@ -4,6 +4,17 @@ Documento unico per continuità: architettura, server, comandi, problemi noti e 
 
 **Standard operativo deploy produzione (checklist, regole ferree, merge):** [`sintesi/DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md).
 
+### Attività in corso — scrape PagineGialle (aprile 2026)
+
+| Voce | Dettaglio |
+|------|-----------|
+| **Obiettivo** | Popolare `specialists` onda PG (`import_batch = italia_pg_2026_04`) con dati dalla **scheda PG** (JSON-LD `LocalBusiness`): `phone_fixed`, `phone_mobile`, `contact_email`, `opening_hours`, `business_description`, più aggiornamento di `phone` (combinato), `street_address`, `cap`, `website_url` se sito esterno (`sameAs`). Migrazione Alembic **`0011`**. |
+| **Stato (snapshot verifica)** | Job **in esecuzione** su OVH: processo `python …/scrape_paginegialle_specialists.py`; log **`/tmp/pg_scrape_full.log`**. Progresso indicativo **~210–215 / 7657** righe processate (~**2,8%**); nel log compaiono anche **4× `no_change`** (prime righe già aggiornate da test su 4 schede) e poche righe **`NO_LD`** (pagina senza blocco LocalBusiness utile). Conteggi esatti: `grep -c ' OK ' /tmp/pg_scrape_full.log` su server. |
+| **Tempo** | Delay HTTP **~1,25 s**/scheda → ordine **~2,5–3 h** per l’intera onda; il job è **CPU/rete bound**, non blocca l’API. |
+| **Coerenza** | **Matching richieste** invariato (`is_active` + specialty). **Email admin** / tabella match: `contact_email` se presente, altrimenti email record; telefoni via `specialist_phone_combined()` (`phone` oppure fisso+mobile). L’**email univoca** su `specialists.email` resta sintetica (`...@noemail.local`) per vincoli DB; **non** sostituirla con `contact_email`. |
+| **Riprendere da qui** | 1) `ssh ovh` → `tail -f /tmp/pg_scrape_full.log` per monitoraggio. 2) Se il processo **non è più in esecuzione** (`pgrep -af scrape_paginegialle`): `cd /var/www/veterinari/veterinario_full/backend && source /var/www/veterinari/backend/venv/bin/activate && nohup python scripts/scrape_paginegialle_specialists.py >> /tmp/pg_scrape_full.log 2>&1 &` — lo script è **idempotente** sulle righe già piene → `no_change` senza doppie scritture. 3) **Non** lanciare **due** job in parallelo sullo stesso DB. 4) Rifare tutto da zero con sovrascrittura: `--overwrite` (solo se necessario). 5) Script wrapper: [`deploy/run_pg_scrape_background.sh`](../deploy/run_pg_scrape_background.sh). |
+| **Commit** | Feature `scrape_paginegialle_specialists` + `0011` su `master` (es. `c6db676` area); sintesi aggiornate in seguito. |
+
 ---
 
 ## 1. Panoramica
@@ -298,7 +309,7 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 
 ---
 
-*Ultimo aggiornamento significativo: **2026-04-01** — **ondata Italia PG** in produzione: migrazione **`0010_specialist_import_batch`**, import **`import_italia_pg_wave.py`** (**7657** nuovi `specialists`), frontend con `contactLoginRequired` + build **`scp`** + `fix_frontend_dist_permissions.sh`; `curl` health pubblico OK. **Nota deploy:** sul VPS un file **untracked** `backend/scripts/compare_italia_csv_to_db.py` bloccava `git pull` (sovrascrittura); rimuoverlo o spostarlo prima del pull. Matching richieste / email admin **invariati** (`is_active` + specialty; nessun filtro su `import_batch`). Stato precedente: form generico + consulenza online, mail admin To+Cc; tag rollback **`checkpoint/ovh-2026-04-01-email-cc-verified`**. Commit ondata **`80365c1`**.*
+*Ultimo aggiornamento significativo: **2026-04-02** — in corso **scrape PagineGialle** (migrazione **`0011`**, `phone_fixed`/`phone_mobile`/`contact_email`/orari/descrizione; job OVH, log `/tmp/pg_scrape_full.log`; vedi § *Attività in corso*). **2026-04-01** — **ondata Italia PG** in produzione: migrazione **`0010`**, import **`7657`** `specialists`, CAP comuni + Nominatim; frontend `contactLoginRequired` + deploy statiche. Matching richieste **invariato**; email admin con `contact_email`/`phone` combinati quando valorizzati. Tag rollback **`checkpoint/ovh-2026-04-01-email-cc-verified`**. Commit ondata **`80365c1`**; feature scrape **`c6db676`** area.*
 
 ---
 
@@ -307,7 +318,7 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 | Area | Modifica |
 |------|----------|
 | **CAP ondata PG (2026-04-01)** | [`backfill_cap_italia_pg_wave.py`](../scripts/backfill_cap_italia_pg_wave.py): aggiorna **solo** `specialists.cap` per `import_batch=italia_pg_2026_04` con CAP ancora vuoto, usando `comuni_italiani_full.csv` (match comune+provincia + fuzzy **0,88**). **Non** tocca gli specialist pre-esistenti. Produzione OVH: **`6892`** righe aggiornate su **7657** (exact **6673**, strip **9**, fuzzy **210**; **765** senza match — frazioni / località non in anagrafica comuni). Prima `--dry-run` poi esecuzione; health OK dopo commit DB. |
-| **Scrape PG (ondata)** | Migrazione **`0011`**: `phone_fixed`, `phone_mobile`, `contact_email`, `opening_hours`, `business_description`. Script [`scrape_paginegialle_specialists.py`](../scripts/scrape_paginegialle_specialists.py) (JSON-LD `LocalBusiness`); email admin usa `contact_email` se presente. Job lungo: `nohup` → `/tmp/pg_scrape_full.log` su OVH. |
+| **Scrape PG (ondata)** | Migrazione **`0011`** + script [`scrape_paginegialle_specialists.py`](../scripts/scrape_paginegialle_specialists.py). **Stato operativo, ripresa, coerenza:** vedi § in cima *Attività in corso — scrape PagineGialle*. |
 | **CAP Nominatim (ondata)** | [`backfill_cap_nominatim_wave.py`](../scripts/backfill_cap_nominatim_wave.py): secondo passaggio su CAP ancora vuoti via **OSM Nominatim** (online, ~1 req/s). Produzione: recuperati **~513** CAP aggiuntivi (su **765** residui post-comuni); restano **~252** specialist senza CAP (nomi non geografici / nessun risultato OSM). Vedi [`DATABASE.md`](DATABASE.md) *Dati mancanti*. |
 | **Deploy produzione ondata PG (2026-04-01)** | Commit **`80365c1`**: OVH `deploy_safe.sh` (`DEPLOY_ROOT=/var/www/veterinari/veterinario_full/backend`), migrazione **`0010`**, import **`7657`** righe (`italia_pg_2026_04`); frontend build locale + **`scp`** → `/var/www/veterinari/frontend/dist/` + permessi; **`curl`** `127.0.0.1:8060/health` e **`https://api.veterinariovicino.it/health`** OK |
 | **Deploy produzione (2026-04-01)** | Commit **`5a58537`** (`feat(email): CC admin vet.stella…`): OVH `db_backup.sh` + `deploy_safe.sh`, `merge_email_env.py` → `.env` con **`ADMIN_EMAIL_CC=vet.stella@gmail.com`**, `systemctl restart veterinari`; health OK; probe **`POST /requests`** JSON generico + consulenza online → **200**; verifica in posta **To** `seomantis@gmail.com` e **Cc** `vet.stella@gmail.com` (stesso messaggio). **Stato verificato OK** (compilazione form in produzione: modulo generico + consulenza online). Sintesi aggiornate + tag checkpoint nel commit puntato da **`checkpoint/ovh-2026-04-01-email-cc-verified`** |
