@@ -73,18 +73,34 @@ class EmailService:
         user_name: str,
         request_id: str,
         verify_url: str,
+        is_online_consultation: bool = False,
+        paypal_email: str | None = None,
+        online_tier_label: str = "",
     ) -> None:
+        pe = (paypal_email or self.settings.online_consult_paypal_email or "").strip()
         html = _env.get_template("user_confirmation.html").render(
             user_name=user_name,
             request_id=request_id,
             verify_url=verify_url,
+            is_online_consultation=is_online_consultation,
+            paypal_email=pe,
+            online_tier_label=online_tier_label,
         )
         text = (
             f"Ciao {user_name},\n\n"
             f"Abbiamo ricevuto la tua richiesta (ID {request_id}).\n"
-            f"Verifica email: {verify_url}\n"
         )
-        self._send(to_email, "Conferma richiesta — VeterinarioVicino.it", html, text)
+        if is_online_consultation and online_tier_label:
+            text += f"Servizio: consulenza online — {online_tier_label}.\n"
+            if pe:
+                text += f"Pagamento PayPal all'indirizzo: {pe}\n"
+        text += f"Verifica email: {verify_url}\n"
+        subj = (
+            "Conferma consulenza online — VeterinarioVicino.it"
+            if is_online_consultation
+            else "Conferma richiesta — VeterinarioVicino.it"
+        )
+        self._send(to_email, subj, html, text)
 
     def send_admin_new_request(
         self,
@@ -104,6 +120,7 @@ class EmailService:
         team_whatsapp_url_with_text: str,
         user_cap: str | None = None,
         profile_notes: str | None = None,
+        is_online_consultation: bool = False,
     ) -> None:
         html = _env.get_template("admin_request.html").render(
             user_email=user_email,
@@ -122,9 +139,14 @@ class EmailService:
             admin_whatsapp_url=self.settings.admin_whatsapp_url,
             team_whatsapp_url_with_text=team_whatsapp_url_with_text,
             frontend_url=self.settings.frontend_url.rstrip("/"),
+            is_online_consultation=is_online_consultation,
         )
         text_lines = [
-            "Nuova richiesta VeterinarioVicino",
+            (
+                "[CONSULENZA ONLINE — video Google Meet] Nuova richiesta VeterinarioVicino"
+                if is_online_consultation
+                else "Nuova richiesta VeterinarioVicino"
+            ),
             f"Sito web: {self.settings.frontend_url.rstrip('/')}",
             f"Utente: {user_name} <{user_email}> {user_phone}",
             f"Animale: {animal_species}",
@@ -142,7 +164,12 @@ class EmailService:
             "Testo da copiare:",
             whatsapp_text,
         ])
-        self._send(admin_email, f"Nuova richiesta veterinario - {city} ({urgency})", html, "\n".join(text_lines))
+        subj = (
+            f"[Consulenza online] Nuova richiesta veterinario - {city} ({urgency})"
+            if is_online_consultation
+            else f"Nuova richiesta veterinario - {city} ({urgency})"
+        )
+        self._send(admin_email, subj, html, "\n".join(text_lines))
 
     def send_test_ping(self) -> None:
         """Email minima per verificare SMTP in produzione."""

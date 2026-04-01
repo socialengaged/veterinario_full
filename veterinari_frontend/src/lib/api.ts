@@ -63,6 +63,9 @@ export type CreateRequestPayload = {
   registration_consent: boolean;
   marketing_consent?: boolean;
   password?: string | null;
+  source_page?: string | null;
+  consultation_online?: boolean;
+  consultation_tier?: string | null;
 };
 
 export type CreateRequestResponse = {

@@ -40,6 +40,7 @@ export function generateSitemapEntries(): SitemapEntry[] {
   add({ loc: `${base}/`, changefreq: "weekly", priority: 1.0 });
   add({ loc: `${base}/elenco/`, changefreq: "weekly", priority: 0.8 });
   add({ loc: `${base}/richiedi-assistenza/`, changefreq: "monthly", priority: 0.7 });
+  add({ loc: `${base}/consulenza-veterinaria-online/`, changefreq: "weekly", priority: 0.75 });
   add({ loc: `${base}/guide/`, changefreq: "weekly", priority: 0.8 });
   add({ loc: `${base}/servizi/`, changefreq: "weekly", priority: 0.9 });
   add({ loc: `${base}/come-funziona/`, changefreq: "monthly", priority: 0.7 });

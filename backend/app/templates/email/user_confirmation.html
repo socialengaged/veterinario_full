@@ -3,7 +3,17 @@
 <head><meta charset="utf-8"/><title>Conferma richiesta</title></head>
 <body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111;">
   <p>Ciao {{ user_name }},</p>
+  {% if is_online_consultation %}
+  <p>Abbiamo ricevuto la tua richiesta di <strong>consulenza veterinaria online</strong> (videochiamata Google Meet).</p>
+  {% if online_tier_label %}<p><strong>Tariffa scelta:</strong> {{ online_tier_label }}</p>{% endif %}
+  {% if paypal_email %}
+  <p><strong>Pagamento:</strong> invia l’importo concordato tramite PayPal all’indirizzo
+    <a href="mailto:{{ paypal_email }}">{{ paypal_email }}</a>
+    oppure dalla sezione “Invia denaro” dell’app PayPal inserendo questo indirizzo email come destinatario.</p>
+  {% endif %}
+  {% else %}
   <p>Abbiamo ricevuto la tua richiesta di contatto veterinario.</p>
+  {% endif %}
   <p><strong>ID richiesta:</strong> {{ request_id }}</p>
   <p>Per completare la verifica email e accedere alla chat, clicca il link seguente:</p>
   <p><a href="{{ verify_url }}">Verifica email</a></p>

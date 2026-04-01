@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
+import { PromoBanner } from "@/components/PromoBanner";
 import { PluralRedirects } from "@/components/PluralRedirects";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GeolocationProvider } from "@/contexts/GeolocationContext";
@@ -20,6 +21,7 @@ const GuidesIndex = lazy(() => import("./pages/GuidesIndex"));
 const SingleSlugResolver = lazy(() => import("./pages/SingleSlugResolver"));
 const DirectoryPage = lazy(() => import("./pages/DirectoryPage"));
 const RequestPage = lazy(() => import("./pages/RequestPage"));
+const OnlineConsultationPage = lazy(() => import("./pages/OnlineConsultationPage"));
 const SitemapPage = lazy(() => import("./pages/SitemapPage"));
 const SitemapHtmlPage = lazy(() => import("./pages/SitemapHtmlPage"));
 const ServiziPage = lazy(() => import("./pages/ServiziPage"));
@@ -66,6 +68,7 @@ const App = () => (
               <Route path="/mappa-sito-dettagliata/" element={<MappaSitoDettagliata />} />
               <Route path="/sitemap-dynamic" element={<SitemapPage />} />
               <Route path="/richiedi-assistenza/" element={<RequestPage />} />
+              <Route path="/consulenza-veterinaria-online/" element={<OnlineConsultationPage />} />
               <Route path="/servizi/" element={<ServiziPage />} />
               <Route path="/accedi/" element={<LoginPage />} />
               <Route path="/registrati/" element={<RegisterPage />} />

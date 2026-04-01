@@ -6,6 +6,11 @@
     <strong>Sito web:</strong>
     <a href="{{ frontend_url }}/" style="color:#0f766e;">VeterinarioVicino.it</a>
   </p>
+  {% if is_online_consultation %}
+  <p style="font-size:15px;margin:0 0 16px;padding:12px;background:#ecfdf5;border-radius:8px;border:1px solid #34d399;">
+    <strong>Consulenza online</strong> — videochiamata Google Meet; tariffe e modalità come da note della richiesta.
+  </p>
+  {% endif %}
   <h2>Nuova richiesta</h2>
   <p><strong>Utente:</strong> {{ user_name }} &lt;{{ user_email }}&gt; — {{ user_phone }}</p>
   <p><strong>Animale:</strong> {{ animal_species }}</p>

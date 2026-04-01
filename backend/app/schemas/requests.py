@@ -31,6 +31,7 @@ SERVICE_TO_SPECIALTY_SLUG: dict[str, str] = {
     "animali-esotici": "visite-generali",
     "rurale": "visite-generali",
     "toelettatura": "toelettatura",
+    "consultazione_online": "visite-generali",
 }
 
 
@@ -68,6 +69,14 @@ class CreateRequestBody(BaseModel):
     utm_source: Optional[str] = None
     utm_medium: Optional[str] = None
     utm_campaign: Optional[str] = None
+
+    consultation_online: bool = False
+    """True se la richiesta è per consulenza veterinaria online (cani/gatti, tariffe dedicate)."""
+    consultation_tier: Optional[str] = Field(
+        default=None,
+        max_length=32,
+        description="std_15_30 | std_30_50 | specialist_100",
+    )
 
     @field_validator("password")
     @classmethod
@@ -141,6 +150,18 @@ class CreateRequestBody(BaseModel):
             raise ValueError(
                 "Conferma di volerti registrare al sito con questa email e password per accedere alla chat."
             )
+
+        if self.consultation_online:
+            if self.animal_species not in ("cane", "gatto"):
+                raise ValueError("La consulenza online è disponibile solo per cani e gatti.")
+            if self.consultation_tier not in ("std_15_30", "std_30_50", "specialist_100"):
+                raise ValueError("Seleziona una tariffa valida per la consulenza online.")
+            sv = (self.service or "").strip().lower().replace("-", "_")
+            if sv != "consultazione_online":
+                raise ValueError("Servizio non valido per consulenza online.")
+        elif self.consultation_tier is not None and str(self.consultation_tier).strip():
+            raise ValueError("Il campo tariffa online non è ammesso senza consulenza online.")
+
         return self
 
 

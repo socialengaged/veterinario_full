@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     # Se true: niente SMTP reale, log su logger (livello INFO)
     email_log_only: bool = Field(default=False, validation_alias="EMAIL_LOG_ONLY")
 
+    # Consulenza online — PayPal (destinatario default; override con ONLINE_CONSULT_PAYPAL_EMAIL)
+    online_consult_paypal_email: str = Field(
+        default="vet.stella@gmail.com",
+        validation_alias="ONLINE_CONSULT_PAYPAL_EMAIL",
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

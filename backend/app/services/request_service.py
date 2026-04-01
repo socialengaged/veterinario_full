@@ -38,7 +38,31 @@ from app.services.email_service import EmailService
 from app.services.whatsapp_text import build_admin_whatsapp_payload
 
 import logging
+
 logger = logging.getLogger(__name__)
+
+ONLINE_CONSULT_DESC_MARKER = "--- Servizio consulenza online ---"
+
+
+def _tier_label_it(tier: str) -> str:
+    return {
+        "std_15_30": "15 minuti — 30 € (consulenza standard)",
+        "std_30_50": "30 minuti (massimo) — 50 € (consulenza standard)",
+        "specialist_100": "Consulenza veterinaria specialistica — 100 €",
+    }[tier]
+
+
+def _online_description_block(tier: str) -> str:
+    return (
+        f"\n\n{ONLINE_CONSULT_DESC_MARKER}\n"
+        f"Modalità: videochiamata Google Meet.\n"
+        f"Tariffa scelta: {_tier_label_it(tier)}.\n"
+        f"Pagamento: PayPal (email destinatario indicata in configurazione e nella mail di conferma).\n"
+    )
+
+
+def _is_online_consultation_description(description: str | None) -> bool:
+    return bool(description and ONLINE_CONSULT_DESC_MARKER in description)
 
 
 class RequestService:
@@ -207,6 +231,7 @@ class RequestService:
                 team_whatsapp_url_with_text=team_wa,
                 user_cap=user_cap,
                 profile_notes=profile_notes,
+                is_online_consultation=_is_online_consultation_description(req.description),
             )
         except Exception:
             logger.exception("Email admin fallita dopo inoltro richiesta")
@@ -230,15 +255,22 @@ class RequestService:
             conv = self.db.scalar(select(Conversation).where(Conversation.request_id == req.id).limit(1))
             if conv:
                 # Messaggio utente con le note del modulo già creato in create_request
+                if _is_online_consultation_description(req.description):
+                    sys_body = (
+                        "Email verificata. Abbiamo inoltrato la tua richiesta di consulenza online: "
+                        "ti contatteremo per confermare pagamento (PayPal) e organizzare la videochiamata su Google Meet."
+                    )
+                else:
+                    sys_body = (
+                        "Email verificata. Abbiamo inoltrato la tua richiesta alle strutture veterinarie "
+                        "della tua zona per trovare la prima disponibilità tra i nostri contatti. "
+                        "Ti ricontatteranno secondo le preferenze indicate (email, SMS o WhatsApp)."
+                    )
                 self.db.add(
                     Message(
                         conversation_id=conv.id,
                         sender_role=MessageSenderRole.system.value,
-                        body=(
-                            "Email verificata. Abbiamo inoltrato la tua richiesta alle strutture veterinarie "
-                            "della tua zona per trovare la prima disponibilità tra i nostri contatti. "
-                            "Ti ricontatteranno secondo le preferenze indicate (email, SMS o WhatsApp)."
-                        ),
+                        body=sys_body,
                     )
                 )
         self.db.commit()
@@ -261,6 +293,8 @@ class RequestService:
         contact_method: str,
         marketing_consent: bool,
         password_plain: Optional[str] = None,
+        consultation_online: bool = False,
+        consultation_tier: Optional[str] = None,
     ) -> dict[str, Any]:
         slug = specialty_slug.strip().lower()
         specialty = self.db.scalar(select(Specialty).where(Specialty.slug == slug))
@@ -289,13 +323,20 @@ class RequestService:
         self.db.add(animal)
         self.db.flush()
 
+        merged_description = (description or "").strip()
+        tier_label_for_email = ""
+        if consultation_online and consultation_tier:
+            block = _online_description_block(consultation_tier)
+            tier_label_for_email = _tier_label_it(consultation_tier)
+            merged_description = (merged_description + block).strip() if merged_description else block.strip()
+
         req = VetRequest(
             user_id=user.id,
             animal_id=animal.id,
             address_id=addr.id,
             specialty_id=specialty.id,
             urgency=urgency or "normale",
-            description=description,
+            description=merged_description or None,
             contact_method=contact_method,
             marketing_consent=marketing_consent,
             sub_service=sub_service,
@@ -326,7 +367,7 @@ class RequestService:
                 city=city,
                 province=province,
                 user_cap=user_cap,
-                description=description,
+                description=merged_description or None,
                 profile_notes=pn,
             )
             wa_payload = build_admin_whatsapp_payload(
@@ -339,7 +380,7 @@ class RequestService:
                 province=province,
                 specialty=specialty.name,
                 urgency=urgency,
-                description=description,
+                description=merged_description or None,
                 matches=matched_specs,
                 profile_notes=pn,
             )
@@ -348,7 +389,7 @@ class RequestService:
         self.db.add(conv)
         self.db.flush()
 
-        desc_stripped = (description or "").strip()
+        desc_stripped = (merged_description or "").strip()
         if desc_stripped:
             self.db.add(
                 Message(
@@ -359,16 +400,30 @@ class RequestService:
             )
 
         if forward_to_vets:
-            welcome = (
-                "Ciao, abbiamo ricevuto la tua richiesta. Uno specialista ti risponderà quanto prima. "
-                "Controlla la mail di conferma e verifica anche lo spam."
-            )
+            if consultation_online:
+                welcome = (
+                    "Ciao, abbiamo ricevuto la tua richiesta di consulenza online. "
+                    "Uno specialista ti risponderà per organizzare video su Google Meet e il pagamento. "
+                    "Controlla la mail e verifica anche lo spam."
+                )
+            else:
+                welcome = (
+                    "Ciao, abbiamo ricevuto la tua richiesta. Uno specialista ti risponderà quanto prima. "
+                    "Controlla la mail di conferma e verifica anche lo spam."
+                )
         else:
-            welcome = (
-                "Ciao! Abbiamo registrato la tua richiesta. Per inoltrarla ai veterinari della tua zona e "
-                "cercare la prima disponibilità tra i nostri contatti, apri l'email che ti abbiamo inviato e "
-                "clicca sul link di verifica. Controlla anche la cartella spam."
-            )
+            if consultation_online:
+                welcome = (
+                    "Ciao! Abbiamo registrato la tua consulenza online. Per ricevere istruzioni e coordinare "
+                    "pagamento (PayPal) e videochiamata Google Meet, apri l'email che ti abbiamo inviato e "
+                    "clicca sul link di verifica. Controlla anche la cartella spam."
+                )
+            else:
+                welcome = (
+                    "Ciao! Abbiamo registrato la tua richiesta. Per inoltrarla ai veterinari della tua zona e "
+                    "cercare la prima disponibilità tra i nostri contatti, apri l'email che ti abbiamo inviato e "
+                    "clicca sul link di verifica. Controlla anche la cartella spam."
+                )
         self.db.add(
             Message(
                 conversation_id=conv.id,
@@ -406,6 +461,9 @@ class RequestService:
                 user_name=user.full_name,
                 request_id=str(req.id),
                 verify_url=redirect_url,
+                is_online_consultation=consultation_online,
+                paypal_email=self.settings.online_consult_paypal_email,
+                online_tier_label=tier_label_for_email,
             )
         except Exception:
             logger.exception("Email conferma utente fallita dopo persistenza richiesta")
@@ -426,12 +484,13 @@ class RequestService:
                     province=province,
                     specialty_name=specialty.name,
                     urgency=urgency,
-                    description=description,
+                    description=merged_description or None,
                     matches=matched_specs,
                     whatsapp_text=wa_payload["whatsapp_text"],
                     team_whatsapp_url_with_text=team_wa,
                     user_cap=uc,
                     profile_notes=pn,
+                    is_online_consultation=consultation_online,
                 )
             except Exception:
                 logger.exception("Email admin fallita dopo persistenza richiesta")

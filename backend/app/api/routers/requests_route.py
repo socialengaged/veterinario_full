@@ -30,6 +30,8 @@ def create_request(body: CreateRequestBody, db: Session = Depends(get_db)) -> Cr
             contact_method=body.contact_method,
             marketing_consent=body.marketing_consent,
             password_plain=body.password,
+            consultation_online=body.consultation_online,
+            consultation_tier=body.consultation_tier,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
