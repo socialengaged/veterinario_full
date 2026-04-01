@@ -21,8 +21,16 @@ const PAYPAL_EMAIL =
   (import.meta.env.VITE_ONLINE_CONSULT_PAYPAL_EMAIL as string | undefined)?.trim() || "vet.stella@gmail.com";
 
 const TIER_OPTIONS: { id: ConsultationTier; title: string; detail: string }[] = [
-  { id: "std_15_30", title: "15 minuti", detail: "30 € — consulenza standard" },
-  { id: "std_30_50", title: "30 minuti (max)", detail: "50 € — consulenza standard" },
+  {
+    id: "std_15_30",
+    title: "15 minuti",
+    detail: "30 € — consulenza semplice (monitoraggio terapia, iter diagnostico)",
+  },
+  {
+    id: "std_30_50",
+    title: "30 minuti (max)",
+    detail: "50 € — second opinion o consulenza casi cronici",
+  },
   { id: "specialist_100", title: "Specialistica", detail: "100 € — consulenza veterinaria specialistica" },
 ];
 
@@ -102,7 +110,7 @@ export default function OnlineConsultationPage() {
         password: form.password,
         consultationTier: tier,
       });
-      const res = await postRequests(payload);
+      const res = await postRequests(payload, examFiles.length > 0 ? examFiles : undefined);
       setAccessToken(res.access_token);
       navigate(`/dashboard/chat/${res.conversation_id}`, { replace: true });
     } catch (err) {
@@ -371,6 +379,31 @@ export default function OnlineConsultationPage() {
                 placeholder="Sintomi, dubbi, terapie in corso…"
                 className={cn(inputClass, "resize-none")}
               />
+            </div>
+
+            <div>
+              <label htmlFor="vv-online-exams" className="block text-sm font-medium text-foreground mb-1.5">
+                Esami già eseguiti (facoltativo)
+              </label>
+              <input
+                id="vv-online-exams"
+                type="file"
+                multiple
+                accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,application/pdf,image/*"
+                onChange={(e) => {
+                  const list = e.target.files;
+                  if (!list?.length) {
+                    setExamFiles([]);
+                    return;
+                  }
+                  setExamFiles(Array.from(list).slice(0, 8));
+                }}
+                className={cn(inputClass, "py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary")}
+              />
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Puoi allegare <strong>PDF</strong> o <strong>immagini</strong> (referti, radiografie, foto). Massimo{" "}
+                <strong>8 file</strong>, fino a <strong>8 MB</strong> ciascuno.
+              </p>
             </div>
 
             <div>

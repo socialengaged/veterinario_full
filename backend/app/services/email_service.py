@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 import smtplib
+from email import encoders
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
@@ -24,7 +26,14 @@ class EmailService:
     def __init__(self) -> None:
         self.settings = get_settings()
 
-    def _send(self, to: str, subject: str, html: str, text: str) -> None:
+    def _send(
+        self,
+        to: str,
+        subject: str,
+        html: str,
+        text: str,
+        attachments: list[tuple[str, bytes, str]] | None = None,
+    ) -> None:
         if self.settings.email_log_only:
             logger.info(
                 "[EMAIL_LOG_ONLY] to=%s subject=%s\n--- text ---\n%s\n--- html (trim) ---\n%s...",
@@ -33,6 +42,11 @@ class EmailService:
                 text,
                 html[:500],
             )
+            if attachments:
+                logger.info(
+                    "[EMAIL_LOG_ONLY] attachments=%s",
+                    [(n, len(b)) for n, b, _ in attachments],
+                )
             return
 
         if not (self.settings.smtp_password or "").strip():
@@ -41,16 +55,35 @@ class EmailService:
                 "(es. Gmail: smtp.gmail.com:587 + password per app)"
             )
 
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = self.settings.smtp_from
-        msg["To"] = to
-        msg.attach(MIMEText(text, "plain", "utf-8"))
-        msg.attach(MIMEText(html, "html", "utf-8"))
+        if attachments:
+            msg = MIMEMultipart("mixed")
+            msg["Subject"] = subject
+            msg["From"] = self.settings.smtp_from
+            msg["To"] = to
+            alt = MIMEMultipart("alternative")
+            alt.attach(MIMEText(text, "plain", "utf-8"))
+            alt.attach(MIMEText(html, "html", "utf-8"))
+            msg.attach(alt)
+            for filename, data, ctype in attachments:
+                maintype, subtype = (
+                    ctype.split("/", 1) if "/" in (ctype or "") else ("application", "octet-stream")
+                )
+                part = MIMEBase(maintype, subtype)
+                part.set_payload(data)
+                encoders.encode_base64(part)
+                part.add_header("Content-Disposition", "attachment", filename=filename)
+                msg.attach(part)
+        else:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = self.settings.smtp_from
+            msg["To"] = to
+            msg.attach(MIMEText(text, "plain", "utf-8"))
+            msg.attach(MIMEText(html, "html", "utf-8"))
 
         try:
             if self.settings.smtp_use_tls:
-                with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port, timeout=30) as smtp:
+                with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port, timeout=60) as smtp:
                     smtp.ehlo()
                     smtp.starttls()
                     smtp.ehlo()
@@ -58,7 +91,7 @@ class EmailService:
                         smtp.login(self.settings.smtp_user, self.settings.smtp_password)
                     smtp.sendmail(self.settings.smtp_from, [to], msg.as_string())
             else:
-                with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port, timeout=30) as smtp:
+                with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port, timeout=60) as smtp:
                     if self.settings.smtp_user and self.settings.smtp_password:
                         smtp.login(self.settings.smtp_user, self.settings.smtp_password)
                     smtp.sendmail(self.settings.smtp_from, [to], msg.as_string())
@@ -121,7 +154,9 @@ class EmailService:
         user_cap: str | None = None,
         profile_notes: str | None = None,
         is_online_consultation: bool = False,
+        attachments: list[tuple[str, bytes, str]] | None = None,
     ) -> None:
+        attachment_names = [a[0] for a in attachments] if attachments else []
         html = _env.get_template("admin_request.html").render(
             user_email=user_email,
             user_name=user_name,
@@ -140,6 +175,7 @@ class EmailService:
             team_whatsapp_url_with_text=team_whatsapp_url_with_text,
             frontend_url=self.settings.frontend_url.rstrip("/"),
             is_online_consultation=is_online_consultation,
+            attachment_names=attachment_names,
         )
         text_lines = [
             (
@@ -156,6 +192,8 @@ class EmailService:
         ]
         if profile_notes and str(profile_notes).strip():
             text_lines.append(f"Note profilo utente: {str(profile_notes).strip()}")
+        if attachment_names:
+            text_lines.append(f"Allegati esami (in questa email): {', '.join(attachment_names)}")
         text_lines.extend([
             "",
             f"WhatsApp team (testo incluso): {team_whatsapp_url_with_text}",
@@ -169,7 +207,7 @@ class EmailService:
             if is_online_consultation
             else f"Nuova richiesta veterinario - {city} ({urgency})"
         )
-        self._send(admin_email, subj, html, "\n".join(text_lines))
+        self._send(admin_email, subj, html, "\n".join(text_lines), attachments=attachments)
 
     def send_test_ping(self) -> None:
         """Email minima per verificare SMTP in produzione."""

@@ -35,6 +35,7 @@ from app.services.admin_match_payload import (
     enrich_specialist_matches,
 )
 from app.services.email_service import EmailService
+from app.services.request_uploads import load_request_uploads, save_request_uploads
 from app.services.whatsapp_text import build_admin_whatsapp_payload
 
 import logging
@@ -46,8 +47,8 @@ ONLINE_CONSULT_DESC_MARKER = "--- Servizio consulenza online ---"
 
 def _tier_label_it(tier: str) -> str:
     return {
-        "std_15_30": "15 minuti — 30 € (consulenza standard)",
-        "std_30_50": "30 minuti (massimo) — 50 € (consulenza standard)",
+        "std_15_30": "15 minuti — 30 € (consulenza semplice: monitoraggio terapia, iter diagnostico)",
+        "std_30_50": "30 minuti (massimo) — 50 € (second opinion o consulenza casi cronici)",
         "specialist_100": "Consulenza veterinaria specialistica — 100 €",
     }[tier]
 
@@ -215,6 +216,10 @@ class RequestService:
             team_wa = admin_team_whatsapp_url_with_text(
                 self.settings.admin_whatsapp_url, wa_payload["whatsapp_text"]
             )
+            att: list[tuple[str, bytes, str]] | None = None
+            if _is_online_consultation_description(req.description):
+                loaded = load_request_uploads(self.settings.request_upload_dir, req.id)
+                att = loaded if loaded else None
             self.email.send_admin_new_request(
                 admin_email=self.settings.admin_email,
                 user_email=user.email,
@@ -232,6 +237,7 @@ class RequestService:
                 user_cap=user_cap,
                 profile_notes=profile_notes,
                 is_online_consultation=_is_online_consultation_description(req.description),
+                attachments=att,
             )
         except Exception:
             logger.exception("Email admin fallita dopo inoltro richiesta")
@@ -295,6 +301,7 @@ class RequestService:
         password_plain: Optional[str] = None,
         consultation_online: bool = False,
         consultation_tier: Optional[str] = None,
+        uploaded_files: Optional[list[tuple[str, bytes, str]]] = None,
     ) -> dict[str, Any]:
         slug = specialty_slug.strip().lower()
         specialty = self.db.scalar(select(Specialty).where(Specialty.slug == slug))
@@ -455,6 +462,12 @@ class RequestService:
 
         self.db.commit()
 
+        if uploaded_files and consultation_online:
+            try:
+                save_request_uploads(self.settings.request_upload_dir, req.id, uploaded_files)
+            except Exception:
+                logger.exception("Salvataggio allegati consulenza online fallito (richiesta già registrata)")
+
         try:
             self.email.send_user_request_confirmation(
                 to_email=user.email,
@@ -474,6 +487,9 @@ class RequestService:
                 team_wa = admin_team_whatsapp_url_with_text(
                     self.settings.admin_whatsapp_url, wa_payload["whatsapp_text"]
                 )
+                att_admin: list[tuple[str, bytes, str]] | None = None
+                if consultation_online and uploaded_files:
+                    att_admin = uploaded_files
                 self.email.send_admin_new_request(
                     admin_email=self.settings.admin_email,
                     user_email=user.email,
@@ -491,6 +507,7 @@ class RequestService:
                     user_cap=uc,
                     profile_notes=pn,
                     is_online_consultation=consultation_online,
+                    attachments=att_admin,
                 )
             except Exception:
                 logger.exception("Email admin fallita dopo persistenza richiesta")

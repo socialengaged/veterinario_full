@@ -35,11 +35,13 @@ export function clearAccessToken(): void {
 function parseApiError(detail: unknown): string {
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail)) {
-    const first = detail[0];
-    if (first && typeof first === "object" && "msg" in first) {
-      return String((first as { msg: string }).msg);
-    }
-    return JSON.stringify(detail);
+    const msgs = detail.map((item) => {
+      if (item && typeof item === "object" && "msg" in item) {
+        return String((item as { msg: string }).msg);
+      }
+      return typeof item === "string" ? item : JSON.stringify(item);
+    });
+    return msgs.join("; ");
   }
   return "Errore di rete o server";
 }
@@ -153,7 +155,7 @@ export async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
-  if (body !== undefined) {
+  if (body !== undefined && !(body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
   if (auth) {
@@ -164,7 +166,12 @@ export async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T
   const res = await fetch(`${getApiBaseUrl()}${path}`, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body:
+      body !== undefined
+        ? body instanceof FormData
+          ? body
+          : JSON.stringify(body)
+        : undefined,
   });
 
   const text = await res.text();
@@ -184,7 +191,22 @@ export async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T
   return json as T;
 }
 
-export async function postRequests(payload: CreateRequestPayload): Promise<CreateRequestResponse> {
+export async function postRequests(
+  payload: CreateRequestPayload,
+  files?: File[],
+): Promise<CreateRequestResponse> {
+  if (files && files.length > 0) {
+    const fd = new FormData();
+    fd.append("payload", JSON.stringify(payload));
+    for (const f of files) {
+      fd.append("files", f);
+    }
+    return apiFetch<CreateRequestResponse>("/requests", {
+      method: "POST",
+      body: fd,
+      auth: false,
+    });
+  }
   return apiFetch<CreateRequestResponse>("/requests", {
     method: "POST",
     body: payload,

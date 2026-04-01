@@ -11,6 +11,11 @@
     <strong>Consulenza online</strong> — videochiamata Google Meet; tariffe e modalità come da note della richiesta.
   </p>
   {% endif %}
+  {% if attachment_names %}
+  <p style="font-size:14px;margin:0 0 16px;padding:12px;background:#fffbeb;border-radius:8px;border:1px solid #fcd34d;">
+    <strong>Esami allegati</strong> (file in allegato a questa email): {{ attachment_names | join(", ") }}
+  </p>
+  {% endif %}
   <h2>Nuova richiesta</h2>
   <p><strong>Utente:</strong> {{ user_name }} &lt;{{ user_email }}&gt; — {{ user_phone }}</p>
   <p><strong>Animale:</strong> {{ animal_species }}</p>

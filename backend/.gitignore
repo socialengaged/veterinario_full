@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 *.py[cod]
 .venv/
 venv/
@@ -9,4 +9,7 @@ venv/
 .coverage
 .DS_Store
 .venv310/
+
+uploads/request_files/*
+!uploads/request_files/.gitkeep
 

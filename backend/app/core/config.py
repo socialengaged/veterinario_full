@@ -45,6 +45,11 @@ class Settings(BaseSettings):
         default="vet.stella@gmail.com",
         validation_alias="ONLINE_CONSULT_PAYPAL_EMAIL",
     )
+    # Allegati modulo consulenza online (PDF/immagini) per email admin
+    request_upload_dir: Path = Field(
+        default_factory=lambda: _BACKEND_ROOT / "uploads" / "request_files",
+        validation_alias="REQUEST_UPLOAD_DIR",
+    )
 
 
 @lru_cache

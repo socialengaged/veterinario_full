@@ -164,6 +164,8 @@ Esempi utili:
 
 **Resend:** rimosso dal codice; eventuali `RESEND_*` nel `.env` sono ignorate.
 
+- **`REQUEST_UPLOAD_DIR`** (opzionale): cartella per allegati PDF/immagini del modulo **consulenza online** (default relativo al backend: `uploads/request_files`). Sul VPS assicurarsi che esista e sia scrivibile dall’utente del servizio (es. `sudo mkdir -p …/uploads/request_files && sudo chown -R www-data:www-data …/uploads` se il processo gira come `www-data`, altrimenti allineare a `User=` di `systemd`).
+
 ---
 
 ## 5. CORS
@@ -205,6 +207,8 @@ Copre: `/health`, home, `/accedi/` (POST `/auth/login` verso API pubblica), `/re
 curl -s https://api.veterinariovicino.it/health
 curl -sI https://veterinariovicino.it/assets/index-*.js   # sostituire hash reale; deve essere 200, non 403
 ```
+
+**Consulenza online + allegati:** pagina **`/consulenza-veterinaria-online/`** — testo tariffe (15 min / 30 min / specialistica) e campo **esami già eseguiti** (PDF/immagini). Dopo deploy backend, verificare che la directory upload sul server sia scrivibile e che l’email a `ADMIN_EMAIL` arrivi con allegati dopo invio (utente già verificato) o dopo verifica email (account nuovo).
 
 **Smoke test flusso utente (browser):**
 
