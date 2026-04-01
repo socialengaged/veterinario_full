@@ -21,7 +21,7 @@ Documento unico per continuità: architettura, server, comandi, problemi noti e 
 
 - **Prodotto:** portale VeterinarioVicino.it + API `api.veterinariovicino.it`; utente invia richiesta assistenza, crea account (email/password), chat guidata, verifica email obbligatoria prima dell’inoltro ai veterinari.
 - **Repo:** monorepo [veterinario_full](https://github.com/socialengaged/veterinario_full) (`backend/` FastAPI, `veterinari_frontend/` Vite/React). Branch principale `master`.
-- **Produzione (OVH):** VPS `57.131.16.162`; API su `127.0.0.1:8060` (systemd `veterinari`), Nginx verso HTTPS; statiche in `/var/www/veterinari/frontend/dist/`. DB PostgreSQL `veterinari`. Email via SMTP (es. Gmail), non Resend.
+- **Produzione (OVH):** VPS `57.131.16.162`; API su `127.0.0.1:8060` (systemd `veterinari`), Nginx verso HTTPS; statiche in `/var/www/veterinari/frontend/dist/`. DB PostgreSQL `veterinari`. Email via SMTP (es. Gmail), non Resend. Notifiche admin: **To** `ADMIN_EMAIL`, **Cc** `ADMIN_EMAIL_CC` (default `vet.stella@gmail.com`).
 - **Deploy attuale:** backend aggiornabile con **`git pull`** solo se il server ha clone Git in `/var/www/veterinari`; altrimenti pacchetto (`tar` estratto in `backend/`) + **`scp`** del `dist/` frontend. Dopo ogni upload frontend: **permessi** (§2) obbligatori.
 - **Qualità:** pytest schema in CI/backend; `validate_preprod.py` utile su DB “vergine” o email di test uniche; su DB già popolato i conteggi possono fallire senza indicare regressione (vedi §15).
 - **Prossimi miglioramenti consigliati:** clone Git sul VPS per allineamento al runbook; `FRONTEND_URL` sempre `https://…` nei link email; backup DB prima di migrazioni; smoke Playwright/E2E dopo deploy.
@@ -158,7 +158,8 @@ Esempi utili:
 
 - `FRONTEND_URL=https://veterinariovicino.it`
 - `API_PUBLIC_URL=https://api.veterinariovicino.it`
-- `ADMIN_EMAIL=seomantis@gmail.com`
+- `ADMIN_EMAIL=seomantis@gmail.com` (destinatario **To** delle notifiche nuova richiesta)
+- `ADMIN_EMAIL_CC=vet.stella@gmail.com` (opzionale; **Cc** sulla stessa email admin; vuoto = disattiva). Sul server si può aggiungere con `python deploy/merge_email_env.py` se manca la chiave.
 - `EMAIL_LOG_ONLY=false` per invio reale
 - **SMTP Gmail:** `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USE_TLS=true`, `SMTP_USER`, `SMTP_FROM` (solitamente stesso indirizzo Gmail), `SMTP_PASSWORD` = *password per le app* Google.
 
@@ -177,6 +178,7 @@ Esempi utili:
 ## 6. Email e notifiche “WhatsApp”
 
 - Invio tramite **SMTP** (Gmail o altro).
+- Notifiche **nuova richiesta** (admin): una mail con **To = `ADMIN_EMAIL`** e **Cc = `ADMIN_EMAIL_CC`** (stesso corpo e allegati). Template consulenza online **senza** tabella specialisti in zona; richiesta generica **con** tabella match.
 - **Nessun** invio automatico a WhatsApp: testo riutilizzabile in `admin_notifications.payload_json` e nell’email admin; link team configurabile (`ADMIN_WHATSAPP_URL`, default `https://wa.me/393204864478`).
 
 ---
@@ -293,7 +295,7 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 
 ---
 
-*Ultimo aggiornamento significativo: form `/richiedi-assistenza/` e inline servizio×animale con password obbligatoria, `POST /requests` + redirect chat; query `servizio` risolta da slug pagina; sintesi aggiornate.*
+*Ultimo aggiornamento significativo: form `/richiedi-assistenza/` e inline servizio×animale con password obbligatoria, `POST /requests` + redirect chat; query `servizio` risolta da slug pagina; sintesi aggiornate. **2026-04-01:** email admin con **Cc** `vet.stella@gmail.com` (`ADMIN_EMAIL_CC`), template consulenza online senza tabella match.*
 
 ---
 
@@ -301,6 +303,7 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 
 | Area | Modifica |
 |------|----------|
+| **Deploy produzione (2026-04-01)** | Commit **`5a58537`** (`feat(email): CC admin vet.stella…`): OVH `db_backup.sh` + `deploy_safe.sh`, `merge_email_env.py` → `.env` con **`ADMIN_EMAIL_CC=vet.stella@gmail.com`**, `systemctl restart veterinari`; health OK; probe **`POST /requests`** JSON generico + consulenza online → **200**; verifica in posta **To** `seomantis@gmail.com` e **Cc** `vet.stella@gmail.com` (stesso messaggio) |
 | Deploy | **`DEPLOY_SAFE_WORKFLOW.md`**: procedura fissa branch → test → backup → `git pull` → `pip` → `alembic` → restart → health → E2E → log → aggiornamento sintesi → merge |
 | Priorità contatto / admin | Ordinamento match per **priorità** (score + tentativi/successi/ultimo contatto); email admin con **priorità**, `tel:`, WA, link **firmati** per esito contatto; API `GET /admin/matches`, `POST /admin/match/{id}/update`, `GET .../contact-done`; `GET /admin/requests` espone **`matches_url`** |
 | DB | Migrazione Alembic **`0008_contact_tracking_priority`**: colonne su `specialists` e `request_matches` per tracking contatti |
@@ -319,7 +322,7 @@ curl -sS -X POST "https://api.veterinariovicino.it/requests" \
 | **Checkpoint rollback** | Tag **`checkpoint/ovh-2026-03-30-pre-dashboard-footer-requests`** → commit **`8a92d71`** (stato immediatamente prima della release footer/richieste); release merge: **`def8143`**; docs commit **`81a0192`** |
 | **Deploy produzione (3)** | **2026-03-30:** `git pull` OVH fino a **`81a0192`**, `alembic` OK, restart API, health OK; frontend **`scp`** `dist/` + permessi |
 | **UX / richiesta e registrazione** | Pulsanti **Richiedi assistenza** e **Registrati** non più disabilitati in silenzio: messaggio **“Completa ancora: …”** al submit; commit **`1c3d080`**; deploy: build locale + **`scp`** su `/var/www/veterinari/frontend/dist/` + script permessi; health OK, asset JS **200** |
-| **Consulenza online** | Pagina **`/consulenza-veterinaria-online/`** (solo cani/gatti): tariffe 15′/30′/specialistica, Meet, PayPal **`vet.stella@gmail.com`** (`VITE_ONLINE_CONSULT_PAYPAL_EMAIL` / `ONLINE_CONSULT_PAYPAL_EMAIL`); **banner** `PromoBanner` in `App.tsx` (deve essere **renderizzato**, non solo importato); API `consultation_online` + `consultation_tier`; oggetto email admin **`[Consulenza online]`**; email utente **Conferma consulenza online** |
+| **Consulenza online** | Pagina **`/consulenza-veterinaria-online/`** (solo cani/gatti): tariffe 15′/30′/specialistica, Meet, PayPal **`vet.stella@gmail.com`** (`VITE_ONLINE_CONSULT_PAYPAL_EMAIL` / `ONLINE_CONSULT_PAYPAL_EMAIL`); **banner** `PromoBanner` in `App.tsx` (deve essere **renderizzato**, non solo importato); API `consultation_online` + `consultation_tier`; oggetto email admin **`[Consulenza online]`**; email utente **Conferma consulenza online**; email admin **To+Cc** come richiesta generica; HTML **senza** elenco match (solo note/allegati/WhatsApp) |
 | **Fix banner consulenza online** | Bug: `PromoBanner` importato ma non in JSX → nessuna barra in produzione; correzione + redeploy `dist/`; sintesi: ordine deploy in [`DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md) sezione *Deploy produzione OVH* |
 | Veterinari | `POST /specialists/register`, `GET /specialists/specialties`; footer link `/iscrizione-veterinari/`; migrazione Alembic `0003_usr_prof_spec` (`profile_notes_for_vets`, `specialists.user_id`, `pending_specialist_profile`) |
 

@@ -260,4 +260,4 @@ Compilare a mano o in ticket:
 
 ---
 
-*Ultimo aggiornamento: workflow standard operativo permanente (marzo 2026).*
+*Ultimo aggiornamento: workflow standard operativo permanente (marzo 2026). Deploy **2026-04-01:** email admin con `ADMIN_EMAIL_CC` documentato in `PROGETTO_OVH_STATO.md` §4 e `merge_email_env.py`.*
