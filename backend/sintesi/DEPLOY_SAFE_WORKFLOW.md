@@ -79,8 +79,8 @@ Flusso **effettivo** quando la release tocca **sito statico** e **API** (path e 
 | 2 | SSH `ovh` | `cd /var/www/veterinari/backend` → `git pull --ff-only origin master` → `source venv/bin/activate` → `pip install -r requirements.txt` → se serve: `alembic upgrade head` → `sudo systemctl restart veterinari` → `curl -s http://127.0.0.1:8060/health` |
 | 3 | PC | `cd veterinari_frontend` → `npm run build` (legge `.env.production`) |
 | 4 | PC | Da `veterinari_frontend/dist/`: `scp -r * ovh:/var/www/veterinari/frontend/dist/` (PowerShell: vedi §Deploy frontend in `PROGETTO_OVH_STATO`) |
-| 5 | SSH `ovh` | **Permessi:** `sudo bash /var/www/veterinari/backend/deploy/fix_frontend_dist_permissions.sh /var/www/veterinari/frontend/dist` |
-| 6 | Browser | Verifica UI; se non cambia: **incognito** o **hard refresh** (Ctrl+F5) — la **PWA** può cacheare il vecchio `index.html`. |
+| 5 | SSH `ovh` | **Permessi (obbligatorio):** `sudo bash /var/www/veterinari/backend/deploy/fix_frontend_dist_permissions.sh /var/www/veterinari/frontend/dist` — senza questo passo, **`/assets/*.js` può rispondere 403** e il sito resta sullo **spinner**. |
+| 6 | Browser / curl | `curl -sI https://veterinariovicino.it/assets/<nome-file-da-index.html>` → deve essere **200**. Poi verifica UI; se non cambia: **incognito** o **hard refresh** (Ctrl+F5) — la **PWA** può cacheare il vecchio `index.html`. |
 
 **Errore comune:** componente aggiunto in repo ma **non montato nel JSX** (es. import senza `<Componente />` in `App.tsx`): il deploy file è corretto ma in produzione non compare nulla.
 

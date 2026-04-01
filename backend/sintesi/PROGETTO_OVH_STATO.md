@@ -246,7 +246,7 @@ Repository GitHub: [https://github.com/socialengaged/veterinario_full](https://g
 
 | Problema | Causa | Fix |
 |----------|--------|-----|
-| Sito bianco + spinner | `/assets/*.js` → **403** | `chmod` su `dist/` e `assets/` (vedi §Deploy frontend) |
+| Sito bianco + spinner | `/assets/*.js` → **403** | `chmod` su `dist/` e `assets/` (vedi §Deploy frontend). Verifica rapida: `curl -sI https://veterinariovicino.it/assets/index-*.js` (sostituire hash da `index.html`) — deve essere **200**, non 403. |
 | DNS “down” | A record puntavano a IP errato | A → `57.131.16.162` |
 | Certificato non attendibile | Solo self-signed | Certbot Let’s Encrypt |
 | Email solo in test Resend | Limite destinatari | Solo SMTP Gmail + password app |
