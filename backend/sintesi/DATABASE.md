@@ -45,6 +45,6 @@ Due consumi distinti degli stessi dati anagrafici (studi / ambulatori), con **un
 4. Su OVH: stesso CSV allineato, `venv`, rieseguire import (o copiare CSV + script aggiornati), poi smoke `POST /requests` / health.
 5. **Deploy frontend:** `scp` di `dist/` + `fix_frontend_dist_permissions.sh` (come [`DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md)).
 
-**Conteggio produzione (snapshot 2026-04-01):** `SELECT count(*) FROM specialists;` → **3024** su DB OVH. Il file `veterinari.csv` ha **~3147 righe** (incluso header): la differenza rispetto al COUNT è da righe scartate in import (`business_status` ≠ OPERATIONAL, provincia non valida, duplicati, ecc.).
+**Conteggio produzione (snapshot 2026-04-01):** `SELECT count(*) FROM specialists;` → **10681** su DB OVH (di cui **7657** con `import_batch = 'italia_pg_2026_04'` — ondata PagineGialle). Prima dell’ondata il totale era **3024**. Il file `veterinari.csv` ha **~3147 righe** (incluso header): la differenza rispetto al COUNT storico era da righe scartate in import (`business_status` ≠ OPERATIONAL, ecc.); l’ondata PG è importata da script dedicato, non solo da quel CSV.
 
 **Checkpoint Git** prima di import distruttivi o refactor: vedi [`PROGETTO_OVH_STATO.md`](PROGETTO_OVH_STATO.md) §14 — tag **`checkpoint/ovh-2026-04-01-email-cc-verified`** (rollback codice; il DB va ripristinato dal **backup** se serve tornare indietro sui dati).
