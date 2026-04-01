@@ -152,7 +152,10 @@ def main() -> int:
                 cap, reason = nominatim_cap(city, prov, client=client)
                 cap_for_pair[(city, prov)] = (cap, reason)
                 if (i + 1) % 25 == 0 or i == 0:
-                    print(f"  [{i+1}/{len(pairs)}] {city!r} ({prov}) -> {cap or '—'} ({reason})")
+                    print(
+                        f"  [{i+1}/{len(pairs)}] {city!r} ({prov}) -> {cap or '—'} ({reason})",
+                        flush=True,
+                    )
                 if i < len(pairs) - 1:
                     time.sleep(args.min_delay)
 
