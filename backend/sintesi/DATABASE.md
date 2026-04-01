@@ -36,7 +36,18 @@ Due consumi distinti degli stessi dati anagrafici (studi / ambulatori), con **un
 - [`scripts/import_from_frontend_dataset.py`](../scripts/import_from_frontend_dataset.py) — legge `veterinari.csv` (default: path sotto `veterinari_frontend/src/data/`), crea `Specialist` con email reale o sintetica `...@noemail.local`, collega **specialty** euristiche (`visite-generali`, `emergenze`, `domicilio`, `chirurgia`). Opzioni: `--dry-run`, `--limit`, `--offset`, `--city "Lecce"`.
 - [`scripts/import_italia_pg_wave.py`](../scripts/import_italia_pg_wave.py) — ondata **PagineGialle** da `veterinari_italia_completo_dedup.csv` (root repo): dedup URL, geo da path URL, genera `veterinari_italia_wave.csv` (merge in `csv-importer.ts`) con `source=italia_pg_2026` e `profile_slug`; imposta `import_batch` e campi vuoti dove mancano dati; `--csv-only` solo CSV senza DB.
 - [`scripts/backfill_cap_italia_pg_wave.py`](../scripts/backfill_cap_italia_pg_wave.py) — aggiorna **solo** `specialists.cap` per righe con `import_batch` (default `italia_pg_2026_04`) e CAP ancora vuoto, usando `veterinari_frontend/src/data/comuni_italiani_full.csv` (match comune+provincia, fuzzy opzionale). **Non** modifica specialist fuori dall’ondata. `--dry-run` per statistiche.
+- [`scripts/backfill_cap_nominatim_wave.py`](../scripts/backfill_cap_nominatim_wave.py) — **secondo passaggio** CAP (sempre solo `import_batch` + CAP vuoto): geocoding **OpenStreetMap Nominatim** (`città, provincia, Italia` → `postcode`). Dedup per coppia (city, province); delay ~**1,1 s** tra richieste (policy OSM). Opzioni: `--dry-run` (query senza commit), `--no-fetch` (solo conteggi), `--limit-unique-pairs N` (test).
 - [`scripts/import_specialists_seed.py`](../scripts/import_specialists_seed.py) — alternativa per CSV **strutturato** con colonne esplicite (`specialties` JSON, ecc.); utile per batch curati o integrazioni OTA.
+
+### Dati mancanti (telefono, indirizzo, orari) — cosa si può fare in modo semplice
+
+| Campo | Recupero programmatico “semplice” |
+|-------|-----------------------------------|
+| **CAP** | ① CSV comuni (`backfill_cap_italia_pg_wave`) ② Nominatim (`backfill_cap_nominatim_wave`) per frazioni / località non in anagrafica ISTAT. |
+| **Telefono, indirizzo stradale, orari** | Non c’è un’API pubblica gratuita e affidabile solo da città+provincia. Opzioni realistiche: **Google Places / simili** (chiave API, costi), **scraping** del sito in `website_url` (fragile, manutenzione), integrazione manuale o da export PG più ricco. |
+| **website_url** | Per l’ondata PG è già spesso valorizzato (URL scheda). |
+| **Coordinate** | Nominatim restituisce lat/lon nella risposta; oggi **non** sono colonne su `specialists` — servirebbe migrazione + script dedicato se servissero in DB. |
+
 
 **Ordine operativo sicuro (ondata nuova):**
 
