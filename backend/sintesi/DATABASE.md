@@ -18,3 +18,32 @@ Tabelle principali (PK UUID, timestamp `created_at` / `updated_at` dove definito
 - `admin_notifications`: `payload_json` (testo WhatsApp + struttura).
 
 Migrazioni: `alembic upgrade head` (revisione iniziale crea schema da metadata).
+
+---
+
+## Pipeline anagrafica veterinari (CSV → directory + matching DB)
+
+Due consumi distinti degli stessi dati anagrafici (studi / ambulatori), con **una sorgente consigliata**:
+
+| Passaggio | Dove | Cosa fa |
+|-----------|------|---------|
+| 1. Sorgente | `veterinari_frontend/src/data/veterinari.csv` | Dataset master (righe ≈ strutture). Sostituire o appendere qui le nuove righe; colonne attese come da [`csv-importer.ts`](../../veterinari_frontend/src/data/csv-importer.ts) (nome, indirizzo, città, provincia, telefoni, email se presente, `business_status`, ecc.). |
+| 2. Frontend | Build Vite (`npm run build`) | A build time il CSV viene parsato e genera gli oggetti **Clinic** usati da elenco, mappe, schede città (nessun fetch runtime dal CSV). |
+| 3. Backend matching | Tabella **`specialists`** + `specialist_specialties` | Il matching delle richieste (`RequestService._match_specialists`) interroga **solo il DB**, non il CSV. Allineare il DB con lo stesso dataset tramite import. |
+
+**Script di import DB (stesso schema CSV del frontend):**
+
+- [`scripts/import_from_frontend_dataset.py`](../scripts/import_from_frontend_dataset.py) — legge `veterinari.csv` (default: path sotto `veterinari_frontend/src/data/`), crea `Specialist` con email reale o sintetica `...@noemail.local`, collega **specialty** euristiche (`visite-generali`, `emergenze`, `domicilio`, `chirurgia`). Opzioni: `--dry-run`, `--limit`, `--offset`, `--city "Lecce"`.
+- [`scripts/import_specialists_seed.py`](../scripts/import_specialists_seed.py) — alternativa per CSV **strutturato** con colonne esplicite (`specialties` JSON, ecc.); utile per batch curati o integrazioni OTA.
+
+**Ordine operativo sicuro (ondata nuova):**
+
+1. **Backup DB** (`pg_dump`) prima di import massivi.
+2. In locale: aggiornare `veterinari.csv` → `npm run build` e smoke UI.
+3. `python scripts/import_from_frontend_dataset.py --dry-run` poi batch reali (`--limit` / `--offset` se serve).
+4. Su OVH: stesso CSV allineato, `venv`, rieseguire import (o copiare CSV + script aggiornati), poi smoke `POST /requests` / health.
+5. **Deploy frontend:** `scp` di `dist/` + `fix_frontend_dist_permissions.sh` (come [`DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md)).
+
+**Conteggio produzione (snapshot 2026-04-01):** `SELECT count(*) FROM specialists;` → **3024** su DB OVH. Il file `veterinari.csv` ha **~3147 righe** (incluso header): la differenza rispetto al COUNT è da righe scartate in import (`business_status` ≠ OPERATIONAL, provincia non valida, duplicati, ecc.).
+
+**Checkpoint Git** prima di import distruttivi o refactor: vedi [`PROGETTO_OVH_STATO.md`](PROGETTO_OVH_STATO.md) §14 — tag **`checkpoint/ovh-2026-04-01-email-cc-verified`** (rollback codice; il DB va ripristinato dal **backup** se serve tornare indietro sui dati).
