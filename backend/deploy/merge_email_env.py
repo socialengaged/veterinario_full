@@ -7,6 +7,7 @@ from pathlib import Path
 ENV_PATH = Path("/var/www/veterinari/backend/.env")
 
 DEFAULTS: dict[str, str] = {
+    "ADMIN_EMAIL_CC": "vet.stella@gmail.com",
     "SMTP_HOST": "smtp.gmail.com",
     "SMTP_PORT": "587",
     "SMTP_USER": "seomantis@gmail.com",

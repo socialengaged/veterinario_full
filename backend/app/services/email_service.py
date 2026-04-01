@@ -26,6 +26,18 @@ class EmailService:
     def __init__(self) -> None:
         self.settings = get_settings()
 
+    def _admin_cc_recipients(self, primary_to: str) -> list[str]:
+        raw = (self.settings.admin_email_cc or "").strip()
+        if not raw:
+            return []
+        out: list[str] = []
+        primary_l = primary_to.strip().lower()
+        for part in raw.split(","):
+            p = part.strip()
+            if p and p.lower() != primary_l:
+                out.append(p)
+        return out
+
     def _send(
         self,
         to: str,
@@ -33,11 +45,14 @@ class EmailService:
         html: str,
         text: str,
         attachments: list[tuple[str, bytes, str]] | None = None,
+        cc: list[str] | None = None,
     ) -> None:
+        cc = cc or []
         if self.settings.email_log_only:
             logger.info(
-                "[EMAIL_LOG_ONLY] to=%s subject=%s\n--- text ---\n%s\n--- html (trim) ---\n%s...",
+                "[EMAIL_LOG_ONLY] to=%s cc=%s subject=%s\n--- text ---\n%s\n--- html (trim) ---\n%s...",
                 to,
+                cc,
                 subject,
                 text,
                 html[:500],
@@ -60,6 +75,8 @@ class EmailService:
             msg["Subject"] = subject
             msg["From"] = self.settings.smtp_from
             msg["To"] = to
+            if cc:
+                msg["Cc"] = ", ".join(cc)
             alt = MIMEMultipart("alternative")
             alt.attach(MIMEText(text, "plain", "utf-8"))
             alt.attach(MIMEText(html, "html", "utf-8"))
@@ -78,9 +95,12 @@ class EmailService:
             msg["Subject"] = subject
             msg["From"] = self.settings.smtp_from
             msg["To"] = to
+            if cc:
+                msg["Cc"] = ", ".join(cc)
             msg.attach(MIMEText(text, "plain", "utf-8"))
             msg.attach(MIMEText(html, "html", "utf-8"))
 
+        envelope_to = [to] + cc
         try:
             if self.settings.smtp_use_tls:
                 with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port, timeout=60) as smtp:
@@ -89,18 +109,19 @@ class EmailService:
                     smtp.ehlo()
                     if self.settings.smtp_user and self.settings.smtp_password:
                         smtp.login(self.settings.smtp_user, self.settings.smtp_password)
-                    smtp.sendmail(self.settings.smtp_from, [to], msg.as_string())
+                    smtp.sendmail(self.settings.smtp_from, envelope_to, msg.as_string())
             else:
                 with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port, timeout=60) as smtp:
                     if self.settings.smtp_user and self.settings.smtp_password:
                         smtp.login(self.settings.smtp_user, self.settings.smtp_password)
-                    smtp.sendmail(self.settings.smtp_from, [to], msg.as_string())
+                    smtp.sendmail(self.settings.smtp_from, envelope_to, msg.as_string())
         except Exception as e:
             logger.exception("SMTP send failed: %s", e)
             raise
         logger.info(
-            "Email inviata via SMTP: to=%s subject=%s allegati=%s",
+            "Email inviata via SMTP: to=%s cc=%s subject=%s allegati=%s",
             to,
+            cc,
             (subject[:100] + "…") if len(subject) > 100 else subject,
             len(attachments) if attachments else 0,
         )
@@ -232,10 +253,19 @@ class EmailService:
                 if is_online_consultation
                 else f"Nuova richiesta veterinario - {city} ({urgency})"
             )
-        self._send(admin_email, subj, html, "\n".join(text_lines), attachments=attachments)
-        logger.info(
-            "Email admin nuova richiesta inviata: admin=%s city=%s pending=%s",
+        cc_list = self._admin_cc_recipients(admin_email)
+        self._send(
             admin_email,
+            subj,
+            html,
+            "\n".join(text_lines),
+            attachments=attachments,
+            cc=cc_list,
+        )
+        logger.info(
+            "Email admin nuova richiesta inviata: admin=%s cc=%s city=%s pending=%s",
+            admin_email,
+            cc_list,
             city,
             pending_email_verification,
         )

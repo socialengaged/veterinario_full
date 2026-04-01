@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     api_public_url: str = "http://localhost:8000"
 
     admin_email: str = "seomantis@gmail.com"
+    # Copia in CC delle notifiche admin (lista match, WhatsApp, allegati consulenza online). Default: vet.stella@gmail.com
+    admin_email_cc: str = Field(
+        default="vet.stella@gmail.com",
+        validation_alias="ADMIN_EMAIL_CC",
+    )
     # Se valorizzato, GET /admin/* richiede header X-Admin-Key uguale a questo valore
     admin_api_key: str | None = Field(default=None, validation_alias="ADMIN_API_KEY")
     # Link mostrato nelle email admin (nessun invio automatico a WhatsApp)
