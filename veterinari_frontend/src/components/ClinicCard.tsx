@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Clinic } from "@/data/types";
-import { MapPin, Clock, Phone, Home, AlertCircle, Star, Globe, Navigation } from "lucide-react";
+import { MapPin, Clock, Phone, Home, AlertCircle, Star, Globe, Navigation, Lock } from "lucide-react";
+import { getAccessToken } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useGeoContext } from "@/contexts/GeolocationContext";
 
@@ -11,6 +12,7 @@ interface ClinicCardProps {
 }
 
 export function ClinicCard({ clinic, className, distanceKm: propDistance }: ClinicCardProps) {
+  const isLoggedIn = !!getAccessToken();
   const geo = useGeoContext();
   const profileUrl = clinic.type === "veterinario"
     ? `/veterinario/${clinic.slug}/`
@@ -46,28 +48,38 @@ export function ClinicCard({ clinic, className, distanceKm: propDistance }: Clin
         )}
       </div>
 
-      {clinic.address && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
-          <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="line-clamp-1">{clinic.address}</span>
-        </div>
-      )}
-      {clinic.openingHours && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
-          <Clock className="h-3.5 w-3.5 shrink-0" /> <span className="line-clamp-1">{clinic.openingHours}</span>
-        </div>
-      )}
-      {clinic.phone && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
-          <Phone className="h-3.5 w-3.5 shrink-0" /> {clinic.phone}
-        </div>
-      )}
-      {clinic.website && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
-          <Globe className="h-3.5 w-3.5 shrink-0" />
-          <a href={clinic.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary truncate">
-            {clinic.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-          </a>
-        </div>
+      {clinic.contactLoginRequired && !isLoggedIn ? (
+        <p className="text-xs text-muted-foreground border border-primary/20 rounded-lg p-2.5 bg-primary/5 mb-2">
+          <Lock className="inline h-3.5 w-3.5 mr-1 text-primary align-text-bottom" />
+          <Link to="/accedi/" className="text-primary font-semibold hover:underline">Accedi</Link>
+          {" "}per visualizzare tutti i dati di contatto (indirizzo, telefono, sito).
+        </p>
+      ) : (
+        <>
+          {clinic.address && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+              <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="line-clamp-1">{clinic.address}</span>
+            </div>
+          )}
+          {clinic.openingHours && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+              <Clock className="h-3.5 w-3.5 shrink-0" /> <span className="line-clamp-1">{clinic.openingHours}</span>
+            </div>
+          )}
+          {clinic.phone && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+              <Phone className="h-3.5 w-3.5 shrink-0" /> {clinic.phone}
+            </div>
+          )}
+          {clinic.website && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+              <Globe className="h-3.5 w-3.5 shrink-0" />
+              <a href={clinic.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary truncate">
+                {clinic.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+              </a>
+            </div>
+          )}
+        </>
       )}
 
       <div className="flex flex-wrap gap-1.5 mb-3 mt-2">

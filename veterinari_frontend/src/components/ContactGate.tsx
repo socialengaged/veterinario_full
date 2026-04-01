@@ -7,6 +7,8 @@ interface ContactGateProps {
   email?: string;
   address?: string;
   isLoggedIn?: boolean;
+  /** Se true, mostra sempre il blocco "Accedi" per anonimi (scheda onda PG senza contatti pubblici). */
+  contactLoginRequired?: boolean;
 }
 
 /** Masks the street name in an address, e.g. "Via Roma 42, 73100 Lecce" → "Via ********* 42, 73100 Lecce" */
@@ -24,32 +26,50 @@ function maskAddress(address: string): string {
   return address;
 }
 
-export function ContactGate({ phone, email, address, isLoggedIn = false }: ContactGateProps) {
+export function ContactGate({
+  phone,
+  email,
+  address,
+  isLoggedIn = false,
+  contactLoginRequired = false,
+}: ContactGateProps) {
   if (isLoggedIn) {
+    const hasAny = !!(address || phone || email);
+    if (!contactLoginRequired && !hasAny) return null;
     return (
       <section className="p-5 rounded-xl border border-border bg-surface">
         <h2 className="font-display font-semibold text-foreground mb-3">Contatti</h2>
-        <div className="space-y-2">
-          {address && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4 text-primary" /> {address}
-            </div>
-          )}
-          {phone && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Phone className="h-4 w-4 text-primary" />
-              <a href={`tel:${phone}`} className="hover:text-primary transition-colors">{phone}</a>
-            </div>
-          )}
-          {email && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Mail className="h-4 w-4 text-primary" />
-              <a href={`mailto:${email}`} className="hover:text-primary transition-colors">{email}</a>
-            </div>
-          )}
-        </div>
+        {!hasAny && contactLoginRequired ? (
+          <p className="text-sm text-muted-foreground">
+            Nessun telefono o indirizzo completo disponibile in anagrafe. Puoi comunque richiedere un contatto tramite il modulo del sito.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {address && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 text-primary" /> {address}
+              </div>
+            )}
+            {phone && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Phone className="h-4 w-4 text-primary" />
+                <a href={`tel:${phone}`} className="hover:text-primary transition-colors">{phone}</a>
+              </div>
+            )}
+            {email && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4 text-primary" />
+                <a href={`mailto:${email}`} className="hover:text-primary transition-colors">{email}</a>
+              </div>
+            )}
+          </div>
+        )}
       </section>
     );
+  }
+
+  if (!contactLoginRequired && !phone && !email && !address) {
+    return null;
   }
 
   return (

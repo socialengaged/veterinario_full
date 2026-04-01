@@ -92,6 +92,8 @@ export interface Clinic {
   scrapedServices?: string[];
   scrapedPhones?: string[];
   scrapedEmails?: string[];
+  /** Ondata import PG: contatti mascherati finché l'utente non è loggato */
+  contactLoginRequired?: boolean;
 }
 
 export interface Guide {

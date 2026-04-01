@@ -15,6 +15,7 @@ import { ClinicMap } from "@/components/ClinicMap";
 import { ContactGate } from "@/components/ContactGate";
 import { getClinicImage } from "@/data/clinic-images";
 import { getClinic, getCity, getService } from "@/data";
+import { getAccessToken } from "@/lib/api";
 import { generateProfileProse } from "@/lib/content-generators";
 import { MapPin, Star, Globe, Stethoscope, Phone, Mail } from "lucide-react";
 import NotFound from "@/pages/NotFound";
@@ -30,8 +31,7 @@ export default function ProfilePage() {
   const serviceDetails = clinic.services.map(s => getService(s)).filter(Boolean);
   const clinicImage = getClinicImage(slug || "") || clinic.image;
 
-  // TODO: Replace with real auth state
-  const isLoggedIn = false;
+  const isLoggedIn = !!getAccessToken();
 
   const typeLabels: Record<string, string> = {
     clinica: "Clinica veterinaria",
@@ -178,6 +178,7 @@ export default function ProfilePage() {
             email={clinic.email}
             address={clinic.address}
             isLoggedIn={isLoggedIn}
+            contactLoginRequired={clinic.contactLoginRequired}
           />
 
           {/* Scraped extra contacts — gated */}

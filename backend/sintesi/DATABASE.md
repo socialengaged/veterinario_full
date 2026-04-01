@@ -6,7 +6,7 @@ Tabelle principali (PK UUID, timestamp `created_at` / `updated_at` dove definito
 - `user_addresses`: `city`, `province` indicizzati.
 - `animals`: `species` indicizzato.
 - `specialties`: `slug` unico, `category` indicizzato.
-- `specialists`: email, city, province indicizzati; `cap` e `street_address` (nullable); `user_id` nullable FK verso `users` (account collegato, unicità parziale dove valorizzato); `species_tags` JSON lista stringhe; **`last_contacted_at`**, **`contact_success_count`**, **`contact_attempts`** (tracking contatti admin — migrazione `0008_contact_tracking_priority`).
+- `specialists`: email, city, province indicizzati; `cap` e `street_address` (nullable); `user_id` nullable FK verso `users` (account collegato, unicità parziale dove valorizzato); `species_tags` JSON lista stringhe; **`import_batch`** (nullable, stringa corta es. `italia_pg_2026_04`) — traccia ondate di import; **non** esposta in API pubbliche verso il frontend; **`last_contacted_at`**, **`contact_success_count`**, **`contact_attempts`** (tracking contatti admin — migrazione `0008_contact_tracking_priority`).
 - **Backfill CAP/indirizzo** su DB già popolato senza rieseguire seed: [`scripts/backfill_specialist_cap_address.sql`](../scripts/backfill_specialist_cap_address.sql) oppure [`scripts/backfill_specialist_cap_address.py`](../scripts/backfill_specialist_cap_address.py) (stessi default di `seed.py` per le email `@example.com`).
 - `specialist_specialties`: PK composta (specialist_id, specialty_id).
 - `vet_requests`: stato richiesta; FK a user, animal, address, specialty.
@@ -34,6 +34,7 @@ Due consumi distinti degli stessi dati anagrafici (studi / ambulatori), con **un
 **Script di import DB (stesso schema CSV del frontend):**
 
 - [`scripts/import_from_frontend_dataset.py`](../scripts/import_from_frontend_dataset.py) — legge `veterinari.csv` (default: path sotto `veterinari_frontend/src/data/`), crea `Specialist` con email reale o sintetica `...@noemail.local`, collega **specialty** euristiche (`visite-generali`, `emergenze`, `domicilio`, `chirurgia`). Opzioni: `--dry-run`, `--limit`, `--offset`, `--city "Lecce"`.
+- [`scripts/import_italia_pg_wave.py`](../scripts/import_italia_pg_wave.py) — ondata **PagineGialle** da `veterinari_italia_completo_dedup.csv` (root repo): dedup URL, geo da path URL, genera `veterinari_italia_wave.csv` (merge in `csv-importer.ts`) con `source=italia_pg_2026` e `profile_slug`; imposta `import_batch` e campi vuoti dove mancano dati; `--csv-only` solo CSV senza DB.
 - [`scripts/import_specialists_seed.py`](../scripts/import_specialists_seed.py) — alternativa per CSV **strutturato** con colonne esplicite (`specialties` JSON, ecc.); utile per batch curati o integrazioni OTA.
 
 **Ordine operativo sicuro (ondata nuova):**

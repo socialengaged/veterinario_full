@@ -1,13 +1,11 @@
 /**
- * CSV Importer — Parses veterinari.csv and produces Clinic[], Province[], City[] objects.
+ * CSV Importer — Parses veterinari.csv + veterinari_italia_wave.csv and produces Clinic[], Province[], City[].
  *
- * USAGE: To update data, replace src/data/veterinari.csv with a new CSV file.
- * The CSV is imported at build time via Vite's ?raw import.
- * New CSVs can add new clinics or update existing ones (matched by generated slug).
- * Additional columns in future CSVs will be preserved in the Clinic object.
+ * L'onda Italia (source italia_pg_*) usa la colonna opzionale `profile_slug` (allineata all'import DB).
  */
 
 import csvRaw from "./veterinari.csv?raw";
+import csvWaveRaw from "./veterinari_italia_wave.csv?raw";
 import { provinceCodes, regionNameToSlug } from "./province-codes";
 import type { Clinic, Province, City } from "./types";
 
@@ -79,11 +77,14 @@ function extractCap(address: string): string {
   return match ? match[1] : "";
 }
 
-// ── Parse CSV ──
+// ── Parse CSV (principale + onda Italia PG) ──
 
-const allRows = parseCsv(csvRaw);
-const headers = allRows[0];
-const dataRows = allRows.slice(1).filter(r => r.length >= 6 && r[0]);
+const parsedMain = parseCsv(csvRaw);
+const parsedWave = parseCsv(csvWaveRaw);
+const dataRows = [
+  ...parsedMain.slice(1).filter(r => r.length >= 6 && r[0]),
+  ...parsedWave.slice(1).filter(r => r.length >= 6 && r[0]),
+];
 
 // Column indices
 const COL = {
@@ -102,7 +103,8 @@ const COL = {
   businessStatus: 12,
   googleTypes: 13,
   source: 14,
-  recordOrigin: 15,
+  /** Slug profilo esplicito (onda italia_pg); se assente si usa toSlug(name + city) */
+  profileSlug: 15,
 };
 
 // ── Build imported clinics ──
@@ -141,7 +143,8 @@ for (const row of dataRows) {
   const regionSlug = provEntry.regionSlug;
   const provinceSlug = provEntry.slug;
   const citySlug = toSlug(cityName);
-  const clinicSlug = toSlug(name + " " + cityName);
+  const explicitSlug = (row[COL.profileSlug] || "").trim();
+  const clinicSlug = explicitSlug || toSlug(name + " " + cityName);
 
   if (!clinicSlug || !citySlug) continue;
 
@@ -175,6 +178,7 @@ for (const row of dataRows) {
     businessStatus: businessStatus || undefined,
     source: source || undefined,
     googleTypes: googleTypes || undefined,
+    contactLoginRequired: (source || "").startsWith("italia_pg"),
   };
 
   importedClinics[clinicSlug] = clinic;
