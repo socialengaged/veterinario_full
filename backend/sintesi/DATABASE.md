@@ -45,7 +45,7 @@ Due consumi distinti degli stessi dati anagrafici (studi / ambulatori), con **un
 | Campo | Recupero programmatico “semplice” |
 |-------|-----------------------------------|
 | **CAP** | ① CSV comuni (`backfill_cap_italia_pg_wave`) ② Nominatim (`backfill_cap_nominatim_wave`) per frazioni / località non in anagrafica ISTAT. |
-| **Telefono, indirizzo stradale, orari** | Non c’è un’API pubblica gratuita e affidabile solo da città+provincia. Opzioni realistiche: **Google Places / simili** (chiave API, costi), **scraping** del sito in `website_url` (fragile, manutenzione), integrazione manuale o da export PG più ricco. |
+| **Telefono, indirizzo stradale, orari** | Per l’ondata PG: **scraping** [`scrape_paginegialle_specialists.py`](../scripts/scrape_paginegialle_specialists.py) sulla scheda (`JSON-LD` in pagina). Altrimenti: Places API a pagamento o dati più ricchi in import. |
 | **website_url** | Per l’ondata PG è già spesso valorizzato (URL scheda). |
 | **Coordinate** | Nominatim restituisce lat/lon nella risposta; oggi **non** sono colonne su `specialists` — servirebbe migrazione + script dedicato se servissero in DB. |
 
