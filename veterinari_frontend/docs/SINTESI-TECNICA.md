@@ -733,7 +733,42 @@ Pagina dedicata al servizio di consulenza veterinaria online, ottimizzata per po
 
 ---
 
-## 16. Prossimi Passi Consigliati
+## 16. CDN Immagini Esterne
+
+### Infrastruttura
+| Voce | Valore |
+|------|--------|
+| **CDN base URL** | `https://images.veterinariovicino.it` |
+| **Hosting** | Netsons (separato da OVH) |
+| **Formato** | PNG, AI-generated, 800×800 |
+| **CORS** | `Access-Control-Allow-Origin: *` |
+| **Cache** | `public, max-age=31536000, immutable` (1 anno) |
+| **JSON index** | `https://images.veterinariovicino.it/index.json` |
+| **Image sitemap** | `https://images.veterinariovicino.it/sitemap-images.xml` |
+
+### Stato attuale (apr 2026)
+- **87 immagini cani** disponibili (~117 MB)
+- **1 usata** in produzione: `cane-felice-dopo-visita-veterinaria.png` → `/veterinario-per-cani/`
+- **41 mappate** a pagine specifiche (da integrare)
+- **45 libere** per nuovi contenuti
+- **Problema**: redirect 301 a `www.images.veterinariovicino.it` (no DNS) — da correggere su Netsons/cPanel
+- **Prossimi batch**: gatti e altri animali in arrivo
+
+### Documentazione
+- Specifiche integrazione: `IMMAGINI-VETERINARIOVICINO-DEV-GUIDE.md` (root repo)
+- Mapping completo: `docs/CDN-IMMAGINI-MAPPING.md`
+
+### Integrazione nel codice
+Le immagini CDN vengono usate con URL diretto (non importate come asset locali):
+```tsx
+const CDN_BASE = "https://images.veterinariovicino.it";
+<img src={`${CDN_BASE}/filename.png`} alt="..." width={800} height={800} loading="lazy" />
+```
+Template con supporto CDN: `KeywordAnimalPage.tsx` (mappa `animalHeroImages`)
+
+---
+
+## 17. Prossimi Passi Consigliati
 
 1. **Espansione geografica**: importare dataset ISTAT dei comuni italiani
 2. **Cliniche reali**: raccolta dati da fonti pubbliche (FNOVI, registri ASL)
