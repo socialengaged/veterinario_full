@@ -106,7 +106,7 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-[5.5rem] z-50 border-b border-border bg-card/95 backdrop-blur-sm md:top-[7rem]">
+      <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-sm">
         <div className="container flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             <img src={logoImg} alt={siteConfig.name} className="h-9 w-9" width={36} height={36} />

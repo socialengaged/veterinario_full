@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
-import { PromoBanner } from "@/components/PromoBanner";
+
 import { PluralRedirects } from "@/components/PluralRedirects";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GeolocationProvider } from "@/contexts/GeolocationContext";
@@ -59,7 +59,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <PromoBanner />
           <Suspense fallback={<Loading />}>
             <PluralRedirects />
             <Routes>
