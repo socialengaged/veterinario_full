@@ -1,7 +1,7 @@
 # VeterinarioVicino.it — Sintesi Tecnica Completa
 
-> Ultimo aggiornamento: 12 marzo 2026  
-> Versione: 1.0
+> Ultimo aggiornamento: 3 aprile 2026  
+> Versione: 1.1
 
 ---
 
@@ -70,6 +70,7 @@ src/
 │   ├── Index.tsx              # Homepage
 │   ├── DirectoryPage.tsx      # /elenco/ — directory strutture
 │   ├── RequestPage.tsx        # /richiedi-assistenza/ — form richiesta
+│   ├── OnlineConsultationPage.tsx # /consulenza-veterinaria-online/ — veterinario online con SEO, schema, FAQ, card Dr. Stella
 │   ├── ServiziPage.tsx        # /servizi/ — hub servizi per categoria
 │   ├── GuidesIndex.tsx        # /guide/ — indice guide
 │   ├── SitemapPage.tsx        # /sitemap-dynamic — XML sitemap
@@ -689,7 +690,50 @@ Pre-compilazione da query string (anche `citta` dalla home / SmartFinder):
 
 ---
 
-## 15. Prossimi Passi Consigliati
+## 15. Veterinario Online (Consulenza in Videochiamata)
+
+**Rotta**: `/consulenza-veterinaria-online/`  
+**Componente**: `OnlineConsultationPage.tsx`
+
+Pagina dedicata al servizio di consulenza veterinaria online, ottimizzata per posizionamento Google sulla keyword **"veterinario online"**.
+
+### Struttura SEO
+- **H1** con keyword primaria: "Veterinario Online: Consulenza Veterinaria in Videochiamata"
+- **Schema.org JSON-LD**: `MedicalBusiness`, `Physician`, `Service` con `OfferCatalog`, `FAQPage`, `WebPage`, `BreadcrumbList`
+- **8 FAQ** con accordion interattivo (rich snippets Google)
+- **Contenuto SEO** in fondo pagina con keyword naturali (veterinario online, visita veterinaria online, second opinion)
+- **Card del veterinario**: Dott. Andrea Stella con avatar SVG cartoon
+
+### Dott. Andrea Stella
+- Medico Veterinario, laureato Università degli Studi di Bari
+- Iscritto Ordine Medici Veterinari Provincia di Lecce, **Albo n. 436**
+- Direttore Sanitario Ambulatorio Veterinario "Città di Melendugno" (Via Martano 24, 73026 Melendugno LE)
+- Specialistica: **Oncologia veterinaria**
+- Animali: Cani e Gatti
+- Avatar: `src/assets/dr-stella-avatar.svg`
+
+### Tariffe
+| Durata | Prezzo | Tipo |
+|--------|--------|------|
+| 15 min | 30 € | Standard (monitoraggio, iter diagnostico) |
+| 30 min | 50 € | Standard (second opinion, casi cronici) |
+| Specialistica | 100 € | Oncologia e consulenze specialistiche |
+
+### Flusso
+1. Utente compila il modulo (animale, tariffa, dati personali, password)
+2. Si crea account + conversazione chat
+3. Verifica email
+4. Coordinamento orario via chat
+5. Pagamento PayPal a `vet.stella@gmail.com`
+6. Videochiamata Google Meet
+
+### Note
+- PromoBanner rimosso (apr 2026): il servizio è ora accessibile tramite card servizi in homepage + dropdown header + pagina /servizi/
+- Nessun banner sticky in alto al sito
+
+---
+
+## 16. Prossimi Passi Consigliati
 
 1. **Espansione geografica**: importare dataset ISTAT dei comuni italiani
 2. **Cliniche reali**: raccolta dati da fonti pubbliche (FNOVI, registri ASL)
