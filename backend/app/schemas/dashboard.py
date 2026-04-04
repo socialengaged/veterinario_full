@@ -64,7 +64,7 @@ class MessageOut(BaseModel):
     sender_role: str
     body: str
     created_at: datetime
-    metadata: Optional[Any] = Field(default=None, validation_alias="message_metadata")
+    message_metadata: Optional[Any] = Field(default=None, serialization_alias="metadata")
     tokens_count: Optional[int] = None
 
 
