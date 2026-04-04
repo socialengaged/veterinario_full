@@ -19,16 +19,6 @@ import { type AnimalKeywordPage, animalKeywordPages, cityKeywordPatterns } from 
 import { siteConfig } from "@/config/site";
 import { breadcrumbJsonLd, faqJsonLd, webPageJsonLd, serviceJsonLd, itemListJsonLd } from "@/lib/seo";
 
-const CDN_BASE = "https://images.veterinariovicino.it";
-
-/** CDN hero images per animal keyword page */
-const animalHeroImages: Record<string, { src: string; alt: string }> = {
-  "veterinario-per-cani": {
-    src: `${CDN_BASE}/cane-felice-dopo-visita-veterinaria.png`,
-    alt: "Cane felice dopo visita veterinaria - Veterinario Vicino",
-  },
-};
-
 interface Props {
   page: AnimalKeywordPage;
 }
@@ -75,19 +65,6 @@ export default function KeywordAnimalPageTemplate({ page }: Props) {
           <Breadcrumbs items={[{ label: page.h1 }]} />
 
           <section>
-            {animalHeroImages[page.slug] && (
-              <div className="rounded-2xl overflow-hidden mb-6 aspect-[4/3] max-h-[400px]">
-                <img
-                  src={animalHeroImages[page.slug].src}
-                  alt={animalHeroImages[page.slug].alt}
-                  width={800}
-                  height={800}
-                  loading="eager"
-                  fetchPriority="high"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
             <div className="text-4xl mb-4">{page.emoji}</div>
             <h1 className="font-display text-3xl md:text-4xl font-extrabold text-foreground mb-4">
               {page.h1}
