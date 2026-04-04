@@ -247,19 +247,6 @@ class RequestService:
         except Exception:
             logger.exception("Email admin fallita dopo inoltro richiesta")
 
-        # --- Invio automatico email ai veterinari con email reale ---
-        self._send_emails_to_matched_specialists(
-            matches=matches,
-            req=req,
-            user=user,
-            animal=animal,
-            specialty=specialty,
-            city=city,
-            province=province,
-            urgency=urgency,
-            phone_fallback=phone_fallback,
-        )
-
         return matched_specs
 
     def _send_emails_to_matched_specialists(
