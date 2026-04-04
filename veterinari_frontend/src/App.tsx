@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import { PluralRedirects } from "@/components/PluralRedirects";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -47,8 +48,13 @@ const DashboardAccountPage = lazy(() => import("./pages/DashboardAccountPage"));
 const queryClient = new QueryClient();
 
 const Loading = () => (
-  <div className="flex min-h-screen items-center justify-center bg-background">
-    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+  <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-[60vh] flex-1 items-center justify-center">
+      <div className="text-center">
+        <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="mt-3 text-sm text-muted-foreground">Caricamento...</p>
+      </div>
+    </div>
   </div>
 );
 
@@ -59,6 +65,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ErrorBoundary>
           <Suspense fallback={<Loading />}>
             <PluralRedirects />
             <Routes>
@@ -108,6 +115,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </ErrorBoundary>
           <CookieBanner />
         </BrowserRouter>
       </GeolocationProvider>

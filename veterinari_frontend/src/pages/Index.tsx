@@ -233,7 +233,9 @@ const Index = () => {
 
         <Suspense
           fallback={
-            <div className="min-h-[12rem] border-y border-border/60 bg-muted/20" aria-hidden />
+            <div className="min-h-[12rem] border-y border-border/60 bg-muted/20 flex items-center justify-center" aria-hidden>
+              <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-primary border-t-transparent" />
+            </div>
           }
         >
           <IndexBelowFold faqItems={homepageFaqs} />

@@ -252,7 +252,7 @@ export default function ProfilePage() {
           {/* Immagine struttura */}
           {clinicImage && (
             <section className="rounded-xl border border-border overflow-hidden">
-              <img src={clinicImage} alt={`Sede di ${clinic.name}`} className="w-full h-48 md:h-64 object-cover" loading="lazy" decoding="async" />
+              <img src={clinicImage} alt={`Sede di ${clinic.name}`} className="w-full h-48 md:h-64 object-cover" loading="lazy" decoding="async" width={640} height={360} />
             </section>
           )}
 

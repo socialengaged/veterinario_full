@@ -47,7 +47,7 @@ export default function DirectoryPage() {
     return allCities;
   }, [region, province, allCities]);
 
-  const activeFilters = [region, province, city, service, animal, profileType, emergency, homeVisit, search, maxRadius].filter(Boolean).length;
+  const activeFilters = [region, province, city, service, animal, profileType, homeVisit, search, maxRadius].filter(Boolean).length;
 
   const filtered = useMemo(() => {
     let result = allClinics;

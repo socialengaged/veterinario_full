@@ -15,7 +15,7 @@ import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { EditorialInfo } from "@/components/EditorialInfo";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { Disclaimer } from "@/components/Disclaimer";
-import { getCity, getProvince, getRegion, getClinicsByCity, getAllServices } from "@/data";
+import { getCity, getProvince, getRegion, getClinicsByCity, getPublicServices } from "@/data";
 import { generateCityProse } from "@/lib/content-generators";
 import { cities as allCitiesMap } from "@/data/cities";
 import { cityRichContent } from "@/data/city-content";

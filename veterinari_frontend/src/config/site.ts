@@ -3,6 +3,8 @@ export const siteConfig = {
   tagline: "Cerca un veterinario vicino a te",
   description: "VeterinarioVicino.it è un servizio gratuito di ricerca e contatto veterinario in Italia. Consulta l'elenco di veterinari e cliniche nella tua zona e invia una richiesta di contatto.",
   url: "https://veterinariovicino.it",
+  /** Strutture censite (arrotondato; aggiornare se necessario rispetto all’elenco) */
+  listedClinicCount: 2300,
   initialArea: "Italia",
   contact: {
     email: "veterinariovicino.it@gmail.com",
