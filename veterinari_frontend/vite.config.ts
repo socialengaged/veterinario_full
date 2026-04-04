@@ -85,9 +85,9 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "pwa-icon-192.png", "pwa-icon-512.png"],
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 1 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/~oauth/, /^\/sitemap.*\.xml$/],
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{css,html,ico,png,svg,woff2}"],
         globIgnores: ["**/*.jpg", "sitemap*.xml"],
         runtimeCaching: [
           {
@@ -96,6 +96,14 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "images",
               expiration: { maxEntries: 60, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+          {
+            urlPattern: /\/assets\/.*\.js$/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "js-chunks",
+              expiration: { maxEntries: 80, maxAgeSeconds: 7 * 24 * 60 * 60 },
             },
           },
         ],

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { TrustModules } from "@/components/TrustModules";
@@ -5,11 +6,20 @@ import { FaqSection } from "@/components/FaqSection";
 import { VetDisclaimer } from "@/components/VetDisclaimer";
 import { Button } from "@/components/ui/button";
 import { siteConfig, coveredAreas, animalCategories } from "@/config/site";
-import { getClinicsWithHomeVisits, getAllGuides } from "@/data";
-import { HomepageClinics } from "@/components/HomepageClinics";
-import { NearbyClinics } from "@/components/NearbyClinics";
+import { guides } from "@/data/guides";
 import { ArrowRight, MapPin, Building2, BookOpen } from "lucide-react";
 import type { HomepageFaqItem } from "@/pages/homepageFaqs";
+
+// Lazy-load componenti che dipendono dal dataset cliniche (4.1MB)
+// Vengono caricati solo quando l'utente scrolla fino a questa sezione
+const HomepageClinics = lazy(() => import("@/components/HomepageClinics").then(m => ({ default: m.HomepageClinics })));
+const NearbyClinics = lazy(() => import("@/components/NearbyClinics").then(m => ({ default: m.NearbyClinics })));
+
+const ClinicsLoader = () => (
+  <div className="py-12 bg-surface border-b border-border flex items-center justify-center">
+    <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-primary border-t-transparent" />
+  </div>
+);
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -21,14 +31,17 @@ const fadeUp = {
 type Props = { faqItems: HomepageFaqItem[] };
 
 export default function IndexBelowFold({ faqItems }: Props) {
-  const homeVisitClinics = getClinicsWithHomeVisits();
-  const guides = getAllGuides().slice(0, 3);
+  const topGuides = Object.values(guides).slice(0, 3);
 
   return (
     <>
-      <NearbyClinics />
+      <Suspense fallback={<ClinicsLoader />}>
+        <NearbyClinics />
+      </Suspense>
 
-      <HomepageClinics />
+      <Suspense fallback={<ClinicsLoader />}>
+        <HomepageClinics />
+      </Suspense>
 
       <section className="py-12 bg-surface border-y border-border">
         <div className="container">
@@ -38,19 +51,14 @@ export default function IndexBelowFold({ faqItems }: Props) {
                 🏠 Visite a domicilio
               </h3>
               <p className="text-xs text-muted-foreground mb-3">
-                {homeVisitClinics.length} professionisti con servizio a domicilio
+                Professionisti con servizio a domicilio nella tua zona
               </p>
-              <div className="space-y-1.5">
-                {homeVisitClinics.slice(0, 3).map((c) => (
-                  <Link
-                    key={c.slug}
-                    to={c.type === "veterinario" ? `/veterinario/${c.slug}/` : `/struttura/${c.slug}/`}
-                    className="block text-xs font-medium text-foreground hover:text-primary transition-colors"
-                  >
-                    {c.name} — <span className="text-muted-foreground">{c.citySlug}</span>
-                  </Link>
-                ))}
-              </div>
+              <Link
+                to="/elenco/"
+                className="inline-flex items-center text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Cerca veterinari a domicilio <ArrowRight className="ml-1 h-3 w-3" />
+              </Link>
             </div>
 
             <div className="p-5 rounded-xl border border-border bg-card">
@@ -149,7 +157,7 @@ export default function IndexBelowFold({ faqItems }: Props) {
             <p className="text-muted-foreground">Risorse per aiutarti a prenderti cura del tuo animale.</p>
           </motion.div>
           <div className="grid gap-4 mb-8">
-            {guides.map((g, i) => (
+            {topGuides.map((g, i) => (
               <motion.div key={g.slug} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.08 }}>
                 <Link
                   to={`/guide/${g.slug}/`}
