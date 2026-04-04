@@ -4,16 +4,34 @@ Documento unico per continuità: architettura, server, comandi, problemi noti e 
 
 **Standard operativo deploy produzione (checklist, regole ferree, merge):** [`sintesi/DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md).
 
-### Modifiche recenti — Evoluzione backend (2026-04-04)
+### Modifiche recenti — 2026-04-04
 
+#### Backend (fasi 0-F)
 | Fase | Cosa | Stato |
 |------|------|-------|
-| **Fase 0** | Import CSV enriched (9,221 record) → DB: +807 nuovi specialist, 1,243 aggiornati. Email reali: 138→810. | ✅ |
+| **Fase 0** | Import CSV enriched (9,221 record) → DB: +807 nuovi specialist, 1,243 aggiornati. Email reali: 138→810. Script: `scripts/import_enriched_csv.py`. | ✅ |
 | **Fase A** | Eliminati 4 vet test @example.com. Matching: esclusi specialist senza email reale né phone_mobile. | ✅ |
-| **Fase B** | Chat: messaggio strutturato utente (animale/servizio/zona/urgenza) + risposta assistente personalizzata. | ✅ |
-| **Fase C** | Email automatica ai vet matchati con email reale. Template specialist_request.html. Max 25/richiesta, rate limit 0.5s. Tracking contacted/contacted_at su request_matches. | ✅ |
-| **Fase E** | Endpoint admin: stats, requests, matches, specialist-message (inserisce risposta vet in chat + notifica email utente), match outcome update. Auth via X-Admin-Key + hmac.compare_digest. | ✅ |
+| **Fase B** | Chat: messaggio strutturato utente (animale/servizio/zona/urgenza) + risposta assistente personalizzata con nome utente. | ✅ |
+| **Fase C** | Template email per vet (`specialist_request.html`). Metodo `send_request_to_specialist()` + `send_specialist_reply_notification()`. Invio manuale (non automatico al dispatch). | ✅ |
+| **Fase E** | Router admin (`admin_route.py`): GET /admin/stats, /requests, /matches; POST /conversations/{id}/specialist-message, /match/{id}/update. Auth: X-Admin-Key + hmac.compare_digest. | ✅ |
 | **Fase F** | Opt-out veterinari: GET /specialists/optout?id=&sig= (HMAC-signed, is_active=false). Link in ogni email ai vet. | ✅ |
+| **Fix** | MessageOut metadata field conflict con SQLAlchemy Base.metadata → rinominato a message_metadata. | ✅ |
+
+#### Frontend (fix usabilità + performance)
+| Fix | Cosa | Stato |
+|-----|------|-------|
+| **BUG 1** | DirectoryPage: variabile `emergency` non definita (crash /elenco/) → rimossa. | ✅ |
+| **BUG 2** | CityPage: `getPublicServices()` non importato (crash pagine città) → fix import. | ✅ |
+| **ErrorBoundary** | Nuovo componente con pagina errore + "Riprova" + "Torna alla homepage". Wrappa Suspense in App.tsx. | ✅ |
+| **Loading** | Componente Loading migliorato con testo "Caricamento..." e layout centrato. | ✅ |
+| **IndexBelowFold** | Spinner nel fallback Suspense (era div vuoto). HomepageClinics e NearbyClinics ora lazy (React.lazy) — il chunk data-clinics (4.1MB) non si carica più sulla homepage. | ✅ |
+| **ProfilePage** | Aggiunto width/height su img per ridurre CLS. | ✅ |
+| **SW precache** | Ridotto da 97 entries (8.8MB) a 12 entries (520KB). JS cachati on-demand con StaleWhileRevalidate. | ✅ |
+| **Font Google** | `<link rel="stylesheet">` → `<link rel="preload" onload>` non-blocking (-450ms FCP). | ✅ |
+
+#### Checkpoint rollback
+- Tag: `checkpoint/2026-04-04-frontend-perf` → commit `697e43d`
+- Tags rollback backend: `pre-fase-0`, `pre-fase-A`, `pre-fase-B`, `pre-fase-C`, `pre-fase-E`, `pre-fase-F`
 
 ### Scrape PagineGialle completato (aprile 2026)
 
