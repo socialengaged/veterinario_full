@@ -9,6 +9,7 @@ from app.http_middleware import SecurityHeadersMiddleware
 from app.api.routers import dashboard_route
 from app.api.routers import requests_route
 from app.api.routers import specialists_public_route
+from app.api.routers import admin_route
 from app.api.routers import users_route
 from app.core.config import get_settings
 
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(users_route.router)
     app.include_router(dashboard_route.router)
     app.include_router(specialists_public_route.router)
+    app.include_router(admin_route.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

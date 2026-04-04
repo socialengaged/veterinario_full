@@ -182,6 +182,9 @@ class RequestMatch(Base):
     request_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("vet_requests.id", ondelete="CASCADE"), nullable=False, index=True)
     specialist_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("specialists.id", ondelete="CASCADE"), nullable=False)
     score: Mapped[float] = mapped_column(Float, nullable=False)
+    contacted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    contacted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    outcome: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
     request: Mapped["VetRequest"] = relationship(back_populates="matches")
     specialist: Mapped["Specialist"] = relationship(back_populates="matches")

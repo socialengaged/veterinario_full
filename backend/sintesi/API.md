@@ -19,13 +19,15 @@
 - `GET /dashboard/chats/{id}` — Bearer; include `messages` e opzionale `request_context` (riepilogo richiesta: servizio, animale, zona, stato, testo richiesta)
 - `POST /dashboard/chats/{id}/messages` — Bearer, body `{"body":"..."}`
 
-### Admin (header `X-Admin-Key` = `ADMIN_API_KEY` nel `.env`; opzionale query `?admin_key=`)
+- `GET /specialists/optout?id=<uuid>&sig=<hmac>` — pubblico, disiscrizione veterinario (HMAC-signed). Imposta `is_active=false`. Ritorna pagina HTML di conferma.
 
-- `GET /admin/stats` — metriche aggregate (cache breve).
-- `GET /admin/requests` — ultime richieste; ogni voce include **`matches_url`** verso lista match.
-- `GET /admin/matches?request_id=<uuid>` — match per richiesta: `priority_score`, `contacted`, `outcome`, dati specialist.
-- `POST /admin/match/{match_id}/update` — body `{"outcome":"success"|"no_answer"|"busy"|"refused"}`; aggiorna `request_matches` e statistiche su `specialists`; log `CONTACT UPDATE`.
-- `GET /admin/match/{match_id}/contact-done?outcome=...&exp=...&sig=...` — conferma esito da **link firmato** (HMAC) nelle email admin, senza API key nell’URL.
+### Admin (header `X-Admin-Key` = `ADMIN_API_KEY` nel `.env`)
+
+- `GET /admin/stats` — contatori: specialisti totali, con email reale, richieste, match, match contattati.
+- `GET /admin/requests?limit=50&offset=0` — lista richieste con paginazione, user email/name.
+- `GET /admin/matches?request_id=<uuid>` — match per richiesta: score, contacted, contacted_at, outcome, dati specialist (nome, email, phone).
+- `POST /admin/match/{match_id}/update` — body `{"outcome":"success"|"no_answer"|"busy"|"refused"}`. Match ID formato: `{request_id}_{specialist_id}`.
+- `POST /admin/conversations/{conv_id}/specialist-message` — body `{"specialist_id":"<uuid>","body":"..."}`. Inserisce messaggio `sender_role=specialist` nella conversazione + invia email notifica all’utente.
 
 ### Internal SEO (stesso header admin)
 

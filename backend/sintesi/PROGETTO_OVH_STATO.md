@@ -4,7 +4,18 @@ Documento unico per continuità: architettura, server, comandi, problemi noti e 
 
 **Standard operativo deploy produzione (checklist, regole ferree, merge):** [`sintesi/DEPLOY_SAFE_WORKFLOW.md`](DEPLOY_SAFE_WORKFLOW.md).
 
-### Attività in corso — scrape PagineGialle (aprile 2026)
+### Modifiche recenti — Evoluzione backend (2026-04-04)
+
+| Fase | Cosa | Stato |
+|------|------|-------|
+| **Fase 0** | Import CSV enriched (9,221 record) → DB: +807 nuovi specialist, 1,243 aggiornati. Email reali: 138→810. | ✅ |
+| **Fase A** | Eliminati 4 vet test @example.com. Matching: esclusi specialist senza email reale né phone_mobile. | ✅ |
+| **Fase B** | Chat: messaggio strutturato utente (animale/servizio/zona/urgenza) + risposta assistente personalizzata. | ✅ |
+| **Fase C** | Email automatica ai vet matchati con email reale. Template specialist_request.html. Max 25/richiesta, rate limit 0.5s. Tracking contacted/contacted_at su request_matches. | ✅ |
+| **Fase E** | Endpoint admin: stats, requests, matches, specialist-message (inserisce risposta vet in chat + notifica email utente), match outcome update. Auth via X-Admin-Key + hmac.compare_digest. | ✅ |
+| **Fase F** | Opt-out veterinari: GET /specialists/optout?id=&sig= (HMAC-signed, is_active=false). Link in ogni email ai vet. | ✅ |
+
+### Scrape PagineGialle completato (aprile 2026)
 
 | Voce | Dettaglio |
 |------|-----------|

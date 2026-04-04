@@ -270,6 +270,100 @@ class EmailService:
             pending_email_verification,
         )
 
+    def send_request_to_specialist(
+        self,
+        *,
+        specialist_email: str,
+        specialist_name: str,
+        user_name: str,
+        user_phone: str,
+        animal_species: str,
+        city: str,
+        province: str,
+        specialty_name: str,
+        urgency: str,
+        description: str | None,
+        request_id: str,
+        optout_url: str,
+    ) -> None:
+        html = _env.get_template("specialist_request.html").render(
+            specialist_name=specialist_name,
+            user_name=user_name,
+            user_phone=user_phone,
+            animal_species=animal_species,
+            city=city,
+            province=province,
+            specialty_name=specialty_name,
+            urgency=urgency,
+            description=description or "",
+            request_id=request_id,
+            optout_url=optout_url,
+        )
+        text = (
+            f"Gentile {specialist_name},\n\n"
+            f"Un paziente nella tua zona ha inoltrato una richiesta tramite VeterinarioVicino.it.\n\n"
+            f"Animale: {animal_species}\n"
+            f"Servizio: {specialty_name}\n"
+            f"Zona: {city} ({province})\n"
+            f"Urgenza: {urgency}\n"
+        )
+        if description:
+            text += f"Note: {description}\n"
+        text += (
+            f"\nContatti paziente:\n"
+            f"Nome: {user_name}\n"
+        )
+        if user_phone:
+            text += f"Telefono: {user_phone}\n"
+        text += (
+            f"\nPer rispondere, rispondi direttamente a questa email.\n\n"
+            f"---\n"
+            f"Se non desideri ricevere richieste: {optout_url}\n"
+        )
+        subj = f"Richiesta paziente — {animal_species} a {city}"
+        self._send(specialist_email, subj, html, text)
+        logger.info(
+            "Email richiesta inviata a specialista: to=%s request_id=%s",
+            specialist_email,
+            request_id,
+        )
+
+    def send_specialist_reply_notification(
+        self,
+        *,
+        to_email: str,
+        user_name: str,
+        specialist_name: str,
+        message_preview: str,
+        chat_url: str,
+    ) -> None:
+        """Notifica all'utente che un veterinario ha risposto."""
+        html = (
+            f'<div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:20px;">'
+            f'<h2 style="color:#0f766e;">Un veterinario ha risposto!</h2>'
+            f'<p>Ciao <strong>{user_name}</strong>,</p>'
+            f'<p><strong>{specialist_name}</strong> ha risposto alla tua richiesta:</p>'
+            f'<blockquote style="background:#f8fafc;border-left:3px solid #0f766e;padding:12px;margin:16px 0;">'
+            f'{message_preview[:500]}'
+            f'</blockquote>'
+            f'<p><a href="{chat_url}" style="background:#0f766e;color:#fff;padding:12px 24px;'
+            f'border-radius:6px;text-decoration:none;display:inline-block;">Vedi la conversazione</a></p>'
+            f'<p style="font-size:12px;color:#888;">VeterinarioVicino.it</p></div>'
+        )
+        text = (
+            f"Ciao {user_name},\n\n"
+            f"{specialist_name} ha risposto alla tua richiesta:\n\n"
+            f'"{message_preview[:500]}"\n\n'
+            f"Vedi la conversazione: {chat_url}\n"
+        )
+        self._send(
+            to_email,
+            f"{specialist_name} ha risposto — VeterinarioVicino.it",
+            html,
+            text,
+        )
+        logger.info("Email notifica risposta vet inviata: to=%s", to_email)
+
     def send_test_ping(self) -> None:
         """Email minima per verificare SMTP in produzione."""
         self._send(

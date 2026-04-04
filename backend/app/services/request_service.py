@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from uuid import UUID
@@ -136,6 +137,15 @@ class RequestService:
         prov_l = province.strip().lower()
         cap_u = (user_cap or "").strip() or None
         for sp in spec_rows:
+            # Skip specialist senza contatti reali
+            has_real_email = (
+                sp.contact_email
+                and sp.contact_email.strip()
+                and "@noemail.local" not in sp.contact_email
+            )
+            has_phone = bool(sp.phone_mobile and sp.phone_mobile.strip())
+            if not has_real_email and not has_phone:
+                continue
             score = 0.0
             if sp.city.strip().lower() == city_l:
                 score += 50.0
@@ -238,6 +248,82 @@ class RequestService:
             logger.exception("Email admin fallita dopo inoltro richiesta")
 
         return matched_specs
+
+    def _send_emails_to_matched_specialists(
+        self,
+        *,
+        matches: list[tuple[Specialist, float]],
+        req: VetRequest,
+        user: User,
+        animal: Animal,
+        specialty: Specialty,
+        city: str,
+        province: str,
+        urgency: str,
+        phone_fallback: str,
+    ) -> None:
+        """Invia email ai veterinari matchati che hanno email reale."""
+        import hmac as _hmac
+        import hashlib
+
+        sent = 0
+        max_emails = 25
+        for sp, _score in matches:
+            if sent >= max_emails:
+                break
+            email = (sp.contact_email or "").strip()
+            if not email or "@noemail.local" in email:
+                continue
+
+            # Build opt-out URL con HMAC
+            secret = (self.settings.secret_key or "").encode()
+            sig = _hmac.new(secret, str(sp.id).encode(), hashlib.sha256).hexdigest()[:16]
+            optout_url = (
+                f"{self.settings.api_public_url.rstrip("/")}/specialists/optout"
+                f"?id={sp.id}&sig={sig}"
+            )
+
+            try:
+                self.email.send_request_to_specialist(
+                    specialist_email=email,
+                    specialist_name=sp.full_name or "Dottore",
+                    user_name=user.full_name or "",
+                    user_phone=user.phone or phone_fallback,
+                    animal_species=animal.species,
+                    city=city,
+                    province=province,
+                    specialty_name=specialty.name,
+                    urgency=urgency,
+                    description=req.description,
+                    request_id=str(req.id),
+                    optout_url=optout_url,
+                )
+                # Aggiorna match come contattato
+                match_row = self.db.scalar(
+                    select(RequestMatch).where(
+                        RequestMatch.request_id == req.id,
+                        RequestMatch.specialist_id == sp.id,
+                    )
+                )
+                if match_row:
+                    match_row.contacted = True
+                    match_row.contacted_at = datetime.now(timezone.utc)
+
+                sent += 1
+                if sent < max_emails:
+                    time.sleep(0.5)  # Rate limiting tra invii
+            except Exception:
+                logger.exception(
+                    "Email a specialista fallita: specialist=%s email=%s",
+                    sp.id, email,
+                )
+
+        if sent > 0:
+            self.db.commit()
+            logger.info(
+                "Inviate %d email a specialisti per richiesta %s",
+                sent, req.id,
+            )
 
     def release_pending_requests_for_user(self, user_id: UUID) -> None:
         """Dopo verifica email: inoltra ai veterinari le richieste ancora in attesa."""
@@ -387,40 +473,62 @@ class RequestService:
         self.db.add(conv)
         self.db.flush()
 
+        # --- Messaggio strutturato richiesta utente ---
+        user_msg_parts = [f"Richiesta veterinario"]
+        user_msg_parts.append(f"Animale: {animal.species}{(' ' + animal.name) if animal.name else ''}")
+        user_msg_parts.append(f"Servizio: {specialty.name}")
+        user_msg_parts.append(f"Zona: {city} ({province})")
+        user_msg_parts.append(f"Urgenza: {urgency or 'normale'}")
         desc_stripped = (merged_description or "").strip()
         if desc_stripped:
-            self.db.add(
-                Message(
-                    conversation_id=conv.id,
-                    sender_role=MessageSenderRole.user.value,
-                    body=desc_stripped,
-                )
+            user_msg_parts.append(desc_stripped)
+        self.db.add(
+            Message(
+                conversation_id=conv.id,
+                sender_role=MessageSenderRole.user.value,
+                body="\n".join(user_msg_parts),
             )
+        )
 
+        # --- Risposta assistente VeterinarioVicino ---
+        user_first = (user.full_name or "").split()[0] if user.full_name else ""
         if forward_to_vets:
             if consultation_online:
                 welcome = (
-                    "Ciao, abbiamo ricevuto la tua richiesta di consulenza online. "
-                    "Uno specialista ti risponderà per organizzare video su Google Meet e il pagamento. "
-                    "Controlla la mail e verifica anche lo spam."
+                    f"Grazie{(' ' + user_first) if user_first else ''}! "
+                    f"La tua richiesta di consulenza online per {animal.species} "
+                    f"è stata inoltrata ai nostri specialisti.\n\n"
+                    "Ti contatteranno per organizzare la videochiamata su Google Meet "
+                    "e il pagamento.\n\n"
+                    "Controlla la mail per la conferma e verifica anche la cartella spam."
                 )
             else:
                 welcome = (
-                    "Ciao, abbiamo ricevuto la tua richiesta. Uno specialista ti risponderà quanto prima. "
-                    "Controlla la mail di conferma e verifica anche lo spam."
+                    f"Grazie{(' ' + user_first) if user_first else ''}! "
+                    f"La tua richiesta è stata inoltrata ai migliori veterinari "
+                    f"nella tua zona per {animal.species} e {specialty.name}.\n\n"
+                    "Troverai qui la risposta e verrai notificato via email.\n\n"
+                    "Controlla la mail per verificare di aver ricevuto copia della tua richiesta, "
+                    "e controlla la cartella spam. Rimuovi da spam per ricevere le notifiche "
+                    "sulla richiesta."
                 )
         else:
             if consultation_online:
                 welcome = (
-                    "Ciao! Abbiamo registrato la tua consulenza online. Per ricevere istruzioni e coordinare "
-                    "pagamento (PayPal) e videochiamata Google Meet, apri l'email che ti abbiamo inviato e "
-                    "clicca sul link di verifica. Controlla anche la cartella spam."
+                    f"Ciao{(' ' + user_first) if user_first else ''}! "
+                    "Abbiamo registrato la tua consulenza online. Per ricevere istruzioni e coordinare "
+                    "pagamento e videochiamata, apri l'email che ti abbiamo inviato e "
+                    "clicca sul link di verifica.\n\n"
+                    "Controlla anche la cartella spam."
                 )
             else:
                 welcome = (
-                    "Ciao! Abbiamo registrato la tua richiesta. Per inoltrarla ai veterinari della tua zona e "
+                    f"Ciao{(' ' + user_first) if user_first else ''}! "
+                    "Abbiamo registrato la tua richiesta. Per inoltrarla ai veterinari della tua zona e "
                     "cercare la prima disponibilità tra i nostri contatti, apri l'email che ti abbiamo inviato e "
-                    "clicca sul link di verifica. Controlla anche la cartella spam."
+                    "clicca sul link di verifica.\n\n"
+                    "Controlla anche la cartella spam. Rimuovi da spam per ricevere le notifiche "
+                    "sulla richiesta."
                 )
         self.db.add(
             Message(
