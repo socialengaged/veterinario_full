@@ -136,6 +136,15 @@ class RequestService:
         prov_l = province.strip().lower()
         cap_u = (user_cap or "").strip() or None
         for sp in spec_rows:
+            # Skip specialist senza contatti reali
+            has_real_email = (
+                sp.contact_email
+                and sp.contact_email.strip()
+                and "@noemail.local" not in sp.contact_email
+            )
+            has_phone = bool(sp.phone_mobile and sp.phone_mobile.strip())
+            if not has_real_email and not has_phone:
+                continue
             score = 0.0
             if sp.city.strip().lower() == city_l:
                 score += 50.0
