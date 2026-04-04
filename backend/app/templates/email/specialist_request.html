@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="utf-8"/><title>Richiesta paziente — VeterinarioVicino.it</title></head>
+<body style="font-family:system-ui,sans-serif;line-height:1.6;color:#111;max-width:600px;margin:0 auto;padding:20px;">
+
+  <div style="text-align:center;padding:16px 0;border-bottom:2px solid #0f766e;margin-bottom:24px;">
+    <h1 style="margin:0;font-size:22px;color:#0f766e;">VeterinarioVicino.it</h1>
+    <p style="margin:4px 0 0;font-size:13px;color:#666;">Servizio di collegamento pazienti — veterinari</p>
+  </div>
+
+  <p style="font-size:16px;">Gentile <strong>{{ specialist_name }}</strong>,</p>
+
+  <p>Un paziente nella tua zona ha inoltrato una richiesta tramite
+  <a href="https://veterinariovicino.it" style="color:#0f766e;">VeterinarioVicino.it</a>.</p>
+
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;">
+    <h3 style="margin:0 0 12px;font-size:16px;color:#0f766e;">Dettagli richiesta</h3>
+    <table style="font-size:14px;width:100%;" cellpadding="4" cellspacing="0">
+      <tr><td style="font-weight:bold;width:120px;vertical-align:top;">Animale:</td><td>{{ animal_species }}</td></tr>
+      <tr><td style="font-weight:bold;vertical-align:top;">Servizio:</td><td>{{ specialty_name }}</td></tr>
+      <tr><td style="font-weight:bold;vertical-align:top;">Zona:</td><td>{{ city }} ({{ province }})</td></tr>
+      <tr><td style="font-weight:bold;vertical-align:top;">Urgenza:</td><td>{{ urgency }}</td></tr>
+      {% if description %}
+      <tr><td style="font-weight:bold;vertical-align:top;">Note:</td><td>{{ description }}</td></tr>
+      {% endif %}
+    </table>
+  </div>
+
+  <div style="background:#ecfdf5;border:1px solid #34d399;border-radius:8px;padding:16px;margin:16px 0;">
+    <h3 style="margin:0 0 8px;font-size:15px;color:#065f46;">Contatti paziente</h3>
+    <p style="margin:4px 0;font-size:14px;"><strong>Nome:</strong> {{ user_name }}</p>
+    {% if user_phone %}
+    <p style="margin:4px 0;font-size:14px;"><strong>Telefono:</strong> {{ user_phone }}</p>
+    {% endif %}
+  </div>
+
+  <p style="font-size:14px;">
+    Per rispondere al paziente, <strong>rispondi direttamente a questa email</strong>
+    oppure contattalo ai recapiti indicati sopra.
+  </p>
+
+  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/>
+
+  <p style="font-size:12px;color:#888;line-height:1.4;">
+    Hai ricevuto questa email perché la tua struttura è presente su VeterinarioVicino.it.
+    Se non desideri più ricevere richieste,
+    <a href="{{ optout_url }}" style="color:#888;">clicca qui per disiscriverti</a>.
+  </p>
+  <p style="font-size:11px;color:#aaa;">
+    VeterinarioVicino.it — {{ city }} ({{ province }})
+    | Rif. richiesta: {{ request_id }}
+  </p>
+
+</body>
+</html>

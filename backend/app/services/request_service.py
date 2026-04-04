@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from uuid import UUID
@@ -246,7 +247,96 @@ class RequestService:
         except Exception:
             logger.exception("Email admin fallita dopo inoltro richiesta")
 
+        # --- Invio automatico email ai veterinari con email reale ---
+        self._send_emails_to_matched_specialists(
+            matches=matches,
+            req=req,
+            user=user,
+            animal=animal,
+            specialty=specialty,
+            city=city,
+            province=province,
+            urgency=urgency,
+            phone_fallback=phone_fallback,
+        )
+
         return matched_specs
+
+    def _send_emails_to_matched_specialists(
+        self,
+        *,
+        matches: list[tuple[Specialist, float]],
+        req: VetRequest,
+        user: User,
+        animal: Animal,
+        specialty: Specialty,
+        city: str,
+        province: str,
+        urgency: str,
+        phone_fallback: str,
+    ) -> None:
+        """Invia email ai veterinari matchati che hanno email reale."""
+        import hmac as _hmac
+        import hashlib
+
+        sent = 0
+        max_emails = 25
+        for sp, _score in matches:
+            if sent >= max_emails:
+                break
+            email = (sp.contact_email or "").strip()
+            if not email or "@noemail.local" in email:
+                continue
+
+            # Build opt-out URL con HMAC
+            secret = (self.settings.secret_key or "").encode()
+            sig = _hmac.new(secret, str(sp.id).encode(), hashlib.sha256).hexdigest()[:16]
+            optout_url = (
+                f"{self.settings.api_public_url.rstrip("/")}/specialists/optout"
+                f"?id={sp.id}&sig={sig}"
+            )
+
+            try:
+                self.email.send_request_to_specialist(
+                    specialist_email=email,
+                    specialist_name=sp.full_name or "Dottore",
+                    user_name=user.full_name or "",
+                    user_phone=user.phone or phone_fallback,
+                    animal_species=animal.species,
+                    city=city,
+                    province=province,
+                    specialty_name=specialty.name,
+                    urgency=urgency,
+                    description=req.description,
+                    request_id=str(req.id),
+                    optout_url=optout_url,
+                )
+                # Aggiorna match come contattato
+                match_row = self.db.scalar(
+                    select(RequestMatch).where(
+                        RequestMatch.request_id == req.id,
+                        RequestMatch.specialist_id == sp.id,
+                    )
+                )
+                if match_row:
+                    match_row.contacted = True
+                    match_row.contacted_at = datetime.now(timezone.utc)
+
+                sent += 1
+                if sent < max_emails:
+                    time.sleep(0.5)  # Rate limiting tra invii
+            except Exception:
+                logger.exception(
+                    "Email a specialista fallita: specialist=%s email=%s",
+                    sp.id, email,
+                )
+
+        if sent > 0:
+            self.db.commit()
+            logger.info(
+                "Inviate %d email a specialisti per richiesta %s",
+                sent, req.id,
+            )
 
     def release_pending_requests_for_user(self, user_id: UUID) -> None:
         """Dopo verifica email: inoltra ai veterinari le richieste ancora in attesa."""
