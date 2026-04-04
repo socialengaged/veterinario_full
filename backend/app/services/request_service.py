@@ -396,40 +396,62 @@ class RequestService:
         self.db.add(conv)
         self.db.flush()
 
+        # --- Messaggio strutturato richiesta utente ---
+        user_msg_parts = [f"Richiesta veterinario"]
+        user_msg_parts.append(f"Animale: {animal.species}{(' ' + animal.name) if animal.name else ''}")
+        user_msg_parts.append(f"Servizio: {specialty.name}")
+        user_msg_parts.append(f"Zona: {city} ({province})")
+        user_msg_parts.append(f"Urgenza: {urgency or 'normale'}")
         desc_stripped = (merged_description or "").strip()
         if desc_stripped:
-            self.db.add(
-                Message(
-                    conversation_id=conv.id,
-                    sender_role=MessageSenderRole.user.value,
-                    body=desc_stripped,
-                )
+            user_msg_parts.append(desc_stripped)
+        self.db.add(
+            Message(
+                conversation_id=conv.id,
+                sender_role=MessageSenderRole.user.value,
+                body="\n".join(user_msg_parts),
             )
+        )
 
+        # --- Risposta assistente VeterinarioVicino ---
+        user_first = (user.full_name or "").split()[0] if user.full_name else ""
         if forward_to_vets:
             if consultation_online:
                 welcome = (
-                    "Ciao, abbiamo ricevuto la tua richiesta di consulenza online. "
-                    "Uno specialista ti risponderà per organizzare video su Google Meet e il pagamento. "
-                    "Controlla la mail e verifica anche lo spam."
+                    f"Grazie{(' ' + user_first) if user_first else ''}! "
+                    f"La tua richiesta di consulenza online per {animal.species} "
+                    f"è stata inoltrata ai nostri specialisti.\n\n"
+                    "Ti contatteranno per organizzare la videochiamata su Google Meet "
+                    "e il pagamento.\n\n"
+                    "Controlla la mail per la conferma e verifica anche la cartella spam."
                 )
             else:
                 welcome = (
-                    "Ciao, abbiamo ricevuto la tua richiesta. Uno specialista ti risponderà quanto prima. "
-                    "Controlla la mail di conferma e verifica anche lo spam."
+                    f"Grazie{(' ' + user_first) if user_first else ''}! "
+                    f"La tua richiesta è stata inoltrata ai migliori veterinari "
+                    f"nella tua zona per {animal.species} e {specialty.name}.\n\n"
+                    "Troverai qui la risposta e verrai notificato via email.\n\n"
+                    "Controlla la mail per verificare di aver ricevuto copia della tua richiesta, "
+                    "e controlla la cartella spam. Rimuovi da spam per ricevere le notifiche "
+                    "sulla richiesta."
                 )
         else:
             if consultation_online:
                 welcome = (
-                    "Ciao! Abbiamo registrato la tua consulenza online. Per ricevere istruzioni e coordinare "
-                    "pagamento (PayPal) e videochiamata Google Meet, apri l'email che ti abbiamo inviato e "
-                    "clicca sul link di verifica. Controlla anche la cartella spam."
+                    f"Ciao{(' ' + user_first) if user_first else ''}! "
+                    "Abbiamo registrato la tua consulenza online. Per ricevere istruzioni e coordinare "
+                    "pagamento e videochiamata, apri l'email che ti abbiamo inviato e "
+                    "clicca sul link di verifica.\n\n"
+                    "Controlla anche la cartella spam."
                 )
             else:
                 welcome = (
-                    "Ciao! Abbiamo registrato la tua richiesta. Per inoltrarla ai veterinari della tua zona e "
+                    f"Ciao{(' ' + user_first) if user_first else ''}! "
+                    "Abbiamo registrato la tua richiesta. Per inoltrarla ai veterinari della tua zona e "
                     "cercare la prima disponibilità tra i nostri contatti, apri l'email che ti abbiamo inviato e "
-                    "clicca sul link di verifica. Controlla anche la cartella spam."
+                    "clicca sul link di verifica.\n\n"
+                    "Controlla anche la cartella spam. Rimuovi da spam per ricevere le notifiche "
+                    "sulla richiesta."
                 )
         self.db.add(
             Message(
